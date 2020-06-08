@@ -30,22 +30,6 @@ public class ListenerServiceImpl implements ListenerService {
 
     private SetupHandlersBuilder.HandlersSetup protocolHandler;
 
-//    @Autowired
-//    public ListenerServiceImpl() {
-//
-//         runtimeConfig = RuntimeConfigAutoImpl.builder().build();
-//         netConfig = new NetLocalDevConfig().toBuilder()
-//                .maxSocketConnections(OptionalInt.of(100))
-//                .build();
-//
-//         protocolConfig = new ProtocolBSVMainConfig().toBuilder()
-//                .handshakeMaxPeers(OptionalInt.of(100))
-//                .discoveryMethod(ProtocolConfig.DiscoveryMethod.DNS)
-//                .discoveryCheckingPeerReachability(false)
-//                .build();
-//
-//         fileUtils = new ClasspathFileUtils(this.getClass().getClassLoader());
-//    }
 
     @Autowired
     protected ListenerServiceImpl(RuntimeConfig runtimeConfig,

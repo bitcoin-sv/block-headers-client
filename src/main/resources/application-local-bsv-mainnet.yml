@@ -1,6 +1,5 @@
 debug: false
-#logging.level.org.springframework.data.mongodb.core.MongoTemplate: ERROR
-# We disable the autoconfiguration for JPA (postgresql)
+
 spring:
   # This property is needed because we have 2 version of the Repositories (for MongodDb and PostgresQL). The
   # repositories for the same Entities have the same name, so even if only one of them is loaded into the
@@ -20,14 +19,7 @@ spring:
     properties.hibernate.jdbc.batch_size: 100
 
   data:
-    # MongoDB Configuration parameters:
-    mongodb:
-      port: 27017
-      host: localhost
-      database: bnaDB
-      username: bna
-      password: bna
-      authentication-database: admin
+
 
 # Application Configuration:
 headersv:
@@ -39,7 +31,6 @@ headersv:
     listener:
       p2p:
         folders:
-        #  data: /Users/ilozanof/Desktop/ilozanof/work/nChain/dev/bitcoinnetworkanalyser/listener-app/src/main/resources/data
           data: /workspace/headerSV/src/main/resources/data
           config:
         maxPeers: 50
