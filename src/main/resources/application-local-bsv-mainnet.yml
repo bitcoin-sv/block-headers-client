@@ -24,7 +24,7 @@ spring:
 # Application Configuration:
 headersv:
   # This variable will determine what Repositories are loaded into the Spring context (postgresql or the mongodb ones)
-  persistenceEngine: mongodb
+  persistenceEngine: postgreSQL
 
   # Listener Configuration params:
   listener-app:
@@ -33,8 +33,8 @@ headersv:
         folders:
           data: /workspace/headerSV/src/main/resources/data
           config:
-        maxPeers: 50
-        minPeers: 45
+        maxPeers: 25
+        minPeers: 10
         relayTxs: true
       height-locator:
         topChainMargin: 0

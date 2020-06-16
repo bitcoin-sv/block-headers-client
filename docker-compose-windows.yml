@@ -1,0 +1,46 @@
+version: "3"
+services:
+  postgres-headerSV:
+    image: postgres:11.5
+    container_name: postgres-headerSV
+    volumes:
+      - headerSV-postgres-volume:/var/lib/postgresql/data:Z
+    environment:
+      - POSTGRES_DB=headerSV
+      - POSTGRES_USER=headerSV
+      - POSTGRES_PASSWORD=test
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - 54323:5432
+    stop_grace_period: 120s
+    networks:
+      - headerSV-network
+
+  headersv-client-app:
+    image: headersv-client-app:0.1
+    container_name: headersv-client-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - JAR=build/libs/headerSV-0.0.1.jar
+    volumes:
+      - ./app-data:/app-data
+    environment:
+      - JAVA_OPTS=-XX:+PrintFlagsFinal
+      - spring.datasource.url=jdbc:postgresql://postgres-headerSV:5432/headerSV
+      - spring.datasource.username=bna
+      - spring.datasource.password=Azs9AY1r0DYWDnz9WoU2VV674
+      - spring.profiles.active=docker
+#    depends_on:
+#      - postgres-headerSV
+    networks:
+      - headerSV-network
+
+volumes:
+  headerSV-postgres-volume:
+      external: true
+
+networks:
+  headerSV-network:
+    driver: bridge

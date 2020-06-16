@@ -51,7 +51,7 @@ public class HeaderSVConfig {
         // A normal configuration based on a Local Development Environment (a medium-level laptop)
         // We raise the number of socket connections a little bit...
         return new NetLocalDevConfig().toBuilder()
-                .maxSocketConnections(OptionalInt.of(200))
+                .maxSocketConnections(OptionalInt.of(100))
                 .build();
     }
 
