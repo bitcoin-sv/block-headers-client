@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=test
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
-      - 54323:5432
+      - 54320:5432
     stop_grace_period: 120s
     networks:
       - headerSV-network
@@ -31,9 +31,9 @@ services:
       - spring.datasource.url=jdbc:postgresql://postgres-headerSV:5432/headerSV
       - spring.datasource.username=bna
       - spring.datasource.password=Azs9AY1r0DYWDnz9WoU2VV674
-      - spring.profiles.active=docker
-#    depends_on:
-#      - postgres-headerSV
+      - spring.profiles.active=local-bsv-mainnet
+    depends_on:
+      - postgres-headerSV
     networks:
       - headerSV-network
 
