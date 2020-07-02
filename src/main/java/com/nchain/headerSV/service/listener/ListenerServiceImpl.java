@@ -1,4 +1,4 @@
-package com.nchain.headerSV.service;
+package com.nchain.headerSV.service.listener;
 
 import com.nchain.bna.network.PeerAddress;
 import com.nchain.bna.network.config.NetConfig;
@@ -9,13 +9,13 @@ import com.nchain.bna.protocol.messages.VersionMsg;
 import com.nchain.bna.tools.RuntimeConfig;
 import com.nchain.bna.tools.files.FileUtils;
 import com.nchain.headerSV.domain.PeerInfo;
+import com.nchain.headerSV.service.propagation.buffer.BufferedMessagePeer;
+import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author m.jose@nchain.com
@@ -37,17 +37,19 @@ public class ListenerServiceImpl implements ListenerService {
 
      private SetupHandlersBuilder.HandlersSetup protocolHandler;
 
-    // A Collection to keep track of the Peers handshaked:
-    private final Map<PeerAddress, PeerInfo> peersInfo = new ConcurrentHashMap<>();
+    // Service to store the info from the Network into the Repository as they come along
+    private final MessageBufferService messageBufferService;
 
 
     @Autowired
     protected ListenerServiceImpl(RuntimeConfig runtimeConfig,
                                   NetConfig netConfig, ProtocolConfig protocolConfig,
+                                  MessageBufferService messageBufferService,
                                   FileUtils fileUtils) {
         this.runtimeConfig = runtimeConfig;
         this.netConfig = netConfig;
         this.protocolConfig = protocolConfig;
+        this.messageBufferService = messageBufferService;
         this.fileUtils = fileUtils;
 
     }
@@ -83,11 +85,10 @@ public class ListenerServiceImpl implements ListenerService {
     private void onPeerHandshaked(PeerAddress peerAddress, VersionMsg versionMsg) {
         log.info("onPeerHandshaked: IP:" + peerAddress.toString()+":User Agent:"+ versionMsg.getUser_agent() +": Version :" + versionMsg.getVersion());
 
-        PeerInfo peerInfo = peersInfo.get(peerAddress);
 
-        if (peerInfo == null) {
-            peerInfo = new PeerInfo(peerAddress, versionMsg, Optional.empty());
-            peersInfo.put(peerAddress, peerInfo);
-        }
-    }
+
+            PeerInfo  peerInfo = new PeerInfo(peerAddress, versionMsg, Optional.empty());
+            messageBufferService.queue(new BufferedMessagePeer( peerInfo));
+     }
+
 }

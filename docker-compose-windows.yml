@@ -29,8 +29,8 @@ services:
     environment:
       - JAVA_OPTS=-XX:+PrintFlagsFinal
       - spring.datasource.url=jdbc:postgresql://postgres-headerSV:5432/headerSV
-      - spring.datasource.username=bna
-      - spring.datasource.password=Azs9AY1r0DYWDnz9WoU2VV674
+      - spring.datasource.username=headerSV
+      - spring.datasource.password=test
       - spring.profiles.active=local-bsv-mainnet
     depends_on:
       - postgres-headerSV
