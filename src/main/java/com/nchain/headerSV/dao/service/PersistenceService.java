@@ -16,4 +16,5 @@ public interface PersistenceService {
 
     void persistPeers(Collection<PeerDTO> peerDTO);
     void persistPeer(PeerDTO peerDTO) ;
+  //  PeerDTO retrievePeer(PeerDTO peerDTO);
 }

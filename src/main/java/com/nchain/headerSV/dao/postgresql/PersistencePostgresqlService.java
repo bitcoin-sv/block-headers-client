@@ -55,7 +55,7 @@ public class PersistencePostgresqlService implements PersistenceService {
     public void persistPeer(PeerDTO peerDTO) {
         try {
             List<Peer> peers = peerRepository.findByAddressAndPort(peerDTO.getAddress(), peerDTO.getPort());
-            Peer peer = (peers != null && peers.size() > 0)? peers.get(0) : new Peer();
+            Peer peer = (peers != null && peers.size() > 0)? peers.get(0) : new Peer();       ;
             convertPeer(peerDTO, peer);
             peerRepository.save(peer);
         } catch (DataIntegrityViolationException e) {
@@ -65,6 +65,15 @@ public class PersistencePostgresqlService implements PersistenceService {
             re.printStackTrace();
         }
     }
+
+//    public PeerDTO retrievePeer(PeerDTO peerDTO) {
+//        try {
+//            List<Peer> peers = peerRepository.findByAddressAndPort(peerDTO.getAddress(), peerDTO.getPort());
+//            Peer peer = (peers != null && peers.size() > 0)? peers.get(0) : new Peer();
+//
+//
+//        }
+//    }
 
     private void convertPeer(PeerDTO from, Peer to) {
         if (from == null || to == null) return;
@@ -76,6 +85,21 @@ public class PersistencePostgresqlService implements PersistenceService {
         to.setUser_agent(from.getUserAgent());
         to.setZipcode(from.getZipcode());
         to.setServices(from.getServices());
+        to.setConnectionstatus(from.isConnectionStatus());
+
+    }
+
+    private void convertToPeerDTO(Peer from, PeerDTO to) {
+        if (from == null || to == null) return;
+        to.setAddress(from.getAddress());
+        to.setPort(from.getPort());
+        to.setCity(from.getCity());
+        to.setCountry(from.getCountry());
+        to.setProtocolVersion(from.getProtocol_version());
+        to.setUserAgent(from.getUser_agent());
+        to.setZipcode(from.getZipcode());
+        to.setServices(from.getServices());
+        to.setConnectionStatus(from.isConnectionstatus());
 
     }
 }

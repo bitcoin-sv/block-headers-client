@@ -27,4 +27,5 @@ public class PeerDTO {
     private String city;
     private String zipcode;
     private long services;
+    private boolean connectionStatus;
 }

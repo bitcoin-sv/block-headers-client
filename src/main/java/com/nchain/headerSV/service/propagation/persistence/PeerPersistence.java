@@ -30,4 +30,8 @@ public class PeerPersistence extends AbstractPersistence<PeerDTO> {
         getPersistenceService().persistPeers(peerDTOS);
 
     }
+
+//    protected PeerDTO getPeer(){
+//
+//    }
 }

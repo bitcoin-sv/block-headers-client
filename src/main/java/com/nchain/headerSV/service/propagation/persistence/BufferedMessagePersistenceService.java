@@ -39,10 +39,15 @@ public class BufferedMessagePersistenceService {
         final PeerDTO peerDTO = PeerDTO.builder()
                 .address(peerInfo.getPeerAddress().toStringWithoutPort())
                 .port(peerInfo.getPeerAddress().getPort())
-                .protocolVersion((int) peerInfo.getVersionMsg().getVersion())
-                .userAgent(peerInfo.getVersionMsg().getUser_agent().getStr())
-                .services(peerInfo.getVersionMsg().getServices())
+                .connectionStatus(peerInfo.isPeerConnectedStatus())
                 .build();
+        if (peerInfo.getVersionMsg() != null) {
+
+            peerDTO.setProtocolVersion((int) peerInfo.getVersionMsg().getVersion());
+            peerDTO.setUserAgent(peerInfo.getVersionMsg().getUser_agent().getStr());
+            peerDTO.setServices(peerInfo.getVersionMsg().getServices());
+        }
+
         peerInfo.getLocation().ifPresent(location -> {
             peerDTO.setCity(location.getCity());
             peerDTO.setCountry(location.getCountry());

@@ -55,4 +55,7 @@ public class Peer {
     @Column
     private Long services;
 
+    @Column
+    private boolean connectionstatus;
+
 }

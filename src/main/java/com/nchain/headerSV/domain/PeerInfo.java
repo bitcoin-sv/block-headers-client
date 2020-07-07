@@ -27,12 +27,16 @@ public class PeerInfo {
     private PeerAddress peerAddress;
     private VersionMsg versionMsg;
     private Optional<PeerLocationInfo> location;
+    private boolean  peerConnectedStatus;
+
+
 
 
     @Override
     public String toString() {
         StringBuffer result = new StringBuffer(peerAddress.toString());
-        result.append((location.isPresent())? location : "(location no available");
+        result.append((location.isPresent())? location : "(location not available)");
+        result.append("connectionstatus:"+this.peerConnectedStatus);
         return result.toString();
     }
 }
