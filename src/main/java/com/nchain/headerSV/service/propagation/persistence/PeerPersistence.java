@@ -31,7 +31,4 @@ public class PeerPersistence extends AbstractPersistence<PeerDTO> {
 
     }
 
-//    protected PeerDTO getPeer(){
-//
-//    }
 }
