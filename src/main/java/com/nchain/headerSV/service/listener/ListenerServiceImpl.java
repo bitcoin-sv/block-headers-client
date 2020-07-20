@@ -82,8 +82,8 @@ public class ListenerServiceImpl implements ListenerService {
                 .runtime(runtimeConfig)
                 .network(netConfig)
                 .protocol(protocolConfig)
-                .handlers()
                 .useFileUtils(fileUtils)
+                .handlers()
                 .custom()
                 .addCallback((PeerHandshakeAcceptedListener) this::onPeerHandshaked)
                 .addCallback((PeerDisconnectedListener) this::onPeerDisconnected)
@@ -117,12 +117,12 @@ public class ListenerServiceImpl implements ListenerService {
 
     private void onMessage(PeerAddress peerAddress, BitcoinMsg<?> bitcoinMsg) {
 
-       // log.info(" INCOMING Message:" + bitcoinMsg.getHeader().getCommand() + "...");
+        log.info(" INCOMING Message:" + bitcoinMsg.getHeader().getCommand() + "...");
 
         // We have an Header Message incoming....
 
-        if (bitcoinMsg.is(HeaderMsg.MESSAGE_TYPE)) {
-            HeaderMsg headerMsg = ((BitcoinMsg<HeaderMsg>) bitcoinMsg).getBody();
+        if (bitcoinMsg.is(HeadersMsg.MESSAGE_TYPE)) {
+            HeadersMsg headerMsg = ((BitcoinMsg<HeadersMsg>) bitcoinMsg).getBody();
             log.info("Header Message:" + headerMsg.toString() + "...");
         }
 
