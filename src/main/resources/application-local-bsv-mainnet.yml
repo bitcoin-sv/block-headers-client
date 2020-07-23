@@ -48,22 +48,5 @@ headersv:
         block:
           enabled: true
           batchSize: 1
-        tx:
-          enabled: true
-          batchSize: 100
-    metrics:
-      peers:
-        enabled: true
-        frequencyInMillis: 10000
-      txs:
-        enabled: true
-        frequencyInMillis: 5000
-      messages:
-        enabled: true
-        frequencyInMillis: 5000
-      inv-size:
-        enabled: true
-        frequencyInMillis: 5000
-      kbytes:
-        enabled: true
-        frequencyInMillis: 5000
+
+
