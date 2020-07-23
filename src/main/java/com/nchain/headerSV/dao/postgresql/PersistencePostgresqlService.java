@@ -1,7 +1,10 @@
 package com.nchain.headerSV.dao.postgresql;
 
+import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.model.PeerDTO;
+import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.dao.postgresql.domain.Peer;
+import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
 import com.nchain.headerSV.dao.postgresql.repository.PeerRepository;
 import com.nchain.headerSV.dao.service.PersistenceEngine;
 import com.nchain.headerSV.dao.service.PersistenceService;
@@ -39,6 +42,9 @@ public class PersistencePostgresqlService implements PersistenceService {
     @Autowired
     private PeerRepository peerRepository;
 
+    @Autowired
+    private BlockHeaderRepository blockHeaderRepository;
+
     @Override
     public PersistenceEngine getEngine() {
         return PersistenceEngine.postgresql;
@@ -65,6 +71,45 @@ public class PersistencePostgresqlService implements PersistenceService {
             re.printStackTrace();
         }
     }
+
+    @Override
+    public void persistBlockHeaders(Collection<BlockHeaderDTO> blockHeaderDTOS) {
+        log.debug("Persisting :"+blockHeaderDTOS.size()+": blockHeaders");
+        blockHeaderDTOS.forEach((d -> log.debug("-persisting blockheaders" +d)));
+        blockHeaderDTOS.forEach(this::persistBlockHeader);
+
+    }
+
+    @Override
+    public void persistBlockHeader(BlockHeaderDTO blockHeaderDTO) {
+        try{
+            List<BlockHeader> blockHeaders = blockHeaderRepository.findByAddressAndHash(blockHeaderDTO.getAddress(), blockHeaderDTO.getHash());
+            BlockHeader blockHeader = (blockHeaders != null && blockHeaders.size()> 0) ? blockHeaders.get(0):new BlockHeader();
+            converToBlockheader(blockHeaderDTO, blockHeader);
+            blockHeaderRepository.save(blockHeader);
+        }catch (DataIntegrityViolationException e) {
+            log.debug("ERROR persistBlockHeader. BlockHeader: " + blockHeaderDTO.getHash(), e);
+        } catch (RuntimeException re) {
+            re.printStackTrace();
+        }
+
+    }
+
+    private void converToBlockheader(BlockHeaderDTO dto, BlockHeader to) {
+        if(dto == null || to == null)
+            return;
+        to.setAddress(dto.getAddress());
+        to.setHash(dto.getHash());
+        to.setCreationTimestamp(dto.getCreationTimestamp());
+        to.setDifficultyTarget(dto.getDifficultyTarget());
+        to.setMerkleRoot(dto.getMerkleRoot());
+        to.setNonce(dto.getNonce());
+        to.setDifficultyTarget(dto.getDifficultyTarget());
+        to.setPrevBlockHash(dto.getPrevBlockHash());
+        to.setVersion(dto.getVersion());
+        to.setTransactionCount(dto.getTransactionCount());
+    }
+
 
 //    public PeerDTO retrievePeer(PeerDTO peerDTO) {
 //        try {

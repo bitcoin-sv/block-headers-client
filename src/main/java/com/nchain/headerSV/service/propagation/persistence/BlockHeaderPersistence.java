@@ -1,6 +1,6 @@
 package com.nchain.headerSV.service.propagation.persistence;
 
-import com.nchain.headerSV.dao.model.PeerDTO;
+import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.service.PersistenceLocatorService;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,21 +16,21 @@ import java.util.Collection;
  * Copyright (c) 2009-2016 The Bitcoin Core developers
  * Copyright (c) 2018-2020 Bitcoin Association
  * Distributed under the Open BSV software license, see the accompanying file LICENSE.
+ * @date 21/07/2020
  */
 @Service
-@ConfigurationProperties(prefix = "headersv.listener-app.propagation.persistence.peer")
+@ConfigurationProperties(prefix = "headersv.listener-app.propagation.persistence.block")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class PeerPersistence extends AbstractPersistence<PeerDTO> {
+public class BlockHeaderPersistence extends AbstractPersistence<BlockHeaderDTO> {
 
-    public PeerPersistence(PersistenceLocatorService persistenceLocatorService) {
+    public BlockHeaderPersistence(PersistenceLocatorService persistenceLocatorService) {
         super(persistenceLocatorService);
     }
 
     @GuardedBy("this")
     @Override
-    protected void process(Collection<PeerDTO> peerDTOS) {
-        getPersistenceService().persistPeers(peerDTOS);
+    protected void process(Collection<BlockHeaderDTO> blockHeaderDTOS) {
+        getPersistenceService().persistBlockHeaders(blockHeaderDTOS);
 
     }
-
 }

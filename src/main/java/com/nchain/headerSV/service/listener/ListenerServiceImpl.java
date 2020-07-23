@@ -13,6 +13,7 @@ import com.nchain.bna.tools.RuntimeConfig;
 import com.nchain.bna.tools.bytes.HEX;
 import com.nchain.bna.tools.files.FileUtils;
 import com.nchain.headerSV.domain.PeerInfo;
+import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeader;
 import com.nchain.headerSV.service.propagation.buffer.BufferedMessagePeer;
 import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ import java.util.concurrent.*;
 @Slf4j
 public class ListenerServiceImpl implements ListenerService {
 
+
     // Basic Configuration to connect to the P2P Network and use the Bitcoin Protocol:
     private final RuntimeConfig runtimeConfig;
     private final NetConfig netConfig;
@@ -56,6 +58,7 @@ public class ListenerServiceImpl implements ListenerService {
     private final Duration queueTimeOut = Duration.ofSeconds(10);
 
     public static final byte[] GENESIS_BLOCK_HEADER = HEX.decode("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
+    public static final byte[] ZERO_HASH = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     private ScheduledExecutorService executor;
 
@@ -93,9 +96,6 @@ public class ListenerServiceImpl implements ListenerService {
         // We launch the Thread to process the disconneced Peers:
         executor.scheduleAtFixedRate(this::processDisconnectedPeers,
                 this.queueTimeOut.toMillis(), this.queueTimeOut.toMillis(), TimeUnit.MILLISECONDS);
-
-
-
     }
 
 
@@ -117,15 +117,13 @@ public class ListenerServiceImpl implements ListenerService {
 
     private void onMessage(PeerAddress peerAddress, BitcoinMsg<?> bitcoinMsg) {
 
-        log.info(" INCOMING Message:" + bitcoinMsg.getHeader().getCommand() + "...");
-
         // We have an Header Message incoming....
-
         if (bitcoinMsg.is(HeadersMsg.MESSAGE_TYPE)) {
             HeadersMsg headerMsg = ((BitcoinMsg<HeadersMsg>) bitcoinMsg).getBody();
-            log.info("Header Message:" + headerMsg.toString() + "...");
-        }
+            log.info("Header Message coming from:" + peerAddress + "Message count:"+headerMsg.getCount());
 
+            messageBufferService.queue(new BufferedBlockHeader(headerMsg, peerAddress));
+        }
     }
 
     private void onPeerDisconnected(PeerAddress peerAddress,  PeerDisconnectedListener.DisconnectionReason reason) {
@@ -147,19 +145,17 @@ public class ListenerServiceImpl implements ListenerService {
                 .version(versionMsg.getVersion())
                 .blockLocatorHash(hashMsgs)
                 .hashCount(VarIntMsg.builder().value(1).build())
-                .hashStop(HashMsg.builder().hash(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}).build())
-              //  .hashStop(HashMsg.builder().hash(HEX.decode("00000000000000000000000000000000")).build())
+                .hashStop(HashMsg.builder().hash(ZERO_HASH).build())
                 .build();
         GetHeadersMsg getHeadersMsg = GetHeadersMsg.builder()
                 .baseGetDataAndHeaderMsg(baseGetDataAndHeaderMsg)
                 .build();
-        log.info(" Outgoing GetHeader Message:" + getHeadersMsg.getMessageType()+ ":"+getHeadersMsg.getBaseGetDataAndHeaderMsg().toString());
 
         protocolHandler.getConnHandler().send(peerAddress, getHeadersMsg);
 
         if (peerInfo == null) {
 
-            peerInfo = new PeerInfo(peerAddress, versionMsg, Optional.empty(), true); // fee is null at this point
+            peerInfo = new PeerInfo(peerAddress, versionMsg, Optional.empty(), true);
             log.info("onPeerConnected: :" + peerInfo.toString());
             peersInfo.put(peerAddress, peerInfo);
             messageBufferService.queue(new BufferedMessagePeer(peerInfo));
