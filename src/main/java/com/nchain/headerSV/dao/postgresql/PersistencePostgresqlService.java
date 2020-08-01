@@ -18,6 +18,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author m.jose@nchain.com
@@ -93,6 +94,38 @@ public class PersistencePostgresqlService implements PersistenceService {
             re.printStackTrace();
         }
 
+    }
+
+    public Optional<BlockHeaderDTO> retrieveBlockHeader(String hash) {
+        Optional<BlockHeaderDTO> result = Optional.empty();
+        try{
+           List<BlockHeader> blockHeaders = blockHeaderRepository.findByHash(hash);
+           if (blockHeaders != null && blockHeaders.size()> 0) {
+               BlockHeaderDTO blockHeaderDTO = new BlockHeaderDTO();
+               convertToBlockHeaderDTO(blockHeaders.get(0), blockHeaderDTO);
+               result = Optional.of(blockHeaderDTO);
+           }
+        }catch (DataIntegrityViolationException e) {
+            log.debug("ERROR retrieving BlockHeaderBy Hash: " + hash, e);
+        } catch (RuntimeException re) {
+            re.printStackTrace();
+        }
+        return result;
+    }
+
+    private void convertToBlockHeaderDTO(BlockHeader from, BlockHeaderDTO to) {
+        if(from == null || to == null)
+            return;
+        to.setAddress(from.getAddress());
+        to.setHash(from.getHash());
+        to.setCreationTimestamp(from.getCreationTimestamp());
+        to.setDifficultyTarget(from.getDifficultyTarget());
+        to.setMerkleRoot(from.getMerkleRoot());
+        to.setNonce(from.getNonce());
+        to.setDifficultyTarget(from.getDifficultyTarget());
+        to.setPrevBlockHash(from.getPrevBlockHash());
+        to.setVersion(from.getVersion());
+        to.setTransactionCount(from.getTransactionCount());
     }
 
     private void converToBlockheader(BlockHeaderDTO dto, BlockHeader to) {

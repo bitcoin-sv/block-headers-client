@@ -4,6 +4,7 @@ import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.model.PeerDTO;
 
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Operations provided by the persistence Layer.
@@ -21,5 +22,6 @@ public interface PersistenceService {
 
     void persistBlockHeaders(Collection<BlockHeaderDTO> blockHeaderDTOS);
     void persistBlockHeader(BlockHeaderDTO blockHeaderDTO);
+    public Optional<BlockHeaderDTO> retrieveBlockHeader(String hash);
 
 }
