@@ -1,7 +1,8 @@
 package com.nchain.headerSV;
 
-import com.nchain.headerSV.service.listener.ListenerService;
+import com.nchain.headerSV.service.network.NetworkService;
 import com.nchain.headerSV.service.propagation.PropagationDBService;
+import com.nchain.headerSV.service.sync.BlockHeadersSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,21 +20,24 @@ public class HeaderSVApplication {
 	}
 
 	@Autowired
-	private ListenerService listenerService;
+	private NetworkService networkService;
 
 	@Autowired
 	private PropagationDBService propagationDBService;
 
+	@Autowired
+	private BlockHeadersSyncService blockHeadersSyncService;
+
 	@EventListener
 	public void onStart(ApplicationReadyEvent event) {
 		propagationDBService.start();
-		listenerService.start();
-
+		networkService.start();
+		blockHeadersSyncService.start();
 	}
 
 	@PreDestroy
 	public void onStop() {
-		listenerService.stop();
+		networkService.stop();
 		propagationDBService.stop();
 	}
 

@@ -29,9 +29,6 @@ public class PeerInfo {
     private Optional<PeerLocationInfo> location;
     private boolean  peerConnectedStatus;
 
-
-
-
     @Override
     public String toString() {
         StringBuffer result = new StringBuffer(peerAddress.toString());
