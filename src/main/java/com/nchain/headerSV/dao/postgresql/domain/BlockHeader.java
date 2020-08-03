@@ -23,17 +23,15 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BlockHeader {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column
+    @NotNull
+    private String hash;
 
     @Column
     @NotNull
     private String address;
-
-    @Column
-    @NotNull
-    private String hash;
 
     @Column
     @NotNull

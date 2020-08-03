@@ -65,6 +65,7 @@ public class HeaderSVConfig {
                 .handshakeMaxPeers(OptionalInt.of(listenerConfig.getMaxPeers()))
                 .handshakeMinPeers(OptionalInt.of(listenerConfig.getMinPeers()))
                 .handshakeUsingRelay(listenerConfig.isRelayTxs())
+                .handshakeProtocolVersion(70015)
                 .build();
     }
 
@@ -82,4 +83,5 @@ public class HeaderSVConfig {
                 foldersConfig.data, foldersConfig.config);
         return fileUtils;
     }
+
 }

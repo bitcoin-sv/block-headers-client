@@ -84,10 +84,11 @@ public class PersistencePostgresqlService implements PersistenceService {
     @Override
     public void persistBlockHeader(BlockHeaderDTO blockHeaderDTO) {
         try{
-            List<BlockHeader> blockHeaders = blockHeaderRepository.findByAddressAndHash(blockHeaderDTO.getAddress(), blockHeaderDTO.getHash());
-            BlockHeader blockHeader = (blockHeaders != null && blockHeaders.size()> 0) ? blockHeaders.get(0):new BlockHeader();
-            converToBlockheader(blockHeaderDTO, blockHeader);
-            blockHeaderRepository.save(blockHeader);
+            if(!blockHeaderRepository.existsById(blockHeaderDTO.getHash())){
+                BlockHeader blockHeader = new BlockHeader();
+                convertToBlockheader(blockHeaderDTO, blockHeader);
+                blockHeaderRepository.save(blockHeader);
+            }
         }catch (DataIntegrityViolationException e) {
             log.debug("ERROR persistBlockHeader. BlockHeader: " + blockHeaderDTO.getHash(), e);
         } catch (RuntimeException re) {
@@ -99,10 +100,10 @@ public class PersistencePostgresqlService implements PersistenceService {
     public Optional<BlockHeaderDTO> retrieveBlockHeader(String hash) {
         Optional<BlockHeaderDTO> result = Optional.empty();
         try{
-           List<BlockHeader> blockHeaders = blockHeaderRepository.findByHash(hash);
-           if (blockHeaders != null && blockHeaders.size()> 0) {
+           BlockHeader blockHeader = blockHeaderRepository.findByHash(hash);
+           if (blockHeader != null) {
                BlockHeaderDTO blockHeaderDTO = new BlockHeaderDTO();
-               convertToBlockHeaderDTO(blockHeaders.get(0), blockHeaderDTO);
+               convertToBlockHeaderDTO(blockHeader, blockHeaderDTO);
                result = Optional.of(blockHeaderDTO);
            }
         }catch (DataIntegrityViolationException e) {
@@ -128,7 +129,7 @@ public class PersistencePostgresqlService implements PersistenceService {
         to.setTransactionCount(from.getTransactionCount());
     }
 
-    private void converToBlockheader(BlockHeaderDTO dto, BlockHeader to) {
+    private void convertToBlockheader(BlockHeaderDTO dto, BlockHeader to) {
         if(dto == null || to == null)
             return;
         to.setAddress(dto.getAddress());
