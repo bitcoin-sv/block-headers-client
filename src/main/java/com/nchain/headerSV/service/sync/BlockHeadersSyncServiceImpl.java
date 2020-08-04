@@ -4,12 +4,12 @@ import com.nchain.bna.network.PeerAddress;
 import com.nchain.bna.protocol.config.ProtocolConfig;
 import com.nchain.bna.protocol.messages.*;
 import com.nchain.bna.protocol.messages.common.Message;
+import com.nchain.bna.tools.bytes.ByteTools;
 import com.nchain.bna.tools.bytes.HEX;
 import com.nchain.bna.tools.crypto.Sha256Wrapper;
 import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
-import com.nchain.headerSV.domain.PeerInfo;
 import com.nchain.headerSV.service.network.NetworkService;
-import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeader;
+import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeaders;
 import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import com.nchain.headerSV.service.sync.consumer.MessageConsumer;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.concurrent.ThreadSafe;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -80,8 +81,32 @@ public class BlockHeadersSyncServiceImpl implements BlockHeadersSyncService, Mes
 
         HeadersMsg headerMsg = (HeadersMsg) message;
 
-        messageBufferService.queue(new BufferedBlockHeader(headerMsg, peerAddress));
+        List<BlockHeaderMsg> validBlockHeaders = headerMsg.getBlockHeaderMsgList().stream().filter(this::validBlockHeader).collect(Collectors.toList());
+
+        messageBufferService.queue(new BufferedBlockHeaders(validBlockHeaders, peerAddress));
     }
+
+    public boolean validBlockHeader(BlockHeaderMsg blockHeader){
+        //check proof of work
+        BigInteger target = BigInteger.valueOf(blockHeader.getDifficultyTarget());
+
+        decompressTargetFromBits(388618029L);
+
+
+        BigInteger blockHashValue = Sha256Wrapper.wrap(blockHeader.getHash().getHashBytes()).toBigInteger();
+
+        return blockHashValue.compareTo(target) <= 0;
+    }
+
+    private BigInteger decompressTargetFromBits(long targetBits){
+        byte[] targetBitsByteArray = BigInteger.valueOf(targetBits).toByteArray();
+
+        BigInteger index = new BigInteger(targetBitsByteArray, 0, 1);
+        BigInteger coefficent = new BigInteger(targetBitsByteArray, 1, 3);
+
+        return coefficent.multiply(BigInteger.valueOf(2).pow(BigInteger.valueOf(8).multiply(index.subtract(BigInteger.valueOf(3L))).intValue()));
+    }
+
 
 
     private void requestNextHeaders(){

@@ -8,7 +8,7 @@ import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.model.PeerDTO;
 import com.nchain.headerSV.domain.PeerInfo;
 import com.nchain.headerSV.service.geolocation.GeolocationService;
-import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeader;
+import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeaders;
 import com.nchain.headerSV.service.propagation.buffer.BufferedMessage;
 import com.nchain.headerSV.service.propagation.buffer.BufferedMessagePeer;
 import lombok.AllArgsConstructor;
@@ -37,8 +37,8 @@ public class BufferedMessagePersistenceService {
         if (bufferedMessage instanceof BufferedMessagePeer) {
             process((BufferedMessagePeer) bufferedMessage);
 
-        } else if(bufferedMessage instanceof BufferedBlockHeader) {
-            process((BufferedBlockHeader) bufferedMessage);
+        } else if(bufferedMessage instanceof BufferedBlockHeaders) {
+            process((BufferedBlockHeaders) bufferedMessage);
         }
     }
 
@@ -66,9 +66,8 @@ public class BufferedMessagePersistenceService {
         peerPersistence.persist(peerDTO);
     }
 
-    private void process(BufferedBlockHeader bufferedBlockHeader) {
-
-      bufferedBlockHeader.getHeaderMsg().getBlockHeaderMsgList().forEach( blockHeaderMsg ->
+    private void process(BufferedBlockHeaders bufferedBlockHeader) {
+      bufferedBlockHeader.getBlockHeaderMsgs().forEach( blockHeaderMsg ->
               process(bufferedBlockHeader.getPeerAddress(), blockHeaderMsg)
       );
     }

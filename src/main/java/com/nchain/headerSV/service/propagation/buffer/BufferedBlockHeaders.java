@@ -1,9 +1,12 @@
 package com.nchain.headerSV.service.propagation.buffer;
 
 import com.nchain.bna.network.PeerAddress;
+import com.nchain.bna.protocol.messages.BlockHeaderMsg;
 import com.nchain.bna.protocol.messages.HeadersMsg;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author m.jose@nchain.com
@@ -15,15 +18,15 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class BufferedBlockHeader implements BufferedMessage {
-    HeadersMsg headerMsg;
+public class BufferedBlockHeaders implements BufferedMessage {
+    List<BlockHeaderMsg> blockHeaderMsgs;
     PeerAddress peerAddress;
 
 
     @Override
     public String toString() {
         return "BufferedBlockHeader{" +
-                "blockHeaderInfo=" + headerMsg.toString() +
+                "blockHeaderInfo=" + blockHeaderMsgs.toString() +
                 '}';
     }
 }
