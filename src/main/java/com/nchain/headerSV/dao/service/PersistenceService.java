@@ -2,6 +2,7 @@ package com.nchain.headerSV.dao.service;
 
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.model.PeerDTO;
+import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -20,7 +21,7 @@ public interface PersistenceService {
     void persistPeer(PeerDTO peerDTO) ;
   //  PeerDTO retrievePeer(PeerDTO peerDTO);
 
-    void persistBlockHeaders(Collection<BlockHeaderDTO> blockHeaderDTOS);
+    void persistBlockHeaders(Collection<BlockHeaderAddrInfo> blockHeaderAddrInfo);
     void persistBlockHeader(BlockHeaderDTO blockHeaderDTO);
     public Optional<BlockHeaderDTO> retrieveBlockHeader(String hash);
 
