@@ -3,6 +3,7 @@ package com.nchain.headerSV.service.propagation.buffer;
 import com.nchain.bna.network.PeerAddress;
 import com.nchain.bna.protocol.messages.BlockHeaderMsg;
 import com.nchain.bna.protocol.messages.HeadersMsg;
+import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -19,14 +20,14 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class BufferedBlockHeaders implements BufferedMessage {
-    List<BlockHeaderMsg> blockHeaderMsgs;
+    List<BlockHeaderDTO> blockHeaderDTOList;
     PeerAddress peerAddress;
 
 
     @Override
     public String toString() {
         return "BufferedBlockHeader{" +
-                "blockHeaderInfo=" + blockHeaderMsgs.toString() +
+                "blockHeaderInfo=" + blockHeaderDTOList.toString() +
                 '}';
     }
 }

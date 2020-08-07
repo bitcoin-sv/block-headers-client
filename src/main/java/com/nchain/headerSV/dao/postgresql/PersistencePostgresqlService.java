@@ -8,6 +8,7 @@ import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
 import com.nchain.headerSV.dao.postgresql.repository.PeerRepository;
 import com.nchain.headerSV.dao.service.PersistenceEngine;
 import com.nchain.headerSV.dao.service.PersistenceService;
+import com.nchain.headerSV.service.cache.BlockHeaderCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -84,11 +85,9 @@ public class PersistencePostgresqlService implements PersistenceService {
     @Override
     public void persistBlockHeader(BlockHeaderDTO blockHeaderDTO) {
         try{
-            if(!blockHeaderRepository.existsById(blockHeaderDTO.getHash())){
                 BlockHeader blockHeader = new BlockHeader();
                 convertToBlockheader(blockHeaderDTO, blockHeader);
                 blockHeaderRepository.save(blockHeader);
-            }
         }catch (DataIntegrityViolationException e) {
             log.debug("ERROR persistBlockHeader. BlockHeader: " + blockHeaderDTO.getHash(), e);
         } catch (RuntimeException re) {

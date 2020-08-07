@@ -1,9 +1,14 @@
 package com.nchain.headerSV.dao.postgresql.domain;
 
+import com.nchain.bna.network.PeerAddress;
+import com.nchain.bna.protocol.messages.BlockHeaderMsg;
+import com.nchain.bna.tools.bytes.HEX;
+import com.nchain.bna.tools.crypto.Sha256Wrapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.checkerframework.common.aliasing.qual.Unique;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -25,7 +30,6 @@ import javax.validation.constraints.NotNull;
 public class BlockHeader {
 
     @Id
-    @Column
     @NotNull
     private String hash;
 
@@ -59,4 +63,18 @@ public class BlockHeader {
 
     @Column
     private long transactionCount;
+
+    public static BlockHeader of(BlockHeaderMsg blockHeaderMsg){
+        return BlockHeader.builder()
+                .version(blockHeaderMsg.getVersion())
+                .hash(HEX.encode(blockHeaderMsg.getHash().getHashBytes()))
+                .address(new PeerAddress("127.0.0.1", 0).toString())
+                .prevBlockHash(HEX.encode(Sha256Wrapper.wrapReversed(blockHeaderMsg.getPrevBlockHash().getHashBytes()).getBytes()))
+                .merkleRoot(HEX.encode(Sha256Wrapper.wrapReversed(blockHeaderMsg.getMerkleRoot().getHashBytes()).getBytes()))
+                .creationTimestamp(blockHeaderMsg.getCreationTimestamp())
+                .difficultyTarget(blockHeaderMsg.getDifficultyTarget())
+                .nonce(blockHeaderMsg.getNonce())
+                .transactionCount(blockHeaderMsg.getTransactionCount().getValue())
+                .build();
+    }
 }

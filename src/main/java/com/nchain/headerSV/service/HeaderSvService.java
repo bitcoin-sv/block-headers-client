@@ -1,4 +1,4 @@
-package com.nchain.headerSV.service.sync;
+package com.nchain.headerSV.service;
 
 /**
  * @author m.fletcher@nchain.com
@@ -8,7 +8,7 @@ package com.nchain.headerSV.service.sync;
  * Distributed under the Open BSV software license, see the accompanying file LICENSE.
  * @date 03/06/2020
  */
-public interface BlockHeadersSyncService {
+public interface HeaderSvService {
     /** Starts the Listener */
     void start();
     /** Stops the Listener */

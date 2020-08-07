@@ -67,37 +67,14 @@ public class BufferedMessagePersistenceService {
     }
 
     private void process(BufferedBlockHeaders bufferedBlockHeader) {
-      bufferedBlockHeader.getBlockHeaderMsgs().forEach( blockHeaderMsg ->
-              process(bufferedBlockHeader.getPeerAddress(), blockHeaderMsg)
+      bufferedBlockHeader.getBlockHeaderDTOList().forEach( blockHeaderDTO ->
+              process(bufferedBlockHeader.getPeerAddress(), blockHeaderDTO)
       );
     }
 
-    private void process(PeerAddress peerAddress, BlockHeaderMsg message) {
-        final String hash = HEX.encode(message.getHash().getHashBytes());
-        final String preHash = HEX.encode(Sha256Wrapper.wrapReversed(message.getPrevBlockHash().getHashBytes()).getBytes());
-        final String merkleroot = HEX.encode(Sha256Wrapper.wrapReversed(message.getMerkleRoot().getHashBytes()).getBytes());
-
-        if(isBlockHashValid(hash)) {
-            final BlockHeaderDTO blockHeaderDTO = BlockHeaderDTO.builder()
-                    .address(peerAddress.toStringWithoutPort())
-                    .hash(hash)
-                    .prevBlockHash(preHash)
-                    .merkleRoot(merkleroot)
-                    .difficultyTarget(message.getDifficultyTarget())
-                    .transactionCount(message.getTransactionCount().getValue())
-                    .creationTimestamp(message.getCreationTimestamp())
-                    .version(message.getVersion())
-                    .nonce(message.getNonce()).build();
-            blockHeaderPersistence.persist(blockHeaderDTO);
-        }
-
+    private void process(PeerAddress peerAddress, BlockHeaderDTO blockHeaderDTO) {
+        blockHeaderPersistence.persist(blockHeaderDTO);
     }
-
-    private boolean isBlockHashValid(String blockHash) {
-        if (blockHash!= null && blockHash.startsWith("0")) return true;
-        return false;
-    }
-
 
     public void stop() {
         peerPersistence.flush();

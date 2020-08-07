@@ -1,5 +1,6 @@
 package com.nchain.headerSV.dao.model;
 
+import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,4 +29,19 @@ public class BlockHeaderDTO {
     private long difficultyTarget;
     private long nonce;
     private long transactionCount;
+
+    public static BlockHeaderDTO of(BlockHeader blockHeader) {
+        return BlockHeaderDTO.builder()
+                .address(blockHeader.getAddress())
+                .hash(blockHeader.getHash())
+                .creationTimestamp(blockHeader.getCreationTimestamp())
+                .difficultyTarget(blockHeader.getDifficultyTarget())
+                .merkleRoot(blockHeader.getMerkleRoot())
+                .prevBlockHash(blockHeader.getPrevBlockHash())
+                .version(blockHeader.getVersion())
+                .nonce(blockHeader.getNonce())
+                .prevBlockHash(blockHeader.getPrevBlockHash())
+                .transactionCount(blockHeader.getTransactionCount())
+                .build();
+    }
 }

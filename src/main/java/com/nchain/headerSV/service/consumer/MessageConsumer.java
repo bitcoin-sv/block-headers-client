@@ -1,6 +1,7 @@
-package com.nchain.headerSV.service.sync.consumer;
+package com.nchain.headerSV.service.consumer;
 
 import com.nchain.bna.network.PeerAddress;
+import com.nchain.bna.protocol.messages.common.BitcoinMsg;
 import com.nchain.bna.protocol.messages.common.Message;
 
 /**
@@ -13,5 +14,5 @@ import com.nchain.bna.protocol.messages.common.Message;
  */
 public interface MessageConsumer {
     /** message listener to consume given message */
-    <T extends Message> void consume(T message, PeerAddress peerAddress);
+    <T extends Message> void consume(BitcoinMsg<T> message, PeerAddress peerAddress);
 }
