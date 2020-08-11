@@ -1,5 +1,8 @@
 package com.nchain.headerSV.domain;
 
+import com.nchain.bna.network.PeerAddress;
+import com.nchain.headerSV.dao.model.BlockHeaderDTO;
+import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,4 +30,19 @@ public class BlockHeaderAddrInfo {
     private long difficultyTarget;
     private long nonce;
     private long transactionCount;
+
+    public static BlockHeaderAddrInfo of(BlockHeader blockHeader, PeerAddress peerAddress) {
+        return BlockHeaderAddrInfo.builder()
+                .address(peerAddress.toString())
+                .hash(blockHeader.getHash())
+                .creationTimestamp(blockHeader.getCreationTimestamp())
+                .difficultyTarget(blockHeader.getDifficultyTarget())
+                .merkleRoot(blockHeader.getMerkleRoot())
+                .prevBlockHash(blockHeader.getPrevBlockHash())
+                .version(blockHeader.getVersion())
+                .nonce(blockHeader.getNonce())
+                .prevBlockHash(blockHeader.getPrevBlockHash())
+                .transactionCount(blockHeader.getTransactionCount())
+                .build();
+    }
 }
