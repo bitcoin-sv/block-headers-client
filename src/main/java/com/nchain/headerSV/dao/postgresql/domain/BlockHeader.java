@@ -29,10 +29,6 @@ public class BlockHeader {
 
     @Column
     @NotNull
-    private String address;
-
-    @Column
-    @NotNull
     private String hash;
 
     @Column

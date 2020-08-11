@@ -1,13 +1,17 @@
 package com.nchain.headerSV.dao.postgresql;
 
+import com.nchain.headerSV.dao.model.BlockHeaderAddrDTO;
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.model.PeerDTO;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
+import com.nchain.headerSV.dao.postgresql.domain.BlockHeaderAddr;
 import com.nchain.headerSV.dao.postgresql.domain.Peer;
+import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderAddrRepository;
 import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
 import com.nchain.headerSV.dao.postgresql.repository.PeerRepository;
 import com.nchain.headerSV.dao.service.PersistenceEngine;
 import com.nchain.headerSV.dao.service.PersistenceService;
+import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -46,6 +50,10 @@ public class PersistencePostgresqlService implements PersistenceService {
     @Autowired
     private BlockHeaderRepository blockHeaderRepository;
 
+    @Autowired
+    private BlockHeaderAddrRepository blockHeaderAddrRepository;
+
+
     @Override
     public PersistenceEngine getEngine() {
         return PersistenceEngine.postgresql;
@@ -74,17 +82,62 @@ public class PersistencePostgresqlService implements PersistenceService {
     }
 
     @Override
-    public void persistBlockHeaders(Collection<BlockHeaderDTO> blockHeaderDTOS) {
-        log.debug("Persisting :"+blockHeaderDTOS.size()+": blockHeaders");
-        blockHeaderDTOS.forEach((d -> log.debug("-persisting blockheaders" +d)));
-        blockHeaderDTOS.forEach(this::persistBlockHeader);
+    public void persistBlockHeaders(Collection<BlockHeaderAddrInfo> blockHeaderAddrInfos) {
+        log.debug("Persisting :"+blockHeaderAddrInfos.size()+": blockHeaders");
+        blockHeaderAddrInfos.forEach((d -> log.debug("-persisting blockheaders" +d)));
+        blockHeaderAddrInfos.forEach(this::persistBlockHeaderInfo);
+        //blockHeaderDTOS.forEach(this::persistBlockHeaderAddr);
 
+    }
+
+    void persistBlockHeaderInfo(BlockHeaderAddrInfo blockHeaderInfo) {
+        final BlockHeaderDTO blockHeaderDTO = BlockHeaderDTO.builder()
+                .hash(blockHeaderInfo.getHash())
+                .prevBlockHash(blockHeaderInfo.getPrevBlockHash())
+                .merkleRoot(blockHeaderInfo.getMerkleRoot())
+                .difficultyTarget(blockHeaderInfo.getDifficultyTarget())
+                .transactionCount(blockHeaderInfo.getTransactionCount())
+                .creationTimestamp(blockHeaderInfo.getCreationTimestamp())
+                .version(blockHeaderInfo.getVersion())
+                .nonce(blockHeaderInfo.getNonce()).build();
+
+        final BlockHeaderAddrDTO blockHeaderAddrDTO = BlockHeaderAddrDTO.builder()
+                .address(blockHeaderInfo.getAddress())
+                .hash(blockHeaderInfo.getHash()).build();
+        persistBlockHeader(blockHeaderDTO);
+        persistBlockHeaderAddr(blockHeaderAddrDTO);
+    }
+
+
+
+
+    public void persistBlockHeaderAddr(BlockHeaderAddrDTO blockHeaderDTO) {
+        try{
+            List<BlockHeaderAddr> blockHeaders = blockHeaderAddrRepository.findByAddressAndHash(blockHeaderDTO.getAddress(), blockHeaderDTO.getHash());
+            BlockHeaderAddr blockHeaderAddr = (blockHeaders != null && blockHeaders.size()> 0) ? blockHeaders.get(0):new BlockHeaderAddr();
+            converToBlockheaderAddr(blockHeaderDTO, blockHeaderAddr);
+            blockHeaderAddrRepository.save(blockHeaderAddr);
+        }catch (DataIntegrityViolationException e) {
+            log.debug("ERROR persistBlockHeaderAddr. BlockHeader: " + blockHeaderDTO.getHash(), e);
+        } catch (RuntimeException re) {
+            re.printStackTrace();
+        }
+
+    }
+
+    private void converToBlockheaderAddr(BlockHeaderAddrDTO from, BlockHeaderAddr to) {
+
+        if(from == null || to == null)
+            return;
+
+        to.setHash(from.getHash());
+        to.setAddress(from.getAddress());
     }
 
     @Override
     public void persistBlockHeader(BlockHeaderDTO blockHeaderDTO) {
         try{
-            List<BlockHeader> blockHeaders = blockHeaderRepository.findByAddressAndHash(blockHeaderDTO.getAddress(), blockHeaderDTO.getHash());
+            List<BlockHeader> blockHeaders = blockHeaderRepository.findByHash(blockHeaderDTO.getHash());
             BlockHeader blockHeader = (blockHeaders != null && blockHeaders.size()> 0) ? blockHeaders.get(0):new BlockHeader();
             converToBlockheader(blockHeaderDTO, blockHeader);
             blockHeaderRepository.save(blockHeader);
@@ -116,7 +169,7 @@ public class PersistencePostgresqlService implements PersistenceService {
     private void convertToBlockHeaderDTO(BlockHeader from, BlockHeaderDTO to) {
         if(from == null || to == null)
             return;
-        to.setAddress(from.getAddress());
+
         to.setHash(from.getHash());
         to.setCreationTimestamp(from.getCreationTimestamp());
         to.setDifficultyTarget(from.getDifficultyTarget());
@@ -131,7 +184,7 @@ public class PersistencePostgresqlService implements PersistenceService {
     private void converToBlockheader(BlockHeaderDTO dto, BlockHeader to) {
         if(dto == null || to == null)
             return;
-        to.setAddress(dto.getAddress());
+
         to.setHash(dto.getHash());
         to.setCreationTimestamp(dto.getCreationTimestamp());
         to.setDifficultyTarget(dto.getDifficultyTarget());

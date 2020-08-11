@@ -4,8 +4,8 @@ import com.nchain.bna.network.PeerAddress;
 import com.nchain.bna.protocol.messages.BlockHeaderMsg;
 import com.nchain.bna.tools.bytes.HEX;
 import com.nchain.bna.tools.crypto.Sha256Wrapper;
-import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.model.PeerDTO;
+import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 import com.nchain.headerSV.domain.PeerInfo;
 import com.nchain.headerSV.service.geolocation.GeolocationService;
 import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeader;
@@ -79,7 +79,7 @@ public class BufferedMessagePersistenceService {
         final String merkleroot = HEX.encode(Sha256Wrapper.wrapReversed(message.getMerkleRoot().getHashBytes()).getBytes());
 
         if(isBlockHashValid(hash)) {
-            final BlockHeaderDTO blockHeaderDTO = BlockHeaderDTO.builder()
+            final BlockHeaderAddrInfo blockHeaderAddrInfo = BlockHeaderAddrInfo.builder()
                     .address(peerAddress.toStringWithoutPort())
                     .hash(hash)
                     .prevBlockHash(preHash)
@@ -89,7 +89,7 @@ public class BufferedMessagePersistenceService {
                     .creationTimestamp(message.getCreationTimestamp())
                     .version(message.getVersion())
                     .nonce(message.getNonce()).build();
-            blockHeaderPersistence.persist(blockHeaderDTO);
+            blockHeaderPersistence.persist(blockHeaderAddrInfo);
         }
 
     }

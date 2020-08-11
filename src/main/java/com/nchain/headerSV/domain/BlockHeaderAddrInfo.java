@@ -1,4 +1,4 @@
-package com.nchain.headerSV.dao.model;
+package com.nchain.headerSV.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,20 +11,20 @@ import lombok.NoArgsConstructor;
  * Copyright (c) 2009-2016 The Bitcoin Core developers
  * Copyright (c) 2018-2020 Bitcoin Association
  * Distributed under the Open BSV software license, see the accompanying file LICENSE.
- * @date 01/07/2020
+ * @date 05/08/2020
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PeerDTO {
+public class BlockHeaderAddrInfo {
     private String address;
-    private int port;
-    private String userAgent;
-    private int protocolVersion;
-    private String country;
-    private String city;
-    private String zipcode;
-    private long services;
-    private boolean connectionStatus;
+    private String hash;
+    private long version;
+    private String prevBlockHash;
+    private String merkleRoot;
+    private long creationTimestamp;
+    private long difficultyTarget;
+    private long nonce;
+    private long transactionCount;
 }

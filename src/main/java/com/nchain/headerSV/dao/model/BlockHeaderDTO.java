@@ -18,8 +18,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BlockHeaderDTO {
-    private Long id;
-    private String address;
     private String hash;
     private long version;
     private String prevBlockHash;
