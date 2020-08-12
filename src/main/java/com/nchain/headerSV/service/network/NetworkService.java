@@ -1,7 +1,7 @@
 package com.nchain.headerSV.service.network;
 
 import com.nchain.bna.protocol.messages.common.Message;
-import com.nchain.headerSV.service.sync.consumer.MessageConsumer;
+import com.nchain.headerSV.service.consumer.MessageConsumer;
 
 /**
  * @author m.jose@nchain.com

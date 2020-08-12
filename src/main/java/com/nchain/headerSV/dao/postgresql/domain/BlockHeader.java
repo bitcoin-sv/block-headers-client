@@ -1,5 +1,8 @@
 package com.nchain.headerSV.dao.postgresql.domain;
 
+import com.nchain.bna.protocol.messages.BlockHeaderMsg;
+import com.nchain.bna.tools.bytes.HEX;
+import com.nchain.bna.tools.crypto.Sha256Wrapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 /**
  * @author m.jose@nchain.com
@@ -23,11 +27,8 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BlockHeader {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    @Column
+    @Id
     @NotNull
     private String hash;
 
@@ -57,4 +58,22 @@ public class BlockHeader {
 
     @Column
     private long transactionCount;
+
+    public static BlockHeader of(BlockHeaderMsg blockHeaderMsg){
+        return BlockHeader.builder()
+                .version(blockHeaderMsg.getVersion())
+                .hash(HEX.encode(blockHeaderMsg.getHash().getHashBytes()))
+                .prevBlockHash(HEX.encode(Sha256Wrapper.wrapReversed(blockHeaderMsg.getPrevBlockHash().getHashBytes()).getBytes()))
+                .merkleRoot(HEX.encode(Sha256Wrapper.wrapReversed(blockHeaderMsg.getMerkleRoot().getHashBytes()).getBytes()))
+                .creationTimestamp(blockHeaderMsg.getCreationTimestamp())
+                .difficultyTarget(blockHeaderMsg.getDifficultyTarget())
+                .nonce(blockHeaderMsg.getNonce())
+                .transactionCount(blockHeaderMsg.getTransactionCount().getValue())
+                .build();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(hash);
+    }
 }

@@ -1,14 +1,10 @@
 package com.nchain.headerSV.service.propagation.persistence;
 
-import com.nchain.bna.network.PeerAddress;
-import com.nchain.bna.protocol.messages.BlockHeaderMsg;
-import com.nchain.bna.tools.bytes.HEX;
-import com.nchain.bna.tools.crypto.Sha256Wrapper;
+
 import com.nchain.headerSV.dao.model.PeerDTO;
-import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 import com.nchain.headerSV.domain.PeerInfo;
 import com.nchain.headerSV.service.geolocation.GeolocationService;
-import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeader;
+import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeaders;
 import com.nchain.headerSV.service.propagation.buffer.BufferedMessage;
 import com.nchain.headerSV.service.propagation.buffer.BufferedMessagePeer;
 import lombok.AllArgsConstructor;
@@ -37,8 +33,8 @@ public class BufferedMessagePersistenceService {
         if (bufferedMessage instanceof BufferedMessagePeer) {
             process((BufferedMessagePeer) bufferedMessage);
 
-        } else if(bufferedMessage instanceof BufferedBlockHeader) {
-            process((BufferedBlockHeader) bufferedMessage);
+        } else if(bufferedMessage instanceof BufferedBlockHeaders) {
+            process((BufferedBlockHeaders) bufferedMessage);
         }
     }
 
@@ -66,43 +62,13 @@ public class BufferedMessagePersistenceService {
         peerPersistence.persist(peerDTO);
     }
 
-    private void process(BufferedBlockHeader bufferedBlockHeader) {
-
-      bufferedBlockHeader.getHeaderMsg().getBlockHeaderMsgList().forEach( blockHeaderMsg ->
-              process(bufferedBlockHeader.getPeerAddress(), blockHeaderMsg)
-      );
-    }
-
-    private void process(PeerAddress peerAddress, BlockHeaderMsg message) {
-        final String hash = HEX.encode(message.getHash().getHashBytes());
-        final String preHash = HEX.encode(Sha256Wrapper.wrapReversed(message.getPrevBlockHash().getHashBytes()).getBytes());
-        final String merkleroot = HEX.encode(Sha256Wrapper.wrapReversed(message.getMerkleRoot().getHashBytes()).getBytes());
-
-        if(isBlockHashValid(hash)) {
-            final BlockHeaderAddrInfo blockHeaderAddrInfo = BlockHeaderAddrInfo.builder()
-                    .address(peerAddress.toStringWithoutPort())
-                    .hash(hash)
-                    .prevBlockHash(preHash)
-                    .merkleRoot(merkleroot)
-                    .difficultyTarget(message.getDifficultyTarget())
-                    .transactionCount(message.getTransactionCount().getValue())
-                    .creationTimestamp(message.getCreationTimestamp())
-                    .version(message.getVersion())
-                    .nonce(message.getNonce()).build();
-            blockHeaderPersistence.persist(blockHeaderAddrInfo);
-        }
-
-    }
-
-    private boolean isBlockHashValid(String blockHash) {
-        if (blockHash!= null && blockHash.startsWith("0")) return true;
-        return false;
+    private void process(BufferedBlockHeaders bufferedBlockHeader) {
+      bufferedBlockHeader.getBlockHeaderAddrInfos().forEach(blockHeaderPersistence::persist);
     }
 
 
     public void stop() {
         peerPersistence.flush();
         blockHeaderPersistence.flush();
-
     }
 }

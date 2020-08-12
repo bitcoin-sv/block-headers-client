@@ -1,5 +1,7 @@
 package com.nchain.headerSV.service.propagation.persistence;
 
+import com.nchain.bna.protocol.messages.BlockHeaderMsg;
+import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.service.PersistenceLocatorService;
 import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
