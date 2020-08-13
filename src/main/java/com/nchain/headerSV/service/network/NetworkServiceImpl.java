@@ -6,15 +6,15 @@ import com.nchain.bna.network.listeners.PeerDisconnectedListener;
 import com.nchain.bna.protocol.config.ProtocolConfig;
 import com.nchain.bna.protocol.handlers.SetupHandlersBuilder;
 import com.nchain.bna.protocol.listeners.MessageReceivedListener;
-import com.nchain.bna.protocol.messages.*;
+import com.nchain.bna.protocol.messages.VersionMsg;
 import com.nchain.bna.protocol.messages.common.BitcoinMsg;
 import com.nchain.bna.protocol.messages.common.Message;
 import com.nchain.bna.tools.RuntimeConfig;
 import com.nchain.bna.tools.files.FileUtils;
 import com.nchain.headerSV.domain.PeerInfo;
+import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.headerSV.service.propagation.buffer.BufferedMessagePeer;
 import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
-import com.nchain.headerSV.service.consumer.MessageConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 /**
  * @author m.jose@nchain.com
@@ -103,7 +102,7 @@ public class NetworkServiceImpl implements NetworkService {
         init();
         protocolHandler.start();
 
-        log.info("Connecting to minimum peers: " + protocolConfig.getHandshakeMinPeers());
+        log.debug("Connecting to minimum peers: " + protocolConfig.getHandshakeMinPeers());
 
         // don't start until succesfully connected to peers
         while(peersInfo.values().stream().filter(PeerInfo::isPeerConnectedStatus).count() < protocolConfig.getHandshakeMinPeers().getAsInt()){
@@ -114,7 +113,7 @@ public class NetworkServiceImpl implements NetworkService {
             }
         }
 
-        log.info("Connected to peers");
+        log.debug("Connected to peers");
     }
 
     @Override
@@ -149,7 +148,7 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     private void onMessage(PeerAddress peerAddress, BitcoinMsg<?> bitcoinMsg) {
-        log.info("Incoming Message coming from:" + peerAddress + "type: " + bitcoinMsg.getHeader().getCommand());
+        log.debug("Incoming Message coming from:" + peerAddress + "type: " + bitcoinMsg.getHeader().getCommand());
         Set<MessageConsumer> handlers = messageConsumers.get(bitcoinMsg.getBody().getClass());
 
         if(handlers == null) {
@@ -160,7 +159,7 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     private void onPeerDisconnected(PeerAddress peerAddress,  PeerDisconnectedListener.DisconnectionReason reason) {
-        log.info("onPeerDisconnected: IP:" + peerAddress.toString()+":Reason:" + reason.toString());
+        log.debug("onPeerDisconnected: IP:" + peerAddress.toString()+":Reason:" + reason.toString());
         PeerInfo peerInfo = peersInfo.get(peerAddress);
 
         if(peerInfo == null)  peerInfo = new PeerInfo(peerAddress,  null, Optional.empty(), false);

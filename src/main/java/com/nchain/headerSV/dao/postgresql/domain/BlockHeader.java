@@ -76,4 +76,5 @@ public class BlockHeader {
     public int hashCode() {
         return Objects.hash(hash);
     }
+
 }

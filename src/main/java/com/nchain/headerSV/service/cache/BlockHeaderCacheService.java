@@ -33,6 +33,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
     private HashMap<String, CachedBranch> branches;
 
 
+
     public BlockHeaderCacheService(BlockHeaderRepository blockHeaderRepository){
         this.blockHeaderRepository = blockHeaderRepository;
 
@@ -209,6 +210,18 @@ public class BlockHeaderCacheService implements HeaderSvService {
 
         log.info("Added block: " + blockHeader.getHash() + " to cache at height: " + height);
     }
+
+    public HashMap<String, BlockHeader> getUnconnectedBlocks() {
+        return unconnectedBlocks;
+    }
+
+    public HashMap<String, CachedHeader> getConnectedBlocks() {
+        return connectedBlocks;
+    }
+
+
+
+
 
     private String generateBranchId(String hash){
         // the branch id is the first child nodes hash
