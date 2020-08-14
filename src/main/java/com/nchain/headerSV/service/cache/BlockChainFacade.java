@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -23,47 +22,50 @@ public class BlockChainFacade {
     @Autowired
     BlockHeaderCacheService blockHeaderCacheService;
 
+    private enum BranchState {
+        MAIN_CHAIN,
+        ORPHAN,
+        STALE
+    }
+
     public BlockHeaderQueryResult getBlockFromCache(String hash) {
         BlockHeaderQueryResult  queryResult = null;
         Optional<CachedHeader> cachedHeader = Optional.empty();
-        Optional<BlockHeader>  blockHeader  = blockHeaderCacheService.getUnconnectedBlocks().entrySet().stream()
-               .filter( e -> e.getKey().equals(hash)).map(Map.Entry::getValue).findFirst();
+        BlockHeader  blockHeader  = blockHeaderCacheService.getUnconnectedBlocks().get(hash);
 
-        queryResult = blockHeader.isPresent()? BlockHeaderQueryResult.builder()
-               .blockHeader(blockHeader.get())
+        queryResult = blockHeader != null? BlockHeaderQueryResult.builder()
+               .blockHeader(blockHeader)
                .height(0)
                .work(0)
-               .state("ORPHAN").build():  getBlockHeaderQueryResult(hash);
+               .state(BranchState.MAIN_CHAIN.name()).build():  getBlockHeaderQueryResult(hash);
 
         return queryResult;
     }
 
     private BlockHeaderQueryResult getBlockHeaderQueryResult(String hash) {
-        Optional<CachedHeader> cachedHeader;
-        cachedHeader = blockHeaderCacheService.getConnectedBlocks().entrySet().stream()
-                .filter(e -> e.getKey().equals(hash)).map(Map.Entry::getValue).findFirst();
+       CachedHeader cachedHeader = blockHeaderCacheService.getConnectedBlocks().get(hash);
 
         CachedBranch branch = null;
         BlockHeaderQueryResult queryResult = null;
-        if(cachedHeader.isPresent()) {
-            branch = blockHeaderCacheService.getBranch(cachedHeader.get().getBranchId());
+        if(cachedHeader != null) {
+            branch = blockHeaderCacheService.getBranch(cachedHeader.getBranchId());
 
 
             CachedBranch  maxWorkedHoldBranch = blockHeaderCacheService.getBranches().stream().max(Comparator.comparingDouble(CachedBranch::getWork)).get();
             boolean mainBranch = false;
-            String branchstate = "unknown";
+            String branchstate = BranchState.STALE.name();
             if (maxWorkedHoldBranch != null  && branch != null )
                 if( maxWorkedHoldBranch.getWork() < branch.getWork() || (maxWorkedHoldBranch.getId().equals(branch.getId()) && maxWorkedHoldBranch.getWork() == branch.getWork())) {
 
                     mainBranch = true;
-                    branchstate = "main";
+                    branchstate = BranchState.MAIN_CHAIN.name();
                 }
 
 
             queryResult = BlockHeaderQueryResult.builder()
-                    .blockHeader(cachedHeader.get().getBlockHeader())
-                    .height(cachedHeader.get().getHeight())
-                    .work(cachedHeader.get().getWork())
+                    .blockHeader(cachedHeader.getBlockHeader())
+                    .height(cachedHeader.getHeight())
+                    .work(cachedHeader.getWork())
                     .bestChain(mainBranch)
                     .state(branchstate).build();
         }
