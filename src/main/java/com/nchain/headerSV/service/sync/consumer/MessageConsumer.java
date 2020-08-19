@@ -1,6 +1,6 @@
 package com.nchain.headerSV.service.sync.consumer;
 
-import com.nchain.bna.protocol.messages.common.Message;
+import com.nchain.jcl.protocol.messages.common.Message;
 
 /**
  * @author {m.fletcher}@nchain.com

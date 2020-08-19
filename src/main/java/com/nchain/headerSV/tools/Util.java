@@ -1,9 +1,7 @@
 package com.nchain.headerSV.tools;
 
-import com.nchain.bna.network.PeerAddress;
-import com.nchain.bna.protocol.messages.BlockHeaderMsg;
-import com.nchain.bna.protocol.messages.HashMsg;
-import com.nchain.bna.tools.crypto.Sha256Wrapper;
+import com.nchain.jcl.protocol.messages.HashMsg;
+import com.nchain.jcl.tools.crypto.Sha256Wrapper;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 
 import java.math.BigInteger;

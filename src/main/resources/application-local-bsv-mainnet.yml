@@ -23,30 +23,20 @@ headersv:
   persistenceEngine: postgresql
 
   # Listener Configuration params:
-  listener-app:
-    listener:
-      p2p:
-        folders:
-          data: /workspace/headerSV/src/main/resources/data
-          config:
-        maxPeers: 25
-        minPeers: 10
-        relayTxs: false
-      height-locator:
-        topChainMargin: 0
-        minPeersNeeded: 10
+  p2p:
+    maxPeers: 25
+    minPeers: 5
+    relayTxs: false
 
-    propagation:
-      buffer:
+  propagation:
+    buffer:
+      enabled: true
+      threads: 6
+      bufferSize: 10000
+    persistence:
+      peer:
         enabled: true
-        threads: 6
-        bufferSize: 10000
-      persistence:
-        peer:
-          enabled: true
-          batchSize: 1
-        block:
-          enabled: true
-          batchSize: 1
-
-
+        batchSize: 1
+      block:
+        enabled: true
+        batchSize: 1

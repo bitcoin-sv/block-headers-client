@@ -1,6 +1,6 @@
 package com.nchain.headerSV.domain;
 
-import com.nchain.bna.protocol.messages.BlockHeaderMsg;
+import com.nchain.jcl.protocol.messages.BlockHeaderMsg;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

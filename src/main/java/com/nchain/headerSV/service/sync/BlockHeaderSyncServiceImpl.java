@@ -1,13 +1,6 @@
 package com.nchain.headerSV.service.sync;
 
-import com.nchain.bna.network.PeerAddress;
-import com.nchain.bna.protocol.config.ProtocolConfig;
-import com.nchain.bna.protocol.messages.*;
-import com.nchain.bna.protocol.messages.common.BitcoinMsg;
-import com.nchain.bna.protocol.messages.common.Message;
-import com.nchain.bna.tools.bytes.HEX;
-import com.nchain.bna.tools.crypto.Sha256Wrapper;
-import com.nchain.headerSV.dao.model.BlockHeaderDTO;
+
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 import com.nchain.headerSV.service.HeaderSvService;
@@ -17,6 +10,13 @@ import com.nchain.headerSV.service.network.NetworkService;
 import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeaders;
 import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import com.nchain.headerSV.tools.Util;
+import com.nchain.jcl.network.PeerAddress;
+import com.nchain.jcl.protocol.config.ProtocolConfig;
+import com.nchain.jcl.protocol.messages.*;
+import com.nchain.jcl.protocol.messages.common.BitcoinMsg;
+import com.nchain.jcl.protocol.messages.common.Message;
+import com.nchain.jcl.tools.bytes.HEX;
+import com.nchain.jcl.tools.crypto.Sha256Wrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +25,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -37,35 +40,43 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class BlockHeadersSyncServiceImpl implements HeaderSvService, MessageConsumer {
+public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsumer {
 
     private final NetworkService networkService;
-    private final MessageBufferService messageBufferService;
     private final ProtocolConfig protocolConfig;
+    private final MessageBufferService messageBufferService;
     private final BlockHeaderCacheService blockHeaderCacheService;
     private final TreeSet<Long> processedHeaders;
+    private ScheduledExecutorService executor;
 
-    protected BlockHeadersSyncServiceImpl(NetworkService networkService,
-                                          MessageBufferService messageBufferService,
-                                          ProtocolConfig protocolConfig,
-                                          BlockHeaderCacheService blockHeaderCacheService) {
+    private static int REQUEST_HEADER_SCHEDULE_TIME_MS = 30000;
+    private static int REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS = 5000;
+
+    protected BlockHeaderSyncServiceImpl(NetworkService networkService,
+                                         ProtocolConfig protocolConfig,
+                                         MessageBufferService messageBufferService,
+                                         BlockHeaderCacheService blockHeaderCacheService) {
         this.networkService = networkService;
         this.protocolConfig = protocolConfig;
         this.blockHeaderCacheService = blockHeaderCacheService;
         this.messageBufferService = messageBufferService;
 
         this.processedHeaders = new TreeSet<>();
+        this.executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
     public synchronized void start() {
         networkService.subscribe(HeadersMsg.class, this::consume);
-        checkForHeaders();
+
+        /* periodically check for new incoming headers */
+        executor.scheduleAtFixedRate(this::requestHeaders, REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS, REQUEST_HEADER_SCHEDULE_TIME_MS, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public synchronized void stop() {
         networkService.unsubscribe(HeadersMsg.class, this::consume);
+        executor.shutdown();
     }
 
     private boolean hasMessageBeenProcessed(Long checksum){
@@ -92,11 +103,10 @@ public class BlockHeadersSyncServiceImpl implements HeaderSvService, MessageCons
         //if we cached headers, request the next batch
         if(headersToPersist.size() > 0) {
             messageBufferService.queue(new BufferedBlockHeaders(headersToPersist));
-            checkForHeaders();
+            requestHeaders();
         }
 
         log.info("Finished consuming message type: " + HeadersMsg.MESSAGE_TYPE);
-
     }
 
     public boolean validBlockHeader(BlockHeaderMsg blockHeader){
@@ -111,8 +121,7 @@ public class BlockHeadersSyncServiceImpl implements HeaderSvService, MessageCons
         return true;
     }
 
-
-    private void checkForHeaders(){
+    public void requestHeaders(){
         blockHeaderCacheService.getBranches().forEach(b -> {
             log.info("Requesting headers for branch: " + b.getLeafNode());
             HashMsg hashMsg = HashMsg.builder().hash(HEX.decode(b.getLeafNode())).build();
@@ -120,7 +129,7 @@ public class BlockHeadersSyncServiceImpl implements HeaderSvService, MessageCons
             List<HashMsg> hashMsgs = Arrays.asList(hashMsg);
 
             BaseGetDataAndHeaderMsg baseGetDataAndHeaderMsg = BaseGetDataAndHeaderMsg.builder()
-                    .version(protocolConfig.getHandshakeProtocolVersion())
+                    .version(protocolConfig.getBasicConfig().getProtocolVersion())
                     .blockLocatorHash(hashMsgs)
                     .hashCount(VarIntMsg.builder().value(1).build())
                     .hashStop(HashMsg.builder().hash(Sha256Wrapper.ZERO_HASH.getBytes()).build())
@@ -130,7 +139,8 @@ public class BlockHeadersSyncServiceImpl implements HeaderSvService, MessageCons
                     .baseGetDataAndHeaderMsg(baseGetDataAndHeaderMsg)
                     .build();
 
-            networkService.send(getHeadersMsg);
+            networkService.broadcast(getHeadersMsg);
         });
     }
+
 }

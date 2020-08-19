@@ -1,6 +1,6 @@
 package com.nchain.headerSV.service.propagation.persistence;
 
-import com.nchain.bna.protocol.messages.BlockHeaderMsg;
+import com.nchain.jcl.protocol.messages.BlockHeaderMsg;
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.service.PersistenceLocatorService;
 import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
@@ -21,7 +21,7 @@ import java.util.Collection;
  * @date 21/07/2020
  */
 @Service
-@ConfigurationProperties(prefix = "headersv.listener-app.propagation.persistence.block")
+@ConfigurationProperties(prefix = "headersv.propagation.persistence.block")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BlockHeaderPersistence extends AbstractPersistence<BlockHeaderAddrInfo> {
 

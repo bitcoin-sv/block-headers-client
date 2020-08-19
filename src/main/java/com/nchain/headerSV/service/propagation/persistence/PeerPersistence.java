@@ -18,7 +18,7 @@ import java.util.Collection;
  * Distributed under the Open BSV software license, see the accompanying file LICENSE.
  */
 @Service
-@ConfigurationProperties(prefix = "headersv.listener-app.propagation.persistence.peer")
+@ConfigurationProperties(prefix = "headersv.persistence.peer")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PeerPersistence extends AbstractPersistence<PeerDTO> {
 

@@ -1,6 +1,7 @@
 package com.nchain.headerSV.service.network;
 
-import com.nchain.bna.protocol.messages.common.Message;
+import com.nchain.jcl.network.PeerAddress;
+import com.nchain.jcl.protocol.messages.common.Message;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 
 /**
@@ -16,8 +17,10 @@ public interface NetworkService {
     void start();
     /** Stops the Listener */
     void stop();
-    /** Publishes message to the network */
-    void send(Message message);
+    /** Publishes message to an individual peer */
+    void send(PeerAddress peerAddress, Message message);
+    /** Broadcasts a message to all connected peers */
+    void broadcast(Message message);
     /** subscribe to network events */
     void subscribe(Class<? extends Message> eventClass, MessageConsumer eventHandler);
     /** unsubscribe to network events */

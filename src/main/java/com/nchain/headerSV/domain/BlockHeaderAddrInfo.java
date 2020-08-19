@@ -1,6 +1,6 @@
 package com.nchain.headerSV.domain;
 
-import com.nchain.bna.network.PeerAddress;
+import com.nchain.jcl.network.PeerAddress;
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import lombok.AllArgsConstructor;

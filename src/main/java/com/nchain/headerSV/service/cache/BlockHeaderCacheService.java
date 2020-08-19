@@ -1,6 +1,6 @@
 package com.nchain.headerSV.service.cache;
 
-import com.nchain.bna.tools.crypto.Sha256Wrapper;
+import com.nchain.jcl.tools.crypto.Sha256Wrapper;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
 import com.nchain.headerSV.service.cache.cached.CachedBranch;
@@ -139,7 +139,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
     private void addBranch(BlockHeader blockHeader){
         try {
             //if the vertex's parent has more than 1 edge, there's a fork (new branch)
-            if (blockChain.incomingEdgesOf(blockHeader.getPrevBlockHash()).size() > 1) {
+            if (blockChain.outgoingEdgesOf(blockHeader.getPrevBlockHash()).size() > 1) {
                 String branchId = generateBranchId(blockHeader.getHash());
 
                 //We only want to create a branch if it doesn't exist, not amend any existing branches

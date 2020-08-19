@@ -3,9 +3,9 @@ package com.nchain.headerSV.service.geolocation;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
-import com.nchain.bna.network.PeerAddress;
-import com.nchain.bna.tools.files.FileUtils;
 import com.nchain.headerSV.domain.PeerLocationInfo;
+import com.nchain.jcl.network.PeerAddress;
+import com.nchain.jcl.tools.files.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,9 +48,10 @@ public class GeolocationServiceImpl implements GeolocationService {
             throw new RuntimeException(e);
         }
     }
+
     @PostConstruct
     public void  databaseReaderinit() throws IOException {
-        String filePath = Paths.get(fileUtils.getDataFolder().toString(), DB_FILENAME).toString();
+        String filePath = Paths.get(fileUtils.getRootPath().toString(), DB_FILENAME).toString();
         InputStream inputStream = new FileInputStream(filePath);
         dbReader =  new DatabaseReader.Builder(inputStream).build();
     }

@@ -1,8 +1,9 @@
 package com.nchain.headerSV.dao.postgresql.domain;
 
-import com.nchain.bna.protocol.messages.BlockHeaderMsg;
-import com.nchain.bna.tools.bytes.HEX;
-import com.nchain.bna.tools.crypto.Sha256Wrapper;
+
+import com.nchain.jcl.protocol.messages.BlockHeaderMsg;
+import com.nchain.jcl.tools.bytes.HEX;
+import com.nchain.jcl.tools.crypto.Sha256Wrapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

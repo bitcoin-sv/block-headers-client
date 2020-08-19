@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
  */
 @Service
 @Slf4j
-@ConfigurationProperties(prefix = "headersv.listener-app.propagation.buffer")
+@ConfigurationProperties(prefix = "headersv.propagation.buffer")
 public class PropagationDBService {
 
     private final MessageBufferService messageBufferService;
@@ -53,7 +53,10 @@ public class PropagationDBService {
     }
 
     public void start() {
-        if(!enabled) return;
+        if(!enabled) {
+            throw new RuntimeException("Cannot start service that is disabled");
+        }
+
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads + 1);
         this.messageBufferService.configure(bufferSize);
         log.info("Launching " + threads + " threads to consume network messages. Buffer size is " + bufferSize);

@@ -1,16 +1,17 @@
 package com.nchain.headerSV.service.network;
 
-import com.nchain.bna.network.PeerAddress;
-import com.nchain.bna.network.config.NetConfig;
-import com.nchain.bna.network.listeners.PeerDisconnectedListener;
-import com.nchain.bna.protocol.config.ProtocolConfig;
-import com.nchain.bna.protocol.handlers.SetupHandlersBuilder;
-import com.nchain.bna.protocol.listeners.MessageReceivedListener;
-import com.nchain.bna.protocol.messages.VersionMsg;
-import com.nchain.bna.protocol.messages.common.BitcoinMsg;
-import com.nchain.bna.protocol.messages.common.Message;
-import com.nchain.bna.tools.RuntimeConfig;
-import com.nchain.bna.tools.files.FileUtils;
+import com.nchain.headerSV.config.P2PConfig;
+import com.nchain.jcl.network.PeerAddress;
+import com.nchain.jcl.network.events.PeerDisconnectedEvent;
+import com.nchain.jcl.protocol.config.ProtocolConfig;
+import com.nchain.jcl.protocol.events.MsgReceivedEvent;
+import com.nchain.jcl.protocol.events.PeerHandshakedEvent;
+import com.nchain.jcl.protocol.handlers.block.BlockDownloaderHandler;
+import com.nchain.jcl.protocol.messages.SendHeadersMsg;
+import com.nchain.jcl.protocol.messages.common.BitcoinMsgBuilder;
+import com.nchain.jcl.protocol.messages.common.Message;
+import com.nchain.jcl.protocol.wrapper.P2P;
+import com.nchain.jcl.protocol.wrapper.P2PBuilder;
 import com.nchain.headerSV.domain.PeerInfo;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.headerSV.service.propagation.buffer.BufferedMessagePeer;
@@ -35,15 +36,13 @@ import java.util.concurrent.*;
 @Slf4j
 public class NetworkServiceImpl implements NetworkService {
 
-    // Basic Configuration to connect to the P2P Network and use the Bitcoin Protocol:
-    private final RuntimeConfig runtimeConfig;
-    private final NetConfig netConfig;
-    private final ProtocolConfig protocolConfig;
-    private final FileUtils fileUtils;
+    private ProtocolConfig protocolConfig;
+
+    private P2PConfig p2PConfig;
 
     // Protocol Handlers: This objects will carry out the Bitcoin Protocol and perform the
     // Serialization of messages.
-    private SetupHandlersBuilder.HandlersSetup protocolHandler;
+    private P2P p2p;
 
     // Service to store the info from the Network into the Repository as they come along
     private final MessageBufferService messageBufferService;
@@ -60,73 +59,56 @@ public class NetworkServiceImpl implements NetworkService {
     private Map<Class<? extends Message>, Set<MessageConsumer>> messageConsumers = new ConcurrentHashMap<>();
 
     @Autowired
-    protected NetworkServiceImpl(RuntimeConfig runtimeConfig,
-                                 NetConfig netConfig, ProtocolConfig protocolConfig,
-                                 MessageBufferService messageBufferService,
-                                 FileUtils fileUtils) {
-        this.runtimeConfig = runtimeConfig;
-        this.netConfig = netConfig;
+    protected NetworkServiceImpl(ProtocolConfig protocolConfig,
+                                 P2PConfig p2PConfig,
+                                 MessageBufferService messageBufferService) {
+        this.p2PConfig = p2PConfig;
         this.protocolConfig = protocolConfig;
         this.messageBufferService = messageBufferService;
-        this.fileUtils = fileUtils;
-        this.executor = Executors.newSingleThreadScheduledExecutor();
 
+        this.executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     private void init() {
         log.info("Initalizing the handler" );
 
-        protocolHandler = SetupHandlersBuilder.newSetup()
-                .config()
-                .id("HeaderSv")
-                .runtime(runtimeConfig)
-                .network(netConfig)
-                .protocol(protocolConfig)
-                .useFileUtils(fileUtils)
-                .handlers()
-                .custom()
-                .addCallback(this::onPeerHandshaked)
-                .addCallback(this::onPeerDisconnected)
-                .addCallback((MessageReceivedListener) this::onMessage)
-                .done();
+        p2p = new P2PBuilder("headersv")
+                .config(protocolConfig)
+                .minPeers(p2PConfig.getMinPeers())
+                .maxPeers(p2PConfig.getMaxPeers())
+                .excludeHandler(BlockDownloaderHandler.HANDLER_ID)
+                .build();
+
+        p2p.EVENTS.PEERS.DISCONNECTED.forEach(this::onPeerDisconnected);
+        p2p.EVENTS.PEERS.HANDSHAKED.forEach(this::onPeerHandshaked);
+        p2p.EVENTS.MSGS.ALL.forEach(this::onMessage);
 
         // We launch the Thread to process the disconneced Peers:
         executor.scheduleAtFixedRate(this::processDisconnectedPeers,
                 this.queueTimeOut.toMillis(), this.queueTimeOut.toMillis(), TimeUnit.MILLISECONDS);
     }
 
-
-
     @Override
     public void start() {
         init();
-        protocolHandler.start();
-
-        log.debug("Connecting to minimum peers: " + protocolConfig.getHandshakeMinPeers());
-
-        // don't start until succesfully connected to peers
-        while(peersInfo.values().stream().filter(PeerInfo::isPeerConnectedStatus).count() < protocolConfig.getHandshakeMinPeers().getAsInt()){
-            try{
-                Thread.sleep(500);
-            } catch (InterruptedException ex){
-                ex.printStackTrace();
-            }
-        }
-
-        log.debug("Connected to peers");
+        p2p.start();
     }
 
     @Override
     public void stop() {
-        protocolHandler.stop();
+        p2p.stop();
     }
 
     @Override
-    public void send(Message message) {
-        peersInfo.values().stream().filter(PeerInfo::isPeerConnectedStatus).forEach(peerInfo -> {
-            protocolHandler.getConnHandler().send(peerInfo.getPeerAddress(), message);
-            log.info("Sending message: " + message + " to peer: " + peerInfo.getPeerAddress());
-        });
+    public void broadcast(Message message){
+        BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
+        p2p.REQUESTS.MSGS.broadcast(bitcoinMsgBuilder.build()).submit();
+    }
+
+    @Override
+    public void send(PeerAddress peerAddress, Message message) {
+        BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
+        p2p.REQUESTS.MSGS.send(peerAddress, bitcoinMsgBuilder.build()).submit();
     }
 
     @Override
@@ -147,34 +129,39 @@ public class NetworkServiceImpl implements NetworkService {
         while (!disconnectedPeersQueue.isEmpty()) messageBufferService.queue(new BufferedMessagePeer(disconnectedPeersQueue.poll()));
     }
 
-    private void onMessage(PeerAddress peerAddress, BitcoinMsg<?> bitcoinMsg) {
-        log.debug("Incoming Message coming from:" + peerAddress + "type: " + bitcoinMsg.getHeader().getCommand());
-        Set<MessageConsumer> handlers = messageConsumers.get(bitcoinMsg.getBody().getClass());
+    private void onMessage(MsgReceivedEvent msgReceivedEvent) {
+        log.debug("Incoming Message coming from:" + msgReceivedEvent.getPeerAddress() + "type: " + msgReceivedEvent.getBtcMsg().getHeader().getCommand());
+        Set<MessageConsumer> handlers = messageConsumers.get(msgReceivedEvent.getBtcMsg().getBody().getClass());
 
         if(handlers == null) {
             return;
         }
 
-        handlers.forEach(handler -> handler.consume(bitcoinMsg, peerAddress));
+        handlers.forEach(handler -> handler.consume(msgReceivedEvent.getBtcMsg(), msgReceivedEvent.getPeerAddress()));
     }
 
-    private void onPeerDisconnected(PeerAddress peerAddress,  PeerDisconnectedListener.DisconnectionReason reason) {
-        log.debug("onPeerDisconnected: IP:" + peerAddress.toString()+":Reason:" + reason.toString());
-        PeerInfo peerInfo = peersInfo.get(peerAddress);
+    private void onPeerDisconnected(PeerDisconnectedEvent event) {
+        log.debug("onPeerDisconnected: IP:" + event.getPeerAddress().toString()+":Reason:" + event.getReason().toString());
+        PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
 
-        if(peerInfo == null)  peerInfo = new PeerInfo(peerAddress,  null, Optional.empty(), false);
+        if(peerInfo == null)  peerInfo = new PeerInfo(event.getPeerAddress(),  null, Optional.empty(), false);
         peerInfo.setPeerConnectedStatus(false);
         disconnectedPeersQueue.offer(peerInfo);
 
     }
 
-    private void onPeerHandshaked(PeerAddress peerAddress, VersionMsg versionMsg) {
-        log.debug("onPeerHandshaked: IP:" + peerAddress.toString()+":User Agent:"+ versionMsg.getUser_agent() +": Version :" + versionMsg.getVersion());
-        PeerInfo peerInfo = peersInfo.get(peerAddress);
+    private void onPeerHandshaked(PeerHandshakedEvent event) {
+        log.debug("onPeerHandshaked: IP:" + event.getPeerAddress().toString()+":User Agent:"+ event.getVersionMsg().getUser_agent() +": Version :" + event.getVersionMsg().getVersion());
+        PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
+
+        SendHeadersMsg sendHeadersMsg = SendHeadersMsg.builder().build();
+        BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), sendHeadersMsg);
+
+        p2p.REQUESTS.MSGS.send(event.getPeerAddress(), bitcoinMsgBuilder.build());
 
         if (peerInfo == null) {
-            peerInfo = new PeerInfo(peerAddress, versionMsg, Optional.empty(), true);
-            peersInfo.put(peerAddress, peerInfo);
+            peerInfo = new PeerInfo(event.getPeerAddress(), event.getVersionMsg(), Optional.empty(), true);
+            peersInfo.put(event.getPeerAddress(), peerInfo);
             messageBufferService.queue(new BufferedMessagePeer(peerInfo));
         }
      }

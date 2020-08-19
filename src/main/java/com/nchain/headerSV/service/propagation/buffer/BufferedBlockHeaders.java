@@ -1,9 +1,5 @@
 package com.nchain.headerSV.service.propagation.buffer;
 
-import com.nchain.bna.network.PeerAddress;
-import com.nchain.bna.protocol.messages.BlockHeaderMsg;
-import com.nchain.bna.protocol.messages.HeadersMsg;
-import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;

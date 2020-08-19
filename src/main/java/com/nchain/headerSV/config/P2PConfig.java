@@ -13,11 +13,12 @@ import org.springframework.stereotype.Component;
  * Distributed under the Open BSV software license, see the accompanying file LICENSE.
  * @date 05/06/2020
  */
+@ConfigurationProperties(prefix = "headersv.p2p")
 @Component
-@ConfigurationProperties(prefix = "bna.listener-app.listener.p2p.folders")
-@Getter
 @Setter
-public class FoldersConfig {
-    String data;
-    String config;
+@Getter
+public class P2PConfig {
+    private int maxPeers;
+    private int minPeers;
+    private boolean relayTxs;
 }

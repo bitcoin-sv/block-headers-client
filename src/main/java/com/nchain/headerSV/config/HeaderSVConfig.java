@@ -1,21 +1,24 @@
 package com.nchain.headerSV.config;
 
-import com.nchain.bna.network.config.NetConfig;
-import com.nchain.bna.network.config.NetLocalDevConfig;
-import com.nchain.bna.protocol.config.ProtocolConfig;
-import com.nchain.bna.protocol.config.provided.ProtocolBSVMainConfig;
-import com.nchain.bna.tools.RuntimeConfig;
-import com.nchain.bna.tools.RuntimeConfigAutoImpl;
-import com.nchain.bna.tools.files.FileUtils;
-import com.nchain.bna.tools.files.FileUtilsFactory;
+
+import com.nchain.jcl.network.config.NetworkConfig;
+import com.nchain.jcl.network.config.NetworkConfigImpl;
+import com.nchain.jcl.protocol.config.ProtocolConfig;
+import com.nchain.jcl.protocol.config.provided.ProtocolBSVMainConfig;
+import com.nchain.jcl.protocol.wrapper.P2P;
+import com.nchain.jcl.protocol.wrapper.P2PBuilder;
+import com.nchain.jcl.tools.config.RuntimeConfig;
+import com.nchain.jcl.tools.config.RuntimeConfigImpl;
+import com.nchain.jcl.tools.files.FileUtils;
+import com.nchain.jcl.tools.files.FileUtilsBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 
 import java.io.IOException;
-import java.util.OptionalInt;
 
 /**
  * @author m.jose@nchain.com
@@ -29,44 +32,13 @@ import java.util.OptionalInt;
 @Slf4j
 public class HeaderSVConfig {
 
-    @Autowired
-    private FoldersConfig foldersConfig;
-
-    @Autowired
-    private ListenerConfig listenerConfig;
-
-    /**
-     * Runtime Configuration
-     */
-    @Bean
-    RuntimeConfig runtimeConfig() {
-        return RuntimeConfigAutoImpl.builder().build();
-    }
-
-    /**
-     * The P2P Network Configuration
-     */
-    @Bean
-    NetConfig networkConfig() {
-        // A normal configuration based on a Local Development Environment (a medium-level laptop)
-        // We raise the number of socket connections a little bit...
-        return new NetLocalDevConfig().toBuilder()
-                .maxSocketConnections(OptionalInt.of(100))
-                .build();
-    }
-
     /**
      * The Network Protocol Configuration
      */
     @Bean
     @Profile({"local-bsv-mainnet", "prod-bsv-mainnet"})
     ProtocolConfig protocolLocalMainConfig() {
-        return new ProtocolBSVMainConfig().toBuilder()
-                .handshakeMaxPeers(OptionalInt.of(listenerConfig.getMaxPeers()))
-                .handshakeMinPeers(OptionalInt.of(listenerConfig.getMinPeers()))
-                .handshakeUsingRelay(listenerConfig.isRelayTxs())
-                .handshakeProtocolVersion(70015)
-                .build();
+        return new ProtocolBSVMainConfig().toBuilder().build();
     }
 
     /**
@@ -77,11 +49,6 @@ public class HeaderSVConfig {
      */
     @Bean
     FileUtils fileUtils() throws IOException {
-        log.info("Data folder: " + foldersConfig.data);
-        log.info("Config folder: " + foldersConfig.config);
-        FileUtils fileUtils = FileUtilsFactory.copyFromClasspath(this.getClass().getClassLoader(),
-                foldersConfig.data, foldersConfig.config);
-        return fileUtils;
+        return new FileUtilsBuilder().useClassPath().build();
     }
-
 }
