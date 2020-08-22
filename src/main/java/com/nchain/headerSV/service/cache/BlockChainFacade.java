@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
-import java.util.Optional;
 
 /**
  * @author m.jose@nchain.com
@@ -30,14 +29,13 @@ public class BlockChainFacade {
 
     public BlockHeaderQueryResult getBlockFromCache(String hash) {
         BlockHeaderQueryResult  queryResult = null;
-        Optional<CachedHeader> cachedHeader = Optional.empty();
         BlockHeader  blockHeader  = blockHeaderCacheService.getUnconnectedBlocks().get(hash);
 
         queryResult = blockHeader != null? BlockHeaderQueryResult.builder()
                .blockHeader(blockHeader)
                .height(0)
                .work(0)
-               .state(BranchState.MAIN_CHAIN.name()).build():  getBlockHeaderQueryResult(hash);
+               .state(BranchState.ORPHAN.name()).build():  getBlockHeaderQueryResult(hash);
 
         return queryResult;
     }
