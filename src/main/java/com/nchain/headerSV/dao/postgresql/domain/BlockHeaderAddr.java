@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * @author m.jose@nchain.com
@@ -22,18 +23,14 @@ import javax.validation.constraints.NotNull;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class BlockHeaderAddr {
+@IdClass(BlockHeaderAddr.class)
+public class BlockHeaderAddr implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column
     @NotNull
     private String address;
 
-    @Column
+    @Id
     @NotNull
     private String hash;
-
 }

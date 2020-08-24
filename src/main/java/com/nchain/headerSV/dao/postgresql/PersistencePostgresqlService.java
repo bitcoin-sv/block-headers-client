@@ -76,21 +76,20 @@ public class PersistencePostgresqlService implements PersistenceService {
         } catch (DataIntegrityViolationException e) {
             log.debug("ERROR persistPeer. Peer: " + peerDTO.getAddress(), e);
             // We ignore errors when trying to write duplicated values same peer)
-        } catch (RuntimeException re) {
-            re.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
     @Override
     public void persistBlockHeaders(Collection<BlockHeaderAddrInfo> blockHeaderAddrInfos) {
         log.debug("Persisting :"+blockHeaderAddrInfos.size()+": blockHeaders");
-        blockHeaderAddrInfos.forEach((d -> log.debug("-persisting blockheaders" +d)));
         blockHeaderAddrInfos.forEach(this::persistBlockHeaderInfo);
-        //blockHeaderDTOS.forEach(this::persistBlockHeaderAddr);
-
     }
 
     void persistBlockHeaderInfo(BlockHeaderAddrInfo blockHeaderInfo) {
+        log.debug("Persisting blockheader: " + blockHeaderInfo);
+
         final BlockHeaderDTO blockHeaderDTO = BlockHeaderDTO.builder()
                 .hash(blockHeaderInfo.getHash())
                 .prevBlockHash(blockHeaderInfo.getPrevBlockHash())
@@ -104,6 +103,7 @@ public class PersistencePostgresqlService implements PersistenceService {
         final BlockHeaderAddrDTO blockHeaderAddrDTO = BlockHeaderAddrDTO.builder()
                 .address(blockHeaderInfo.getAddress())
                 .hash(blockHeaderInfo.getHash()).build();
+
         persistBlockHeader(blockHeaderDTO);
         persistBlockHeaderAddr(blockHeaderAddrDTO);
     }
@@ -119,8 +119,8 @@ public class PersistencePostgresqlService implements PersistenceService {
             blockHeaderAddrRepository.save(blockHeaderAddr);
         }catch (DataIntegrityViolationException e) {
             log.debug("ERROR persistBlockHeaderAddr. BlockHeader: " + blockHeaderDTO.getHash(), e);
-        } catch (RuntimeException re) {
-            re.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
     }
@@ -137,14 +137,14 @@ public class PersistencePostgresqlService implements PersistenceService {
     @Override
     public void persistBlockHeader(BlockHeaderDTO blockHeaderDTO) {
         try{
-            List<BlockHeader> blockHeaders = blockHeaderRepository.findByHash(blockHeaderDTO.getHash());
-            BlockHeader blockHeader = (blockHeaders != null && blockHeaders.size()> 0) ? blockHeaders.get(0):new BlockHeader();
-            converToBlockheader(blockHeaderDTO, blockHeader);
-            blockHeaderRepository.save(blockHeader);
+            BlockHeader blockHeader = blockHeaderRepository.findByHash(blockHeaderDTO.getHash());
+            BlockHeader blockHeaderToPersist = blockHeader != null ? blockHeader:new BlockHeader();
+            converToBlockheader(blockHeaderDTO, blockHeaderToPersist);
+            blockHeaderRepository.save(blockHeaderToPersist);
         }catch (DataIntegrityViolationException e) {
             log.debug("ERROR persistBlockHeader. BlockHeader: " + blockHeaderDTO.getHash(), e);
-        } catch (RuntimeException re) {
-            re.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
     }
@@ -152,16 +152,16 @@ public class PersistencePostgresqlService implements PersistenceService {
     public Optional<BlockHeaderDTO> retrieveBlockHeader(String hash) {
         Optional<BlockHeaderDTO> result = Optional.empty();
         try{
-           List<BlockHeader> blockHeaders = blockHeaderRepository.findByHash(hash);
-           if (blockHeaders != null && blockHeaders.size()> 0) {
+           BlockHeader blockHeaders = blockHeaderRepository.findByHash(hash);
+           if (blockHeaders != null) {
                BlockHeaderDTO blockHeaderDTO = new BlockHeaderDTO();
-               convertToBlockHeaderDTO(blockHeaders.get(0), blockHeaderDTO);
+               convertToBlockHeaderDTO(blockHeaders, blockHeaderDTO);
                result = Optional.of(blockHeaderDTO);
            }
         }catch (DataIntegrityViolationException e) {
             log.debug("ERROR retrieving BlockHeaderBy Hash: " + hash, e);
-        } catch (RuntimeException re) {
-            re.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         return result;
     }

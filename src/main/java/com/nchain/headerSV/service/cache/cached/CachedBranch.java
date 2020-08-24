@@ -18,5 +18,5 @@ import lombok.Setter;
 public class CachedBranch {
     private String id;
     private String leafNode;
-    private double work;
+    private Double work;
 }

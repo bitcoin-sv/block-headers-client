@@ -1,12 +1,15 @@
 package com.nchain.headerSV.service.network;
 
 import com.nchain.headerSV.config.P2PConfig;
+import com.nchain.headerSV.service.cache.BlockHeaderCacheService;
 import com.nchain.jcl.network.PeerAddress;
 import com.nchain.jcl.network.events.PeerDisconnectedEvent;
 import com.nchain.jcl.protocol.config.ProtocolConfig;
 import com.nchain.jcl.protocol.events.MsgReceivedEvent;
+import com.nchain.jcl.protocol.events.MsgSentEvent;
 import com.nchain.jcl.protocol.events.PeerHandshakedEvent;
 import com.nchain.jcl.protocol.handlers.block.BlockDownloaderHandler;
+import com.nchain.jcl.protocol.handlers.handshake.HandshakeHandlerConfig;
 import com.nchain.jcl.protocol.messages.SendHeadersMsg;
 import com.nchain.jcl.protocol.messages.common.BitcoinMsgBuilder;
 import com.nchain.jcl.protocol.messages.common.Message;
@@ -38,7 +41,7 @@ public class NetworkServiceImpl implements NetworkService {
 
     private ProtocolConfig protocolConfig;
 
-    private P2PConfig p2PConfig;
+    private P2PConfig p2pConfig;
 
     // Protocol Handlers: This objects will carry out the Bitcoin Protocol and perform the
     // Serialization of messages.
@@ -60,9 +63,9 @@ public class NetworkServiceImpl implements NetworkService {
 
     @Autowired
     protected NetworkServiceImpl(ProtocolConfig protocolConfig,
-                                 P2PConfig p2PConfig,
+                                 P2PConfig p2pConfig,
                                  MessageBufferService messageBufferService) {
-        this.p2PConfig = p2PConfig;
+        this.p2pConfig = p2pConfig;
         this.protocolConfig = protocolConfig;
         this.messageBufferService = messageBufferService;
 
@@ -72,10 +75,15 @@ public class NetworkServiceImpl implements NetworkService {
     private void init() {
         log.info("Initalizing the handler" );
 
+        HandshakeHandlerConfig handshakeHandlerConfig = HandshakeHandlerConfig.builder()
+                .relayTxs(p2pConfig.isRelayTxs())
+                .build();
+
         p2p = new P2PBuilder("headersv")
                 .config(protocolConfig)
-                .minPeers(p2PConfig.getMinPeers())
-                .maxPeers(p2PConfig.getMaxPeers())
+                .minPeers(p2pConfig.getMinPeers())
+                .maxPeers(p2pConfig.getMaxPeers())
+                .config(handshakeHandlerConfig)
                 .excludeHandler(BlockDownloaderHandler.HANDLER_ID)
                 .build();
 
@@ -88,6 +96,7 @@ public class NetworkServiceImpl implements NetworkService {
                 this.queueTimeOut.toMillis(), this.queueTimeOut.toMillis(), TimeUnit.MILLISECONDS);
     }
 
+
     @Override
     public void start() {
         init();
@@ -97,16 +106,17 @@ public class NetworkServiceImpl implements NetworkService {
     @Override
     public void stop() {
         p2p.stop();
+        executor.shutdown();
     }
 
     @Override
     public void broadcast(Message message){
-        BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
-        p2p.REQUESTS.MSGS.broadcast(bitcoinMsgBuilder.build()).submit();
+       BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
+       p2p.REQUESTS.MSGS.broadcast(bitcoinMsgBuilder.build()).submit();
     }
 
     @Override
-    public void send(PeerAddress peerAddress, Message message) {
+    public void send(Message message, PeerAddress peerAddress) {
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
         p2p.REQUESTS.MSGS.send(peerAddress, bitcoinMsgBuilder.build()).submit();
     }
@@ -157,7 +167,7 @@ public class NetworkServiceImpl implements NetworkService {
         SendHeadersMsg sendHeadersMsg = SendHeadersMsg.builder().build();
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), sendHeadersMsg);
 
-        p2p.REQUESTS.MSGS.send(event.getPeerAddress(), bitcoinMsgBuilder.build());
+        p2p.REQUESTS.MSGS.send(event.getPeerAddress(), bitcoinMsgBuilder.build()).submit();
 
         if (peerInfo == null) {
             peerInfo = new PeerInfo(event.getPeerAddress(), event.getVersionMsg(), Optional.empty(), true);
