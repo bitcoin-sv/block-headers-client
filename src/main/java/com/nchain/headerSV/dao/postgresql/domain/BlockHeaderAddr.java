@@ -17,7 +17,8 @@ import javax.validation.constraints.NotNull;
  * @date 05/08/2020
  */
 @Entity
-@Table(name = "BLOCKHEADERADDR")
+@Table(name = "BLOCKHEADERADDR",
+        indexes = @Index(name = "block_header_addr_hash", columnList = "hash"))
 @Data
 @Builder
 @AllArgsConstructor
