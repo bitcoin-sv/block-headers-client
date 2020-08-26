@@ -18,7 +18,7 @@ public interface NetworkService {
     /** Stops the Listener */
     void stop();
     /** Publishes message to an individual peer */
-    void send(PeerAddress peerAddress, Message message);
+    void send(Message message, PeerAddress peerAddress);
     /** Broadcasts a message to all connected peers */
     void broadcast(Message message);
     /** subscribe to network events */

@@ -24,7 +24,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +45,6 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
     private final ProtocolConfig protocolConfig;
     private final MessageBufferService messageBufferService;
     private final BlockHeaderCacheService blockHeaderCacheService;
-    private final TreeSet<Long> processedHeaders;
     private ScheduledExecutorService executor;
 
     private static int REQUEST_HEADER_SCHEDULE_TIME_MS = 30000;
@@ -61,13 +59,13 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
         this.blockHeaderCacheService = blockHeaderCacheService;
         this.messageBufferService = messageBufferService;
 
-        this.processedHeaders = new TreeSet<>();
         this.executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
     public synchronized void start() {
         networkService.subscribe(HeadersMsg.class, this::consume);
+        networkService.subscribe(InvMessage.class, this::consume);
 
         /* periodically check for new incoming headers */
         executor.scheduleAtFixedRate(this::requestHeaders, REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS, REQUEST_HEADER_SCHEDULE_TIME_MS, TimeUnit.MILLISECONDS);
@@ -76,40 +74,52 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
     @Override
     public synchronized void stop() {
         networkService.unsubscribe(HeadersMsg.class, this::consume);
+        networkService.unsubscribe(InvMessage.class, this::consume);
         executor.shutdown();
-    }
-
-    private boolean hasMessageBeenProcessed(Long checksum){
-        return processedHeaders.add(checksum);
     }
 
     @Override
     public <T extends Message> void consume(BitcoinMsg<T> message, PeerAddress peerAddress) {
-        if(!(message.getBody() instanceof HeadersMsg)){
-            throw new UnsupportedOperationException("BlockHeadersSyncService can only consume objects of type 'HeadersMsg'");
+
+        log.info("Consuming message type: " + message.getHeader().getCommand());
+
+        switch(message.getHeader().getCommand()){
+            case HeadersMsg.MESSAGE_TYPE:
+                consumeHeaders((HeadersMsg) message.getBody(), peerAddress);
+                break;
+
+            case InvMessage.MESSAGE_TYPE:
+                consumeInv((InvMessage) message.getBody(), peerAddress);
+                break;
+
+            default:
+                throw new UnsupportedOperationException("Unhandled Message Type: " + message.getBody().getMessageType());
         }
-
-        if(hasMessageBeenProcessed(message.getHeader().getChecksum()))
-            return;
-
-        log.info("Consuming message type: " + HeadersMsg.MESSAGE_TYPE);
-
-        HeadersMsg headerMsg = (HeadersMsg) message.getBody();
-
-        List<BlockHeader> validBlockHeaders = headerMsg.getBlockHeaderMsgList().stream().filter(this::validBlockHeader).map(BlockHeader::of).collect(Collectors.toList());
-        Set<BlockHeader> headersAddedToCache = blockHeaderCacheService.addToCache(validBlockHeaders);
-        List<BlockHeaderAddrInfo> headersToPersist = headersAddedToCache.stream().map(b -> BlockHeaderAddrInfo.of(b, peerAddress)).collect(Collectors.toList());
-
-        //if we cached headers, request the next batch
-        if(headersToPersist.size() > 0) {
-            messageBufferService.queue(new BufferedBlockHeaders(headersToPersist));
-            requestHeaders();
-        }
-
-        log.info("Finished consuming message type: " + HeadersMsg.MESSAGE_TYPE);
     }
 
-    public boolean validBlockHeader(BlockHeaderMsg blockHeader){
+    private void consumeInv(InvMessage invMsg, PeerAddress peerAddress){
+        List<InventoryVectorMsg> inventoryVectorMsgs = invMsg.getInvVectorList().stream().filter(iv -> iv.getType() == InventoryVectorMsg.VectorType.MSG_BLOCK).collect(Collectors.toList());
+
+        inventoryVectorMsgs.forEach(iv -> requestHeadersFromHash(Sha256Wrapper.wrapReversed(iv.getHashMsg().getHashBytes()).toString(), peerAddress));
+    }
+
+    private void consumeHeaders(HeadersMsg headerMsg, PeerAddress peerAddress){
+        List<BlockHeader> validBlockHeaders = headerMsg.getBlockHeaderMsgList().stream().filter(this::validBlockHeader).map(BlockHeader::of).collect(Collectors.toList());
+        Set<BlockHeader> headersAddedToCache = blockHeaderCacheService.addToCache(validBlockHeaders);
+        List<BlockHeaderAddrInfo> headersToPersist = validBlockHeaders.stream().map(b -> BlockHeaderAddrInfo.of(b, peerAddress)).collect(Collectors.toList());
+
+        //we want to persist PeerAddresses, even if the header exists.
+        messageBufferService.queue(new BufferedBlockHeaders(headersToPersist));
+
+        //if we received new headers, request the next batch
+        if(headersAddedToCache.size() > 0) {
+            String lastHash = headerMsg.getBlockHeaderMsgList().get(headerMsg.getBlockHeaderMsgList().size() - 1).getHash().toString();
+            requestHeadersFromHash(lastHash);
+        }
+    }
+
+
+    private boolean validBlockHeader(BlockHeaderMsg blockHeader){
         //check proof of work
         BigInteger target = Util.decompressCompactBits(blockHeader.getDifficultyTarget());
         BigInteger blockHashValue = Sha256Wrapper.wrap(blockHeader.getHash().getHashBytes()).toBigInteger();
@@ -121,26 +131,37 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
         return true;
     }
 
-    public void requestHeaders(){
+    private void requestHeadersFromHash(String hash, PeerAddress peerAddress){
+        networkService.send(getHeaderFromHash(hash), peerAddress);
+    }
+
+    private void requestHeadersFromHash(String hash){
+        networkService.broadcast(getHeaderFromHash(hash));
+    }
+
+    private void requestHeaders(){
         blockHeaderCacheService.getBranches().forEach(b -> {
             log.info("Requesting headers for branch: " + b.getLeafNode());
-            HashMsg hashMsg = HashMsg.builder().hash(HEX.decode(b.getLeafNode())).build();
-
-            List<HashMsg> hashMsgs = Arrays.asList(hashMsg);
-
-            BaseGetDataAndHeaderMsg baseGetDataAndHeaderMsg = BaseGetDataAndHeaderMsg.builder()
-                    .version(protocolConfig.getBasicConfig().getProtocolVersion())
-                    .blockLocatorHash(hashMsgs)
-                    .hashCount(VarIntMsg.builder().value(1).build())
-                    .hashStop(HashMsg.builder().hash(Sha256Wrapper.ZERO_HASH.getBytes()).build())
-                    .build();
-
-            GetHeadersMsg getHeadersMsg = GetHeadersMsg.builder()
-                    .baseGetDataAndHeaderMsg(baseGetDataAndHeaderMsg)
-                    .build();
-
-            networkService.broadcast(getHeadersMsg);
+            networkService.broadcast(getHeaderFromHash(b.getLeafNode()));
         });
+    }
+
+    private GetHeadersMsg getHeaderFromHash(String hash){
+        HashMsg hashMsg = HashMsg.builder().hash(HEX.decode(hash)).build();
+        List<HashMsg> hashMsgs = Arrays.asList(hashMsg);
+
+        BaseGetDataAndHeaderMsg baseGetDataAndHeaderMsg = BaseGetDataAndHeaderMsg.builder()
+                .version(protocolConfig.getBasicConfig().getProtocolVersion())
+                .blockLocatorHash(hashMsgs)
+                .hashCount(VarIntMsg.builder().value(1).build())
+                .hashStop(HashMsg.builder().hash(Sha256Wrapper.ZERO_HASH.getBytes()).build())
+                .build();
+
+        GetHeadersMsg getHeadersMsg = GetHeadersMsg.builder()
+                .baseGetDataAndHeaderMsg(baseGetDataAndHeaderMsg)
+                .build();
+
+        return getHeadersMsg;
     }
 
 }

@@ -24,6 +24,6 @@ public class BlockHeaderQueryResult {
     private double work;
     private int height;
     private boolean bestChain;
-
+    private int confidence;
 
 }

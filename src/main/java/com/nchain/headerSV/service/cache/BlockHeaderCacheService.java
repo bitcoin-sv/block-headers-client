@@ -54,7 +54,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         CachedBranch cachedRootBranch = CachedBranch.builder()
                 .id(rootBranchId)
                 .leafNode(Sha256Wrapper.ZERO_HASH.toString())
-                .work(0).build();
+                .work(Double.valueOf(0)).build();
 
         branches.put(cachedRootBranch.getId(), cachedRootBranch);
 
@@ -84,6 +84,18 @@ public class BlockHeaderCacheService implements HeaderSvService {
         return new ArrayList<>(branches.values());
     }
 
+    public Integer getMinBranchHeight() {
+        Set<Integer> brachHeights = branches.values().stream().map(b-> connectedBlocks.get(b.getLeafNode()).getHeight()).collect(Collectors.toSet());
+
+        return Collections.min(brachHeights);
+    }
+
+    public Integer getMaxBranchHeight() {
+        Set<Integer> brachHeights = branches.values().stream().map(b-> connectedBlocks.get(b.getLeafNode()).getHeight()).collect(Collectors.toSet());
+
+        return Collections.max(brachHeights);
+    }
+
     public CachedBranch getBranch(String branchId){
         return branches.get(branchId);
     }
@@ -96,10 +108,10 @@ public class BlockHeaderCacheService implements HeaderSvService {
         Set<BlockHeader> headersToProcess = new HashSet<>(uniqueBlockHeaders);
         headersToProcess.addAll(unconnectedBlocks.values());
 
-        //add the vertex, connect the edges, create the branches
+        //add the vertex, connect the edges, connect any blocks that are forked
         headersToProcess.forEach(this::addVertex);
         headersToProcess.forEach(this::addEdge);
-        headersToProcess.forEach(this::addBranch);
+        headersToProcess.forEach(this::connectForkedBlock);
 
         //process the graph, building the newly added nodes from the branch tips. Any blocks unconnected after the graph has been built are orphans
         buildGraph();
@@ -136,14 +148,15 @@ public class BlockHeaderCacheService implements HeaderSvService {
         return true;
     }
 
-    private void addBranch(BlockHeader blockHeader){
+    private void connectForkedBlock(BlockHeader blockHeader){
         try {
             //if the vertex's parent has more than 1 edge, there's a fork (new branch)
             if (blockChain.outgoingEdgesOf(blockHeader.getPrevBlockHash()).size() > 1) {
-                String branchId = generateBranchId(blockHeader.getHash());
-
-                //We only want to create a branch if it doesn't exist, not amend any existing branches
-                branches.putIfAbsent(branchId, CachedBranch.builder().id(branchId).work(0).leafNode(blockHeader.getHash()).build());
+                //We need to connect any blocks which are forks here, so they can be traversed when the graph is built. If they cannot be connected,
+                //then they are either Orphans, or branches of unconnected blocks. Connecting the block will generate and update the branch automatically.
+                if(connectedBlocks.get(blockHeader.getPrevBlockHash()) != null){
+                   connectBlockToParent(blockHeader);
+                }
             }
         } catch (IllegalArgumentException ex){
             //parent vertex not found, this is an orphan block
@@ -160,16 +173,24 @@ public class BlockHeaderCacheService implements HeaderSvService {
         log.info("BlockHeader cache initialization complete");
     }
 
+    /*
+     * This function will do a depth first traversal from the tip of each branch which is connected to the main tree. We identify connected branches by those
+     * which have work. If the work is null, it means that it's a branch of a block that is not yet connected. This branch will be traversed and calculated,
+     * unless it is an orphan group of blocks, and therefore a branch which is not connected to the main tree so it will be ignored.
+     *
+     * Once traversed, each branch will be updated to reflect the state of the tree, and future traversals will be from the newly connected blocks, so we never
+     * traverse the same block twice.
+     *
+     */
     private void buildGraph(){
-        //Build graph from the tip of each branch
-        branches.values().forEach(b -> {
-            //traverse through the built graph from genesis, and calculate the work and height given the parent
+        //We only want to traverse branches that are "connected" to the main branch (i.e work != null), else could end up traversing the same branch twice.
+        branches.values().stream().filter(b -> b.getWork() != null).forEach(b -> {
             DepthFirstIterator<String, DefaultEdge> iterator = new DepthFirstIterator(blockChain, b.getLeafNode());
 
-            // The tip is already connected
+            // The leaf node is already connected, unless we've created a new branch
             iterator.next();
 
-            //traverse the child nodes of the branch
+            //traverse the child nodes of the branch, anything below the leaf will be unconnected
             while(iterator.hasNext()) {
                 BlockHeader currentBlockHeader = unconnectedBlocks.get(iterator.next());
                 connectBlockToParent(currentBlockHeader);
@@ -181,7 +202,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         //get the header and calculate the work and height
         CachedHeader parentCachedBlockHeader = connectedBlocks.get(blockHeader.getPrevBlockHash());
 
-        double work = calculateWork(blockHeader.getDifficultyTarget());
+        Double work = calculateWork(blockHeader.getDifficultyTarget());
         int height = parentCachedBlockHeader.getHeight() + 1; //height is 1 greater than parent
 
         //dynamically calculate and get the parent branch and the cumulative work
@@ -189,7 +210,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         double branchWork = branches.get(branchId).getWork();
 
         //if the vertex's parent has more than 1 edge, there's a fork (new branch)
-        if(blockChain.incomingEdgesOf(blockHeader.getPrevBlockHash()).size() > 1) {
+        if(blockChain.outgoingEdgesOf(blockHeader.getPrevBlockHash()).size() > 1) {
             branchId = generateBranchId(blockHeader.getHash());
         }
 
@@ -218,10 +239,6 @@ public class BlockHeaderCacheService implements HeaderSvService {
     public HashMap<String, CachedHeader> getConnectedBlocks() {
         return connectedBlocks;
     }
-
-
-
-
 
     private String generateBranchId(String hash){
         // the branch id is the first child nodes hash

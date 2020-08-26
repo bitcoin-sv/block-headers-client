@@ -15,4 +15,5 @@ import java.util.List;
  */
 public interface BlockHeaderAddrRepository extends JpaRepository<BlockHeaderAddr, Long> {
     List<BlockHeaderAddr> findByAddressAndHash(String address, String hash);
+    List<BlockHeaderAddr> findByHash(String hash);
 }
