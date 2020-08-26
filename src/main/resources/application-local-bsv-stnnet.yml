@@ -1,84 +1,42 @@
 debug: false
-#logging.level.org.springframework.data.mongodb.core.MongoTemplate: ERROR
-# We disable the autoconfiguration for JPA (postgresql)
-spring:
-  # This property is needed because we have 2 version of the Repositories (for MongodDb and PostgresQL). The
-  # repositories for the same Entities have the same name, so even if only one of them is loaded into the
-  # Spring Context, we need this property to avoid runtime Errors.
-  main.allow-bean-definition-overriding: true
-  autoconfigure:
-    exclude: >
-      org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,
-      org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,
-      org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
-  jpa:
-    # The value of "batch_size" affects the performance. It represetns the number of records that need to be in
-    # the buffer before we insert them into the DB. In case of High-loads of incoming data, we should raise this
-    # number to increase performance and insert several records at once. (a value of 25 is fine). In case of small
-    # number of incoming messages, we should low the value otherwise the message will be stored in the buffer but
-    # never inserted in the DB.
-    properties.hibernate.jdbc.batch_size: 15
 
-  data:
-    # MongoDB Configuration parameters:
-    mongodb:
-      port: 27017
-      host: localhost
-      database: bnaDB
-      username: bna
-      password: bna
-      authentication-database: admin
+spring:
+  jpa:
+    properties.hibernate.jdbc.lob.non_contextual_creation: true
+    properties.hibernate.jdbc.batch_size: 2
+    hibernate.ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+  datasource:
+      url: jdbc:postgresql://localhost:54320/headerSV
+      username: headerSV
+      password: test
+      driverClassName: org.postgresql.Driver
+
 
 # Application Configuration:
-
 headersv:
   # This variable will determine what Repositories are loaded into the Spring context (postgresql or the mongodb ones)
-  persistenceEngine: mongodb
+  persistenceEngine: postgresql
 
   # Listener Configuration params:
+  p2p:
+    maxPeers: 25
+    minPeers: 5
+    relayTxs: false
 
-  listener-app:
-    listener:
-      p2p:
-        folders:
-          data:
-          config:
-        maxPeers: 40
-        minPeers: 38
-        relayTxs: false
-      height-locator:
-        topChainMargin: 0
-        minPeersNeeded: 3
-
-    inv:
-      buffer:
+  propagation:
+    buffer:
+      enabled: true
+      threads: 6
+      bufferSize: 10000
+    persistence:
+      peer:
         enabled: true
-        threads: 6
-        bufferSize: 2000
-      persistence:
-        peer:
-          enabled: true
-          batchSize: 1
-        block:
-          enabled: true
-          batchSize: 1
-        tx:
-          enabled: true
-          batchSize: 100
-
-    metrics:
-      peers:
+        batchSize: 1
+      block:
         enabled: true
-        frequencyInMillis: 5000
-      txs:
-        enabled: true
-        frequencyInMillis: 5000
-      messages:
-        enabled: true
-        frequencyInMillis: 5000
-      inv-size:
-        enabled: true
-        frequencyInMillis: 5000
-      kbytes:
-        enabled: true
-        frequencyInMillis: 5000
+        batchSize: 1
