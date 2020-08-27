@@ -24,19 +24,24 @@ headersv:
 
   # Listener Configuration params:
   p2p:
-    maxPeers: 25
-    minPeers: 5
+    maxPeers: 100
+    minPeers: 20
     relayTxs: false
+
+  sync:
+    headersToIgnore: 00000000000000000019f1679932c8a69051fca08d0934ac0c6cad56077d0c66, 0000000000000000004626ff6e3b936941d341c5932ece4357eeccac44e6d56c
+    requestHeadersRefreshIntervalMs: 30000
+
 
   propagation:
     buffer:
       enabled: true
-      threads: 6
-      bufferSize: 10000
+      threads: 1
+      bufferSize: 1000000
     persistence:
       peer:
-        enabled: true
-        batchSize: 1
+        enabled: false
+        batchSize: 20000
       block:
         enabled: true
-        batchSize: 1
+        batchSize: 20000

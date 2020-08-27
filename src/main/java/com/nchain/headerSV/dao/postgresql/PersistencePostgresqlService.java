@@ -113,8 +113,7 @@ public class PersistencePostgresqlService implements PersistenceService {
 
     public void persistBlockHeaderAddr(BlockHeaderAddrDTO blockHeaderDTO) {
         try{
-            List<BlockHeaderAddr> blockHeaders = blockHeaderAddrRepository.findByAddressAndHash(blockHeaderDTO.getAddress(), blockHeaderDTO.getHash());
-            BlockHeaderAddr blockHeaderAddr = (blockHeaders != null && blockHeaders.size()> 0) ? blockHeaders.get(0):new BlockHeaderAddr();
+            BlockHeaderAddr blockHeaderAddr = new BlockHeaderAddr();
             converToBlockheaderAddr(blockHeaderDTO, blockHeaderAddr);
             blockHeaderAddrRepository.save(blockHeaderAddr);
         }catch (DataIntegrityViolationException e) {
@@ -137,8 +136,7 @@ public class PersistencePostgresqlService implements PersistenceService {
     @Override
     public void persistBlockHeader(BlockHeaderDTO blockHeaderDTO) {
         try{
-            BlockHeader blockHeader = blockHeaderRepository.findByHash(blockHeaderDTO.getHash());
-            BlockHeader blockHeaderToPersist = blockHeader != null ? blockHeader:new BlockHeader();
+            BlockHeader blockHeaderToPersist = new BlockHeader();
             converToBlockheader(blockHeaderDTO, blockHeaderToPersist);
             blockHeaderRepository.save(blockHeaderToPersist);
         }catch (DataIntegrityViolationException e) {
