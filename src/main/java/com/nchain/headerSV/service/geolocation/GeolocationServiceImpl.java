@@ -6,13 +6,13 @@ import com.maxmind.geoip2.model.CityResponse;
 import com.nchain.headerSV.domain.PeerLocationInfo;
 import com.nchain.jcl.network.PeerAddress;
 import com.nchain.jcl.tools.files.FileUtils;
+import com.nchain.jcl.tools.files.FileUtilsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -51,8 +51,11 @@ public class GeolocationServiceImpl implements GeolocationService {
 
     @PostConstruct
     public void  databaseReaderinit() throws IOException {
+        //String filePath = Paths.get(fileUtils.getRootPath().toString(), DB_FILENAME).toString();
+        //    InputStream inputStream = new FileUtilsBuilder().copyFromclasspatch().build(this.getClass().getClassLoader()))
+        FileUtils fileUtils = new FileUtilsBuilder().copyFromClasspath().build(this.getClass().getClassLoader());
         String filePath = Paths.get(fileUtils.getRootPath().toString(), DB_FILENAME).toString();
-        InputStream inputStream = new FileInputStream(filePath);
-        dbReader =  new DatabaseReader.Builder(inputStream).build();
+
+        dbReader =  new DatabaseReader.Builder(new File(filePath)).build();
     }
 }

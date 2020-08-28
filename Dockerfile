@@ -12,6 +12,7 @@ RUN gradle assemble
 
 FROM adoptopenjdk/openjdk11:alpine-slim
 COPY --from=builder /home/gradle/headerSV/build/libs/headerSV-0.0.1.jar /app.jar
-#RUN apk add --no-cache --upgrade bash
+COPY wait-for-it.sh .
+RUN apk add --no-cache --upgrade bash
 VOLUME /headerSV-data
 CMD ["java","-jar","-XshowSettings:vm", "-Djava.security.egd=file:/dev/./urandom", "/app.jar","--stacktrace"]
