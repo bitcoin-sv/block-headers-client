@@ -1,12 +1,10 @@
 package com.nchain.headerSV.service.network;
 
 import com.nchain.headerSV.config.P2PConfig;
-import com.nchain.headerSV.service.cache.BlockHeaderCacheService;
 import com.nchain.jcl.network.PeerAddress;
 import com.nchain.jcl.network.events.PeerDisconnectedEvent;
 import com.nchain.jcl.protocol.config.ProtocolConfig;
 import com.nchain.jcl.protocol.events.MsgReceivedEvent;
-import com.nchain.jcl.protocol.events.MsgSentEvent;
 import com.nchain.jcl.protocol.events.PeerHandshakedEvent;
 import com.nchain.jcl.protocol.handlers.block.BlockDownloaderHandler;
 import com.nchain.jcl.protocol.handlers.handshake.HandshakeHandlerConfig;
@@ -17,13 +15,12 @@ import com.nchain.jcl.protocol.wrapper.P2P;
 import com.nchain.jcl.protocol.wrapper.P2PBuilder;
 import com.nchain.headerSV.domain.PeerInfo;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
-import com.nchain.headerSV.service.propagation.buffer.BufferedMessagePeer;
 import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
+
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -54,8 +51,6 @@ public class NetworkServiceImpl implements NetworkService {
     private final Map<PeerAddress, PeerInfo> peersInfo = new ConcurrentHashMap<>();
 
     private final Queue<PeerInfo> disconnectedPeersQueue = new LinkedBlockingQueue<>();
-
-    private final Duration queueTimeOut = Duration.ofSeconds(10);
 
     private ScheduledExecutorService executor;
 
@@ -91,9 +86,6 @@ public class NetworkServiceImpl implements NetworkService {
         p2p.EVENTS.PEERS.HANDSHAKED.forEach(this::onPeerHandshaked);
         p2p.EVENTS.MSGS.ALL.forEach(this::onMessage);
 
-        // We launch the Thread to process the disconneced Peers:
-        executor.scheduleAtFixedRate(this::processDisconnectedPeers,
-                this.queueTimeOut.toMillis(), this.queueTimeOut.toMillis(), TimeUnit.MILLISECONDS);
     }
 
 
@@ -135,9 +127,6 @@ public class NetworkServiceImpl implements NetworkService {
         messageConsumers.merge(eventClass, consumers, (w, prev) -> {prev.addAll(w); return prev;});
     }
 
-    private void processDisconnectedPeers() {
-        while (!disconnectedPeersQueue.isEmpty()) messageBufferService.queue(new BufferedMessagePeer(disconnectedPeersQueue.poll()));
-    }
 
     private void onMessage(MsgReceivedEvent msgReceivedEvent) {
         log.debug("Incoming Message coming from:" + msgReceivedEvent.getPeerAddress() + "type: " + msgReceivedEvent.getBtcMsg().getHeader().getCommand());
@@ -162,17 +151,17 @@ public class NetworkServiceImpl implements NetworkService {
 
     private void onPeerHandshaked(PeerHandshakedEvent event) {
         log.debug("onPeerHandshaked: IP:" + event.getPeerAddress().toString()+":User Agent:"+ event.getVersionMsg().getUser_agent() +": Version :" + event.getVersionMsg().getVersion());
-        PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
+
 
         SendHeadersMsg sendHeadersMsg = SendHeadersMsg.builder().build();
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), sendHeadersMsg);
 
         p2p.REQUESTS.MSGS.send(event.getPeerAddress(), bitcoinMsgBuilder.build()).submit();
 
+        PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
         if (peerInfo == null) {
             peerInfo = new PeerInfo(event.getPeerAddress(), event.getVersionMsg(), Optional.empty(), true);
             peersInfo.put(event.getPeerAddress(), peerInfo);
-            messageBufferService.queue(new BufferedMessagePeer(peerInfo));
         }
      }
 

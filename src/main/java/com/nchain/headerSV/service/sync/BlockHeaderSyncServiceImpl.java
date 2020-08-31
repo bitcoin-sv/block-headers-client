@@ -17,11 +17,15 @@ import com.nchain.jcl.protocol.messages.common.BitcoinMsg;
 import com.nchain.jcl.protocol.messages.common.Message;
 import com.nchain.jcl.tools.bytes.HEX;
 import com.nchain.jcl.tools.crypto.Sha256Wrapper;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -39,6 +43,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@ConfigurationProperties(prefix = "headersv.sync")
 public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsumer {
 
     private final NetworkService networkService;
@@ -47,7 +52,12 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
     private final BlockHeaderCacheService blockHeaderCacheService;
     private ScheduledExecutorService executor;
 
-    private static int REQUEST_HEADER_SCHEDULE_TIME_MS = 30000;
+    @Setter
+    private HashSet<String> headersToIgnore;
+
+    @Setter
+    private int requestHeadersRefreshIntervalMs;
+
     private static int REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS = 5000;
 
     protected BlockHeaderSyncServiceImpl(NetworkService networkService,
@@ -68,7 +78,7 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
         networkService.subscribe(InvMessage.class, this::consume);
 
         /* periodically check for new incoming headers */
-        executor.scheduleAtFixedRate(this::requestHeaders, REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS, REQUEST_HEADER_SCHEDULE_TIME_MS, TimeUnit.MILLISECONDS);
+        executor.scheduleAtFixedRate(this::requestHeaders, REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS, requestHeadersRefreshIntervalMs, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -105,6 +115,12 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
 
     private void consumeHeaders(HeadersMsg headerMsg, PeerAddress peerAddress){
         List<BlockHeader> validBlockHeaders = headerMsg.getBlockHeaderMsgList().stream().filter(this::validBlockHeader).map(BlockHeader::of).collect(Collectors.toList());
+
+        //if any headers are invalid, reject the whole message
+        if(validBlockHeaders.size() < headerMsg.getBlockHeaderMsgList().size()){
+            return;
+        }
+
         Set<BlockHeader> headersAddedToCache = blockHeaderCacheService.addToCache(validBlockHeaders);
         List<BlockHeaderAddrInfo> headersToPersist = validBlockHeaders.stream().map(b -> BlockHeaderAddrInfo.of(b, peerAddress)).collect(Collectors.toList());
 
@@ -125,6 +141,12 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
         BigInteger blockHashValue = Sha256Wrapper.wrap(blockHeader.getHash().getHashBytes()).toBigInteger();
 
         if(blockHashValue.compareTo(target) > 0){
+            log.info("Header: " + blockHeader + " has been rejected due to an invalid proof of work");
+            return false;
+        }
+
+        if(headersToIgnore.contains(blockHeader.getHash().toString())){
+            log.info("Header: " + blockHeader + " has been rejected due to being in the ignore list");
             return false;
         }
 

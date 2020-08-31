@@ -80,7 +80,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
 
     }
 
-    public List<CachedBranch> getBranches(){
+    public synchronized List<CachedBranch> getBranches(){
         return new ArrayList<>(branches.values());
     }
 

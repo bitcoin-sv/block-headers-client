@@ -4,11 +4,15 @@ import com.nchain.headerSV.dao.service.PersistenceEngine;
 import com.nchain.headerSV.dao.service.PersistenceLocatorService;
 import com.nchain.headerSV.dao.service.PersistenceService;
 import lombok.Setter;
+import org.apache.tomcat.jni.Time;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.annotation.concurrent.GuardedBy;
+import javax.transaction.Transactional;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedList;
 
 /**
@@ -19,8 +23,13 @@ import java.util.LinkedList;
  * Distributed under the Open BSV software license, see the accompanying file LICENSE.
  * @date 25/06/2020
  */
+@ConfigurationProperties(prefix = "headersv.persistence")
 public abstract class AbstractPersistence<T> {
     private final PersistenceLocatorService persistenceLocatorService;
+
+    protected long lastFlushTime = System.currentTimeMillis();
+
+    protected long lastFlushTimeMaxIntervalMs = 1000;
 
     @Autowired
     public AbstractPersistence(PersistenceLocatorService persistenceLocatorService) {
@@ -39,14 +48,10 @@ public abstract class AbstractPersistence<T> {
 
     private Collection<T> batch = new LinkedList<>();
 
-    public int getCurrentBatchSize() {
-        return batch.size();
-    }
-
    public void persist(T table){
         if(enabled) {
             batch.add(table);
-            if(batch.size() >= batchSize) {
+            if(batch.size() >= batchSize || System.currentTimeMillis() - lastFlushTime > lastFlushTimeMaxIntervalMs ) {
                 flush();
             }
         }
@@ -56,6 +61,7 @@ public abstract class AbstractPersistence<T> {
     public void flush() {
         process(batch);
         batch.clear();
+        lastFlushTime = System.currentTimeMillis();
     }
 
     protected abstract void process(Collection<T> object);
