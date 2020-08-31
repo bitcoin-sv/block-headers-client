@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.stream.IntStream;
 
 /**
  * @author m.jose@nchain.com
@@ -59,14 +58,13 @@ public class PropagationDBService {
 
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads + 1);
         this.messageBufferService.configure(bufferSize);
-        log.info("Launching " + threads + " threads to consume network messages. Buffer size is " + bufferSize);
-        IntStream.rangeClosed(1, threads).forEach(thread -> {
-            final BufferConsumerTask bufferConsumerTask = applicationContext.getBean(BufferConsumerTask.class);
-            bufferConsumerTask.setName("BufferConsumerTask#" + thread);
-            tasks.add(bufferConsumerTask);
-            executor.submit(bufferConsumerTask);
+        log.info("Launching " + 1 + " threads to consume network messages. Buffer size is " + bufferSize);
 
-        });
+        final BufferConsumerTask bufferConsumerTask = applicationContext.getBean(BufferConsumerTask.class);
+        bufferConsumerTask.setName("BufferConsumerTask#" + 1);
+        tasks.add(bufferConsumerTask);
+        executor.submit(bufferConsumerTask);
+
         executor.submit(this::showStatsLoopTask);
 
     }
@@ -90,7 +88,7 @@ public class PropagationDBService {
                 }
                 final double percent = ((double) currentSize) / bufferSize;
                 final long messages = tasks.stream().map(BufferConsumerTask::getStats).mapToLong(BufferConsumerTask.Stats::getMessages).sum();
-                log.trace("- " + threads + " consumers, " + messages + " messages processed. Producer queue has " + currentSize+ " items of " + bufferSize + " (" + PCT.format(percent) + " full)");
+                log.trace("- " + 1 + " consumers, " + messages + " messages processed. Producer queue has " + currentSize+ " items of " + bufferSize + " (" + PCT.format(percent) + " full)");
                 tasks.stream().map(BufferConsumerTask::getStats).map(BufferConsumerTask.Stats::toString).forEach(log::trace);
             }
         } catch (InterruptedException e) {

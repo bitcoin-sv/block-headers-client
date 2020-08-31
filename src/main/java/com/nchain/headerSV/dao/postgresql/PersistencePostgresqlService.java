@@ -2,13 +2,10 @@ package com.nchain.headerSV.dao.postgresql;
 
 import com.nchain.headerSV.dao.model.BlockHeaderAddrDTO;
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
-import com.nchain.headerSV.dao.model.PeerDTO;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeaderAddr;
-import com.nchain.headerSV.dao.postgresql.domain.Peer;
 import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderAddrRepository;
 import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
-import com.nchain.headerSV.dao.postgresql.repository.PeerRepository;
 import com.nchain.headerSV.dao.service.PersistenceEngine;
 import com.nchain.headerSV.dao.service.PersistenceService;
 import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
@@ -18,10 +15,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+
+import javax.transaction.Transactional;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -41,12 +37,6 @@ import java.util.Optional;
 @Slf4j
 public class PersistencePostgresqlService implements PersistenceService {
 
-    @PersistenceContext
-    private EntityManager em;
-
-    @Autowired
-    private PeerRepository peerRepository;
-
     @Autowired
     private BlockHeaderRepository blockHeaderRepository;
 
@@ -59,32 +49,13 @@ public class PersistencePostgresqlService implements PersistenceService {
         return PersistenceEngine.postgresql;
     }
 
-    @Override
-    public void persistPeers(Collection<PeerDTO> peerDTOs) {
-        log.debug("Persisting "+peerDTOs.size()+" peers");
-        peerDTOs.forEach(p -> log.debug(" - persisting Peer: " + p));
-        peerDTOs.forEach(this::persistPeer);
-    }
 
     @Override
-    public void persistPeer(PeerDTO peerDTO) {
-        try {
-            List<Peer> peers = peerRepository.findByAddressAndPort(peerDTO.getAddress(), peerDTO.getPort());
-            Peer peer = (peers != null && peers.size() > 0)? peers.get(0) : new Peer();       ;
-            convertPeer(peerDTO, peer);
-            peerRepository.save(peer);
-        } catch (DataIntegrityViolationException e) {
-            log.debug("ERROR persistPeer. Peer: " + peerDTO.getAddress(), e);
-            // We ignore errors when trying to write duplicated values same peer)
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    @Override
+    @Transactional
     public void persistBlockHeaders(Collection<BlockHeaderAddrInfo> blockHeaderAddrInfos) {
-        log.debug("Persisting :"+blockHeaderAddrInfos.size()+": blockHeaders");
+        log.info("Persisting :" + blockHeaderAddrInfos.size() + ": blockHeaders");
         blockHeaderAddrInfos.forEach(this::persistBlockHeaderInfo);
+        blockHeaderRepository.flush();
     }
 
     void persistBlockHeaderInfo(BlockHeaderAddrInfo blockHeaderInfo) {
@@ -109,14 +80,12 @@ public class PersistencePostgresqlService implements PersistenceService {
     }
 
 
-
-
     public void persistBlockHeaderAddr(BlockHeaderAddrDTO blockHeaderDTO) {
-        try{
+        try {
             BlockHeaderAddr blockHeaderAddr = new BlockHeaderAddr();
             converToBlockheaderAddr(blockHeaderDTO, blockHeaderAddr);
             blockHeaderAddrRepository.save(blockHeaderAddr);
-        }catch (DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException e) {
             log.debug("ERROR persistBlockHeaderAddr. BlockHeader: " + blockHeaderDTO.getHash(), e);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -126,7 +95,7 @@ public class PersistencePostgresqlService implements PersistenceService {
 
     private void converToBlockheaderAddr(BlockHeaderAddrDTO from, BlockHeaderAddr to) {
 
-        if(from == null || to == null)
+        if (from == null || to == null)
             return;
 
         to.setHash(from.getHash());
@@ -135,11 +104,11 @@ public class PersistencePostgresqlService implements PersistenceService {
 
     @Override
     public void persistBlockHeader(BlockHeaderDTO blockHeaderDTO) {
-        try{
+        try {
             BlockHeader blockHeaderToPersist = new BlockHeader();
             converToBlockheader(blockHeaderDTO, blockHeaderToPersist);
             blockHeaderRepository.save(blockHeaderToPersist);
-        }catch (DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException e) {
             log.debug("ERROR persistBlockHeader. BlockHeader: " + blockHeaderDTO.getHash(), e);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -149,14 +118,14 @@ public class PersistencePostgresqlService implements PersistenceService {
 
     public Optional<BlockHeaderDTO> retrieveBlockHeader(String hash) {
         Optional<BlockHeaderDTO> result = Optional.empty();
-        try{
-           BlockHeader blockHeaders = blockHeaderRepository.findByHash(hash);
-           if (blockHeaders != null) {
-               BlockHeaderDTO blockHeaderDTO = new BlockHeaderDTO();
-               convertToBlockHeaderDTO(blockHeaders, blockHeaderDTO);
-               result = Optional.of(blockHeaderDTO);
-           }
-        }catch (DataIntegrityViolationException e) {
+        try {
+            BlockHeader blockHeaders = blockHeaderRepository.findByHash(hash);
+            if (blockHeaders != null) {
+                BlockHeaderDTO blockHeaderDTO = new BlockHeaderDTO();
+                convertToBlockHeaderDTO(blockHeaders, blockHeaderDTO);
+                result = Optional.of(blockHeaderDTO);
+            }
+        } catch (DataIntegrityViolationException e) {
             log.debug("ERROR retrieving BlockHeaderBy Hash: " + hash, e);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -165,7 +134,7 @@ public class PersistencePostgresqlService implements PersistenceService {
     }
 
     private void convertToBlockHeaderDTO(BlockHeader from, BlockHeaderDTO to) {
-        if(from == null || to == null)
+        if (from == null || to == null)
             return;
 
         to.setHash(from.getHash());
@@ -180,7 +149,7 @@ public class PersistencePostgresqlService implements PersistenceService {
     }
 
     private void converToBlockheader(BlockHeaderDTO dto, BlockHeader to) {
-        if(dto == null || to == null)
+        if (dto == null || to == null)
             return;
 
         to.setHash(dto.getHash());
@@ -192,43 +161,5 @@ public class PersistencePostgresqlService implements PersistenceService {
         to.setPrevBlockHash(dto.getPrevBlockHash());
         to.setVersion(dto.getVersion());
         to.setTransactionCount(dto.getTransactionCount());
-    }
-
-
-//    public PeerDTO retrievePeer(PeerDTO peerDTO) {
-//        try {
-//            List<Peer> peers = peerRepository.findByAddressAndPort(peerDTO.getAddress(), peerDTO.getPort());
-//            Peer peer = (peers != null && peers.size() > 0)? peers.get(0) : new Peer();
-//
-//
-//        }
-//    }
-
-    private void convertPeer(PeerDTO from, Peer to) {
-        if (from == null || to == null) return;
-        to.setAddress(from.getAddress());
-        to.setPort(from.getPort());
-        to.setCity(from.getCity());
-        to.setCountry(from.getCountry());
-        to.setProtocol_version(from.getProtocolVersion());
-        to.setUser_agent(from.getUserAgent());
-        to.setZipcode(from.getZipcode());
-        to.setServices(from.getServices());
-        to.setConnectionstatus(from.isConnectionStatus());
-
-    }
-
-    private void convertToPeerDTO(Peer from, PeerDTO to) {
-        if (from == null || to == null) return;
-        to.setAddress(from.getAddress());
-        to.setPort(from.getPort());
-        to.setCity(from.getCity());
-        to.setCountry(from.getCountry());
-        to.setProtocolVersion(from.getProtocol_version());
-        to.setUserAgent(from.getUser_agent());
-        to.setZipcode(from.getZipcode());
-        to.setServices(from.getServices());
-        to.setConnectionStatus(from.isConnectionstatus());
-
     }
 }

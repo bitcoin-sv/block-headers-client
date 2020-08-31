@@ -2,11 +2,12 @@ debug: false
 
 spring:
   jpa:
-    properties.hibernate.jdbc.lob.non_contextual_creation: true
-    properties.hibernate.jdbc.batch_size: 2
     hibernate.ddl-auto: update
     properties:
       hibernate:
+        jdbc:
+          batch_size: 500
+          non_contextual_creation: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
 
@@ -32,16 +33,13 @@ headersv:
     headersToIgnore: 00000000000000000019f1679932c8a69051fca08d0934ac0c6cad56077d0c66, 0000000000000000004626ff6e3b936941d341c5932ece4357eeccac44e6d56c
     requestHeadersRefreshIntervalMs: 30000
 
-
   propagation:
     buffer:
       enabled: true
       threads: 1
-      bufferSize: 1000000
+      bufferSize: 100000
     persistence:
-      peer:
-        enabled: false
-        batchSize: 20000
       block:
         enabled: true
-        batchSize: 20000
+        batchSize: 500
+      lastFlushTimeMaxIntervalMs: 5000

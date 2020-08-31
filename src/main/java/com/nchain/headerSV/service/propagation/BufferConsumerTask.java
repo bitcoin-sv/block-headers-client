@@ -105,8 +105,7 @@ public class BufferConsumerTask implements Runnable {
 
         @Override
         public String toString() {
-            return "- " + name + ": Uptime: " + getDuration() + "s, messages: " + messages + " (" + getMsgsPerSecond() + " msgs/s), errors: " + errors +
-                    ". Peer db batch: " + bufferedMessagePersistenceService.peerPersistence.getCurrentBatchSize();
+            return "- " + name + ": Uptime: " + getDuration() + "s, messages: " + messages + " (" + getMsgsPerSecond() + " msgs/s), errors: " + errors;
         }
     }
 }
