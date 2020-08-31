@@ -32,6 +32,8 @@ services:
       - spring.datasource.username=headerSV
       - spring.datasource.password=test
       - spring.profiles.active=local-bsv-mainnet
+    ports:
+      - 8081:8080
     depends_on:
       - postgres-headerSV
     networks:
