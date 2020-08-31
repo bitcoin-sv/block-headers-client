@@ -1,20 +1,13 @@
 package com.nchain.headerSV.config;
 
 
-import com.nchain.jcl.network.config.NetworkConfig;
-import com.nchain.jcl.network.config.NetworkConfigImpl;
 import com.nchain.jcl.protocol.config.ProtocolConfig;
 import com.nchain.jcl.protocol.config.provided.ProtocolBSVMainConfig;
-import com.nchain.jcl.protocol.wrapper.P2P;
-import com.nchain.jcl.protocol.wrapper.P2PBuilder;
-import com.nchain.jcl.tools.config.RuntimeConfig;
-import com.nchain.jcl.tools.config.RuntimeConfigImpl;
+import com.nchain.jcl.protocol.config.provided.ProtocolBSVStnConfig;
 import com.nchain.jcl.tools.files.FileUtils;
 import com.nchain.jcl.tools.files.FileUtilsBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 
@@ -42,6 +35,15 @@ public class HeaderSVConfig {
     }
 
     /**
+     * The Network Protocol Configuration
+     */
+    @Bean
+    @Profile({"local-bsv-stnnet", "prod-bsv-stnnet"})
+    ProtocolConfig protocolLocalStnConfig() {
+        return new ProtocolBSVStnConfig().toBuilder().build();
+    }
+
+    /**
      * The FileUtils instance, to perform operations on the file system.
      * If one Data folder is specified, it returns a FileUtils that uses a OS temporary folder, otherwise
      * it uses the folders provided. In both cases, the folders are pre-filled with the data stored in the
@@ -49,6 +51,8 @@ public class HeaderSVConfig {
      */
     @Bean
     FileUtils fileUtils() throws IOException {
-        return new FileUtilsBuilder().useClassPath().build();
+        //return new FileUtilsBuilder().build();
+        return  new FileUtilsBuilder().useClassPath().build(this.getClass().getClassLoader());
     }
+
 }
