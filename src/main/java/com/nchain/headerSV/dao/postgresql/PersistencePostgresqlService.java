@@ -1,14 +1,10 @@
 package com.nchain.headerSV.dao.postgresql;
 
-import com.nchain.headerSV.dao.model.BlockHeaderAddrDTO;
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
-import com.nchain.headerSV.dao.postgresql.domain.BlockHeaderAddr;
-import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderAddrRepository;
 import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
 import com.nchain.headerSV.dao.service.PersistenceEngine;
 import com.nchain.headerSV.dao.service.PersistenceService;
-import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -40,10 +36,6 @@ public class PersistencePostgresqlService implements PersistenceService {
     @Autowired
     private BlockHeaderRepository blockHeaderRepository;
 
-    @Autowired
-    private BlockHeaderAddrRepository blockHeaderAddrRepository;
-
-
     @Override
     public PersistenceEngine getEngine() {
         return PersistenceEngine.postgresql;
@@ -52,64 +44,18 @@ public class PersistencePostgresqlService implements PersistenceService {
 
     @Override
     @Transactional
-    public void persistBlockHeaders(Collection<BlockHeaderAddrInfo> blockHeaderAddrInfos) {
-        log.info("Persisting :" + blockHeaderAddrInfos.size() + ": blockHeaders");
-        blockHeaderAddrInfos.forEach(this::persistBlockHeaderInfo);
+    public void persistBlockHeaders(Collection<BlockHeader> blockHeaderAddrInfos) {
+        log.debug("Persisting :" + blockHeaderAddrInfos.size() + ": blockHeaders");
+        blockHeaderAddrInfos.forEach(this::persistBlockHeader);
         blockHeaderRepository.flush();
     }
 
-    void persistBlockHeaderInfo(BlockHeaderAddrInfo blockHeaderInfo) {
-        log.debug("Persisting blockheader: " + blockHeaderInfo);
-
-        final BlockHeaderDTO blockHeaderDTO = BlockHeaderDTO.builder()
-                .hash(blockHeaderInfo.getHash())
-                .prevBlockHash(blockHeaderInfo.getPrevBlockHash())
-                .merkleRoot(blockHeaderInfo.getMerkleRoot())
-                .difficultyTarget(blockHeaderInfo.getDifficultyTarget())
-                .transactionCount(blockHeaderInfo.getTransactionCount())
-                .creationTimestamp(blockHeaderInfo.getCreationTimestamp())
-                .version(blockHeaderInfo.getVersion())
-                .nonce(blockHeaderInfo.getNonce()).build();
-
-        final BlockHeaderAddrDTO blockHeaderAddrDTO = BlockHeaderAddrDTO.builder()
-                .address(blockHeaderInfo.getAddress())
-                .hash(blockHeaderInfo.getHash()).build();
-
-        persistBlockHeader(blockHeaderDTO);
-        persistBlockHeaderAddr(blockHeaderAddrDTO);
-    }
-
-
-    public void persistBlockHeaderAddr(BlockHeaderAddrDTO blockHeaderDTO) {
-        try {
-            BlockHeaderAddr blockHeaderAddr = new BlockHeaderAddr();
-            converToBlockheaderAddr(blockHeaderDTO, blockHeaderAddr);
-            blockHeaderAddrRepository.save(blockHeaderAddr);
-        } catch (DataIntegrityViolationException e) {
-            log.debug("ERROR persistBlockHeaderAddr. BlockHeader: " + blockHeaderDTO.getHash(), e);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-    }
-
-    private void converToBlockheaderAddr(BlockHeaderAddrDTO from, BlockHeaderAddr to) {
-
-        if (from == null || to == null)
-            return;
-
-        to.setHash(from.getHash());
-        to.setAddress(from.getAddress());
-    }
-
     @Override
-    public void persistBlockHeader(BlockHeaderDTO blockHeaderDTO) {
+    public void persistBlockHeader(BlockHeader blockHeader) {
         try {
-            BlockHeader blockHeaderToPersist = new BlockHeader();
-            converToBlockheader(blockHeaderDTO, blockHeaderToPersist);
-            blockHeaderRepository.save(blockHeaderToPersist);
+            blockHeaderRepository.save(blockHeader);
         } catch (DataIntegrityViolationException e) {
-            log.debug("ERROR persistBlockHeader. BlockHeader: " + blockHeaderDTO.getHash(), e);
+            log.debug("ERROR persistBlockHeader. BlockHeader: " + blockHeader.getHash(), e);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -148,18 +94,4 @@ public class PersistencePostgresqlService implements PersistenceService {
         to.setTransactionCount(from.getTransactionCount());
     }
 
-    private void converToBlockheader(BlockHeaderDTO dto, BlockHeader to) {
-        if (dto == null || to == null)
-            return;
-
-        to.setHash(dto.getHash());
-        to.setCreationTimestamp(dto.getCreationTimestamp());
-        to.setDifficultyTarget(dto.getDifficultyTarget());
-        to.setMerkleRoot(dto.getMerkleRoot());
-        to.setNonce(dto.getNonce());
-        to.setDifficultyTarget(dto.getDifficultyTarget());
-        to.setPrevBlockHash(dto.getPrevBlockHash());
-        to.setVersion(dto.getVersion());
-        to.setTransactionCount(dto.getTransactionCount());
-    }
 }

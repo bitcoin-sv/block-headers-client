@@ -1,5 +1,6 @@
 package com.nchain.headerSV.service.cache;
 
+import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import com.nchain.jcl.tools.crypto.Sha256Wrapper;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
@@ -7,14 +8,20 @@ import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.cache.cached.CachedHeader;
 import com.nchain.headerSV.service.HeaderSvService;
 import com.nchain.headerSV.tools.Util;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 import org.jgrapht.traverse.DepthFirstIterator;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -24,30 +31,39 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@ConfigurationProperties(prefix = "headersv.cache")
 public class BlockHeaderCacheService implements HeaderSvService {
 
     private final BlockHeaderRepository blockHeaderRepository;
+    private final MessageBufferService messageBufferService;
+
     private Graph<String, DefaultEdge> blockChain;
-    private HashMap<String, BlockHeader> unconnectedBlocks;
-    private HashMap<String, CachedHeader> connectedBlocks;
-    private HashMap<String, CachedBranch> branches;
+    private HashMap<String, CachedHeader> unconnectedBlocks = new HashMap<>();
+    private HashMap<String, CachedHeader> connectedBlocks = new HashMap<>();
+    private HashMap<String, CachedBranch> branches = new HashMap<>();
+    private HashMap<String, BlockHeader> blocksToPersist = new HashMap<>();
+
+    private ScheduledExecutorService executor;
+
+    @Setter
+    private Integer cacheFlushThreshold;
+
+    @Setter
+    private Integer lastFlushTimeMaxIntervalMs;
 
 
-
-    public BlockHeaderCacheService(BlockHeaderRepository blockHeaderRepository){
+    public BlockHeaderCacheService(BlockHeaderRepository blockHeaderRepository,
+                                   MessageBufferService messageBufferService){
         this.blockHeaderRepository = blockHeaderRepository;
+        this.messageBufferService = messageBufferService;
 
-        init();
+        this.executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     private void init(){
         //The blockchain is a directed 'tree' graph
         blockChain = GraphTypeBuilder.<String, DefaultEdge> directed().allowingMultipleEdges(false)
                 .allowingSelfLoops(false).edgeClass(DefaultEdge.class).weighted(true).buildGraph();
-
-        connectedBlocks = new HashMap<>();
-        unconnectedBlocks = new HashMap<>();
-        branches = new HashMap<>();
 
         //create and add the root branch the genesis will connect too
         String rootBranchId = generateBranchId(Sha256Wrapper.ZERO_HASH.toString());
@@ -68,16 +84,20 @@ public class BlockHeaderCacheService implements HeaderSvService {
 
         //ensure genesis block exists in database
         initializeGenesis();
+
+        //cache flush process
+        executor.scheduleAtFixedRate(this::flush, lastFlushTimeMaxIntervalMs, lastFlushTimeMaxIntervalMs, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void start() {
+        init();
         loadFromDatabase();
     }
 
     @Override
     public void stop() {
-
+        flush();
     }
 
     public synchronized List<CachedBranch> getBranches(){
@@ -100,13 +120,17 @@ public class BlockHeaderCacheService implements HeaderSvService {
         return branches.get(branchId);
     }
 
-    public synchronized Set<BlockHeader> addToCache(List<BlockHeader> blockHeaders){
-        //Filter out any duplicate headers, and those which are already cached(processed or unprocessed)
+    public Set<BlockHeader> addToCache(Set<BlockHeader> blockHeaders){
+        return addToCache(blockHeaders, true);
+    }
+
+    private synchronized Set<BlockHeader> addToCache(Set<BlockHeader> blockHeaders, boolean persist){
+        //Sort lists into those that have been added, and those which have not
         Set<BlockHeader> uniqueBlockHeaders = blockHeaders.stream().filter(b -> !connectedBlocks.containsKey(b.getHash()) && !unconnectedBlocks.containsKey(b.getHash())).collect(Collectors.toSet());
 
         //we want to process the unique headers, and reattempt connecting any existing unconnectedBlocks
         Set<BlockHeader> headersToProcess = new HashSet<>(uniqueBlockHeaders);
-        headersToProcess.addAll(unconnectedBlocks.values());
+        headersToProcess.addAll(unconnectedBlocks.values().stream().map(cb -> cb.getBlockHeader()).collect(Collectors.toList()));
 
         //add the vertex, connect the edges, connect any blocks that are forked
         headersToProcess.forEach(this::addVertex);
@@ -116,6 +140,16 @@ public class BlockHeaderCacheService implements HeaderSvService {
         //process the graph, building the newly added nodes from the branch tips. Any blocks unconnected after the graph has been built are orphans
         buildGraph();
 
+        //Persist the block headers we've just added
+        if(persist) {
+            uniqueBlockHeaders.forEach(this::persistBlockHeader);
+        }
+
+        //check if we should flush the cash
+        if(blocksToPersist.size() >= cacheFlushThreshold){
+            flush();
+        }
+
         return uniqueBlockHeaders;
     }
 
@@ -124,7 +158,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         try {
             //add the vertex to the graph, and the list of unconnected blocks for processing
             blockChain.addVertex(blockHeader.getHash());
-            unconnectedBlocks.put(blockHeader.getHash(), blockHeader);
+            unconnectedBlocks.put(blockHeader.getHash(), CachedHeader.builder().blockHeader(blockHeader).build());
         } catch (NullPointerException ex){
             return false;
         }
@@ -168,7 +202,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         log.info("Initializing blockheader cache. Processing: " + blockHeaderRepository.count() + " entries...");
         List<BlockHeader> blockHeaderList = blockHeaderRepository.findAll();
 
-        addToCache(blockHeaderList);
+        addToCache(new HashSet<>(blockHeaderList), false);
 
         log.info("BlockHeader cache initialization complete");
     }
@@ -192,7 +226,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
 
             //traverse the child nodes of the branch, anything below the leaf will be unconnected
             while(iterator.hasNext()) {
-                BlockHeader currentBlockHeader = unconnectedBlocks.get(iterator.next());
+                BlockHeader currentBlockHeader = unconnectedBlocks.get(iterator.next()).getBlockHeader();
                 connectBlockToParent(currentBlockHeader);
             }
         });
@@ -232,7 +266,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         log.info("Added block: " + blockHeader.getHash() + " to cache at height: " + height);
     }
 
-    public HashMap<String, BlockHeader> getUnconnectedBlocks() {
+    public HashMap<String, CachedHeader> getUnconnectedBlocks() {
         return unconnectedBlocks;
     }
 
@@ -249,7 +283,19 @@ public class BlockHeaderCacheService implements HeaderSvService {
         return Util.calculateWork(Util.decompressCompactBits(target)).doubleValue();
     }
 
-    private void initializeGenesis(){
-        blockHeaderRepository.save(Util.GENESIS_BLOCK_HEADER);
+    private void initializeGenesis() {
+        blockHeaderRepository.saveAndFlush(Util.GENESIS_BLOCK_HEADER);
+    }
+
+    private void persistBlockHeader(BlockHeader blockHeader) {
+        blocksToPersist.put(blockHeader.getHash(), blockHeader);
+    }
+
+    public synchronized void flush(){
+        if(blocksToPersist.size() > 0) {
+            blockHeaderRepository.saveAll(new ArrayList<>(blocksToPersist.values()));
+
+            blocksToPersist.clear();
+        }
     }
 }

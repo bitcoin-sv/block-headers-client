@@ -34,7 +34,7 @@ public class BufferedMessagePersistenceService {
 
 
     private void process(BufferedBlockHeaders bufferedBlockHeader) {
-      bufferedBlockHeader.getBlockHeaderAddrInfos().forEach(blockHeaderPersistence::persist);
+      bufferedBlockHeader.getBlockHeaders().forEach(blockHeaderPersistence::persist);
     }
 
 

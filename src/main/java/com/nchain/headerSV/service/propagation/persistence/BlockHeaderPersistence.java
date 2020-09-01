@@ -1,9 +1,7 @@
 package com.nchain.headerSV.service.propagation.persistence;
 
-import com.nchain.jcl.protocol.messages.BlockHeaderMsg;
-import com.nchain.headerSV.dao.model.BlockHeaderDTO;
+import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.dao.service.PersistenceLocatorService;
-import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Scope;
@@ -23,7 +21,7 @@ import java.util.Collection;
 @Service
 @ConfigurationProperties(prefix = "headersv.propagation.persistence.block")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class BlockHeaderPersistence extends AbstractPersistence<BlockHeaderAddrInfo> {
+public class BlockHeaderPersistence extends AbstractPersistence<BlockHeader> {
 
     public BlockHeaderPersistence(PersistenceLocatorService persistenceLocatorService) {
         super(persistenceLocatorService);
@@ -31,8 +29,8 @@ public class BlockHeaderPersistence extends AbstractPersistence<BlockHeaderAddrI
 
     @GuardedBy("this")
     @Override
-    protected void process(Collection<BlockHeaderAddrInfo> blockHeaderDTOS) {
-        getPersistenceService().persistBlockHeaders(blockHeaderDTOS);
+    protected void process(Collection<BlockHeader> blockHeaders) {
+        getPersistenceService().persistBlockHeaders(blockHeaders);
 
     }
 }

@@ -25,4 +25,6 @@ public interface NetworkService {
     void subscribe(Class<? extends Message> eventClass, MessageConsumer eventHandler);
     /** unsubscribe to network events */
     void unsubscribe(Class<? extends Message> eventClass, MessageConsumer eventHandler);
+    /** return the number of connected peers*/
+    int getConnectedPeersCount();
 }

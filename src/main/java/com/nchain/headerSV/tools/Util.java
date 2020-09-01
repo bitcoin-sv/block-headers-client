@@ -36,5 +36,6 @@ public class Util {
             .nonce(2083236893L)
             .transactionCount(0)
             .creationTimestamp(1231006505)
+            .confidence(0)
             .build();
 }

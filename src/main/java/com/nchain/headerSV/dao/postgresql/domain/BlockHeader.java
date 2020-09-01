@@ -3,7 +3,6 @@ package com.nchain.headerSV.dao.postgresql.domain;
 
 import com.nchain.jcl.protocol.messages.BlockHeaderMsg;
 import com.nchain.jcl.tools.bytes.HEX;
-import com.nchain.jcl.tools.crypto.Sha256Wrapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -60,7 +59,11 @@ public class BlockHeader {
     @Column
     private long transactionCount;
 
-    public static BlockHeader of(BlockHeaderMsg blockHeaderMsg){
+    @Column
+    @NotNull
+    private long confidence;
+
+    public static BlockHeader of(BlockHeaderMsg blockHeaderMsg, int confidence){
         return BlockHeader.builder()
                 .version(blockHeaderMsg.getVersion())
                 .hash(HEX.encode(blockHeaderMsg.getHash().getHashBytes()))
@@ -70,6 +73,7 @@ public class BlockHeader {
                 .difficultyTarget(blockHeaderMsg.getDifficultyTarget())
                 .nonce(blockHeaderMsg.getNonce())
                 .transactionCount(blockHeaderMsg.getTransactionCount().getValue())
+                .confidence(confidence)
                 .build();
     }
 
