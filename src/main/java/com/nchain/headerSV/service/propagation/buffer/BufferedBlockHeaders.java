@@ -1,9 +1,10 @@
 package com.nchain.headerSV.service.propagation.buffer;
 
-import com.nchain.headerSV.domain.BlockHeaderAddrInfo;
+import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -17,12 +18,12 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class BufferedBlockHeaders implements BufferedMessage {
-    List<BlockHeaderAddrInfo> blockHeaderAddrInfos;
+    List<BlockHeader> blockHeaders;
 
     @Override
     public String toString() {
         return "BufferedBlockHeader{" +
-                "blockHeaderInfo=" + blockHeaderAddrInfos.toString() +
+                "blockHeaderInfo=" + blockHeaders.toString() +
                 '}';
     }
 }

@@ -1,16 +1,12 @@
 package com.nchain.headerSV.service.cache;
 
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
-import com.nchain.headerSV.dao.postgresql.domain.BlockHeaderAddr;
-import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderAddrRepository;
-import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
 import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.cache.cached.CachedHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
-import java.util.List;
 
 /**
  * @author m.jose@nchain.com
@@ -26,9 +22,6 @@ public class BlockChainFacade {
     @Autowired
     BlockHeaderCacheService blockHeaderCacheService;
 
-    @Autowired
-    BlockHeaderAddrRepository blockHeaderAddrRepository;
-
     private enum BranchState {
         MAIN_CHAIN,
         ORPHAN,
@@ -38,16 +31,14 @@ public class BlockChainFacade {
 
     public BlockHeaderQueryResult getBlockFromCache(String hash) {
         BlockHeaderQueryResult  queryResult = null;
-        BlockHeader  blockHeader  = blockHeaderCacheService.getUnconnectedBlocks().get(hash);
+        CachedHeader blockHeader  = blockHeaderCacheService.getUnconnectedBlocks().get(hash);
 
-        List<BlockHeaderAddr> blockHeaderAddrList = blockHeaderAddrRepository.findByHash(hash);
-
-        queryResult = blockHeader != null? BlockHeaderQueryResult.builder()
-               .blockHeader(blockHeader)
+        queryResult = blockHeader != null ? BlockHeaderQueryResult.builder()
+               .blockHeader(blockHeader.getBlockHeader())
                .height(0)
                .work(0)
                .state(BranchState.ORPHAN.name())
-               .confidence(blockHeaderAddrList.size()).build(): getBlockHeaderQueryResult(hash);
+               .build(): getBlockHeaderQueryResult(hash);
 
         return queryResult;
     }
@@ -66,20 +57,17 @@ public class BlockChainFacade {
             String branchstate = BranchState.STALE.name();
             if (maxWorkedHoldBranch != null  && branch != null )
                 if( maxWorkedHoldBranch.getWork() < branch.getWork() || (maxWorkedHoldBranch.getId().equals(branch.getId()) && maxWorkedHoldBranch.getWork() == branch.getWork())) {
-
                     mainBranch = true;
                     branchstate = BranchState.MAIN_CHAIN.name();
                 }
 
-            List<BlockHeaderAddr> blockHeaderAddrList = blockHeaderAddrRepository.findByHash(hash);
 
             queryResult = BlockHeaderQueryResult.builder()
                     .blockHeader(cachedHeader.getBlockHeader())
                     .height(cachedHeader.getHeight())
                     .work(cachedHeader.getWork())
                     .bestChain(mainBranch)
-                    .state(branchstate)
-                    .confidence(blockHeaderAddrList.size()).build();
+                    .state(branchstate).build();
         }
         return queryResult;
     }

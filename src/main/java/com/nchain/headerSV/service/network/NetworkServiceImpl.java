@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * @author m.jose@nchain.com
@@ -50,11 +51,10 @@ public class NetworkServiceImpl implements NetworkService {
     // A Collection to keep track of the Peers handshaked:
     private final Map<PeerAddress, PeerInfo> peersInfo = new ConcurrentHashMap<>();
 
-    private final Queue<PeerInfo> disconnectedPeersQueue = new LinkedBlockingQueue<>();
-
     private ScheduledExecutorService executor;
 
     private Map<Class<? extends Message>, Set<MessageConsumer>> messageConsumers = new ConcurrentHashMap<>();
+
 
     @Autowired
     protected NetworkServiceImpl(ProtocolConfig protocolConfig,
@@ -68,7 +68,7 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     private void init() {
-        log.info("Initalizing the handler" );
+        log.info("Initalizing Network Service" );
 
         HandshakeHandlerConfig handshakeHandlerConfig = HandshakeHandlerConfig.builder()
                 .relayTxs(p2pConfig.isRelayTxs())
@@ -143,15 +143,13 @@ public class NetworkServiceImpl implements NetworkService {
         log.debug("onPeerDisconnected: IP:" + event.getPeerAddress().toString()+":Reason:" + event.getReason().toString());
         PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
 
-        if(peerInfo == null)  peerInfo = new PeerInfo(event.getPeerAddress(),  null, Optional.empty(), false);
-        peerInfo.setPeerConnectedStatus(false);
-        disconnectedPeersQueue.offer(peerInfo);
-
+        if(peerInfo!= null) {
+            peerInfo.setPeerConnectedStatus(false);
+        }
     }
 
     private void onPeerHandshaked(PeerHandshakedEvent event) {
         log.debug("onPeerHandshaked: IP:" + event.getPeerAddress().toString()+":User Agent:"+ event.getVersionMsg().getUser_agent() +": Version :" + event.getVersionMsg().getVersion());
-
 
         SendHeadersMsg sendHeadersMsg = SendHeadersMsg.builder().build();
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), sendHeadersMsg);
@@ -164,5 +162,10 @@ public class NetworkServiceImpl implements NetworkService {
             peersInfo.put(event.getPeerAddress(), peerInfo);
         }
      }
+
+
+    public int getConnectedPeersCount(){
+        return peersInfo.values().stream().filter(PeerInfo::isPeerConnectedStatus).collect(Collectors.toList()).size();
+    }
 
 }

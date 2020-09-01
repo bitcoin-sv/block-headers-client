@@ -4,15 +4,12 @@ import com.nchain.headerSV.dao.service.PersistenceEngine;
 import com.nchain.headerSV.dao.service.PersistenceLocatorService;
 import com.nchain.headerSV.dao.service.PersistenceService;
 import lombok.Setter;
-import org.apache.tomcat.jni.Time;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.annotation.concurrent.GuardedBy;
-import javax.transaction.Transactional;
 import java.util.Collection;
-import java.util.Date;
 import java.util.LinkedList;
 
 /**
