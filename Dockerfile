@@ -15,4 +15,5 @@ COPY --from=builder /home/gradle/headerSV/build/libs/headerSV-0.0.1.jar /app.jar
 COPY wait-for-it.sh .
 RUN apk add --no-cache --upgrade bash
 VOLUME /headerSV-data
-CMD ["java","-jar","-XshowSettings:vm", "-Djava.security.egd=file:/dev/./urandom", "/app.jar","--stacktrace"]
+CMD ["java","-jar","-XX:MaxRAMFraction=1","-XshowSettings:vm", "-Djava.security.egd=file:/dev/./urandom","/app.jar","--stacktrace"]
+
