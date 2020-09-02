@@ -1,13 +1,13 @@
 package com.nchain.headerSV.service.cache;
 
-import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
-import com.nchain.jcl.tools.crypto.Sha256Wrapper;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
+import com.nchain.headerSV.service.HeaderSvService;
 import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.cache.cached.CachedHeader;
-import com.nchain.headerSV.service.HeaderSvService;
+import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import com.nchain.headerSV.tools.Util;
+import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.Graph;
@@ -16,7 +16,6 @@ import org.jgrapht.graph.builder.GraphTypeBuilder;
 import org.jgrapht.traverse.DepthFirstIterator;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
-
 
 import java.util.*;
 import java.util.concurrent.Executors;

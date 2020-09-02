@@ -1,11 +1,11 @@
 package com.nchain.headerSV.config;
 
 
-import com.nchain.jcl.protocol.config.ProtocolConfig;
-import com.nchain.jcl.protocol.config.provided.ProtocolBSVMainConfig;
-import com.nchain.jcl.protocol.config.provided.ProtocolBSVStnConfig;
-import com.nchain.jcl.tools.files.FileUtils;
-import com.nchain.jcl.tools.files.FileUtilsBuilder;
+import com.nchain.jcl.base.tools.files.FileUtils;
+import com.nchain.jcl.base.tools.files.FileUtilsBuilder;
+import com.nchain.jcl.net.protocol.config.ProtocolConfig;
+import com.nchain.jcl.net.protocol.config.provided.ProtocolBSVMainConfig;
+import com.nchain.jcl.net.protocol.config.provided.ProtocolBSVStnConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -51,7 +51,6 @@ public class HeaderSVConfig {
      */
     @Bean
     FileUtils fileUtils() throws IOException {
-        //return new FileUtilsBuilder().build();
         return  new FileUtilsBuilder().useClassPath().build(this.getClass().getClassLoader());
     }
 

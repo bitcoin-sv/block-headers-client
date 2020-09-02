@@ -1,28 +1,32 @@
 package com.nchain.headerSV.service.network;
 
 import com.nchain.headerSV.config.P2PConfig;
-import com.nchain.jcl.network.PeerAddress;
-import com.nchain.jcl.network.events.PeerDisconnectedEvent;
-import com.nchain.jcl.protocol.config.ProtocolConfig;
-import com.nchain.jcl.protocol.events.MsgReceivedEvent;
-import com.nchain.jcl.protocol.events.PeerHandshakedEvent;
-import com.nchain.jcl.protocol.handlers.block.BlockDownloaderHandler;
-import com.nchain.jcl.protocol.handlers.handshake.HandshakeHandlerConfig;
-import com.nchain.jcl.protocol.messages.SendHeadersMsg;
-import com.nchain.jcl.protocol.messages.common.BitcoinMsgBuilder;
-import com.nchain.jcl.protocol.messages.common.Message;
-import com.nchain.jcl.protocol.wrapper.P2P;
-import com.nchain.jcl.protocol.wrapper.P2PBuilder;
 import com.nchain.headerSV.domain.PeerInfo;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
+import com.nchain.jcl.net.network.PeerAddress;
+import com.nchain.jcl.net.network.events.PeerDisconnectedEvent;
+import com.nchain.jcl.net.protocol.config.ProtocolConfig;
+import com.nchain.jcl.net.protocol.events.MsgReceivedEvent;
+import com.nchain.jcl.net.protocol.events.PeerHandshakedEvent;
+import com.nchain.jcl.net.protocol.handlers.block.BlockDownloaderHandler;
+import com.nchain.jcl.net.protocol.handlers.handshake.HandshakeHandlerConfig;
+import com.nchain.jcl.net.protocol.messages.SendHeadersMsg;
+import com.nchain.jcl.net.protocol.messages.common.BitcoinMsgBuilder;
+import com.nchain.jcl.net.protocol.messages.common.Message;
+import com.nchain.jcl.net.protocol.wrapper.P2P;
+import com.nchain.jcl.net.protocol.wrapper.P2PBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 /**

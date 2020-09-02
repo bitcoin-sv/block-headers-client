@@ -1,8 +1,9 @@
 package com.nchain.headerSV.service.network;
 
-import com.nchain.jcl.network.PeerAddress;
-import com.nchain.jcl.protocol.messages.common.Message;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
+import com.nchain.jcl.net.network.PeerAddress;
+import com.nchain.jcl.net.protocol.messages.common.Message;
+
 
 /**
  * @author m.jose@nchain.com

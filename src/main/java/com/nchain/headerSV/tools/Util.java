@@ -1,8 +1,8 @@
 package com.nchain.headerSV.tools;
 
-import com.nchain.jcl.protocol.messages.HashMsg;
-import com.nchain.jcl.tools.crypto.Sha256Wrapper;
 import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
+import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
+import com.nchain.jcl.net.protocol.messages.HashMsg;
 
 import java.math.BigInteger;
 

@@ -4,9 +4,9 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
 import com.nchain.headerSV.domain.PeerLocationInfo;
-import com.nchain.jcl.network.PeerAddress;
-import com.nchain.jcl.tools.files.FileUtils;
-import com.nchain.jcl.tools.files.FileUtilsBuilder;
+import com.nchain.jcl.base.tools.files.FileUtils;
+import com.nchain.jcl.base.tools.files.FileUtilsBuilder;
+import com.nchain.jcl.net.network.PeerAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

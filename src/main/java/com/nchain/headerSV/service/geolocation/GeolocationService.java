@@ -1,7 +1,8 @@
 package com.nchain.headerSV.service.geolocation;
 
-import com.nchain.jcl.network.PeerAddress;
+
 import com.nchain.headerSV.domain.PeerLocationInfo;
+import com.nchain.jcl.net.network.PeerAddress;
 
 import java.util.Optional;
 

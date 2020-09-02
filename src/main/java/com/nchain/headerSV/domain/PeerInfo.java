@@ -1,7 +1,7 @@
 package com.nchain.headerSV.domain;
 
-import com.nchain.jcl.network.PeerAddress;
-import com.nchain.jcl.protocol.messages.VersionMsg;
+import com.nchain.jcl.net.network.PeerAddress;
+import com.nchain.jcl.net.protocol.messages.VersionMsg;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

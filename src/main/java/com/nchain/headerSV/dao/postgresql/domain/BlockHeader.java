@@ -1,14 +1,17 @@
 package com.nchain.headerSV.dao.postgresql.domain;
 
 
-import com.nchain.jcl.protocol.messages.BlockHeaderMsg;
-import com.nchain.jcl.tools.bytes.HEX;
+import com.nchain.jcl.base.tools.bytes.HEX;
+import com.nchain.jcl.net.protocol.messages.BlockHeaderMsg;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 

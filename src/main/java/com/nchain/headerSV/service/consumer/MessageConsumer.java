@@ -1,8 +1,9 @@
 package com.nchain.headerSV.service.consumer;
 
-import com.nchain.jcl.network.PeerAddress;
-import com.nchain.jcl.protocol.messages.common.BitcoinMsg;
-import com.nchain.jcl.protocol.messages.common.Message;
+
+import com.nchain.jcl.net.network.PeerAddress;
+import com.nchain.jcl.net.protocol.messages.common.BitcoinMsg;
+import com.nchain.jcl.net.protocol.messages.common.Message;
 
 /**
  * @author {m.fletcher}@nchain.com
