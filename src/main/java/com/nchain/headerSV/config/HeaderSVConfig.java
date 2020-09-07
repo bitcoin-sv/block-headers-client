@@ -29,7 +29,7 @@ public class HeaderSVConfig {
      * The Network Protocol Configuration
      */
     @Bean
-    @Profile({"local-bsv-mainnet", "prod-bsv-mainnet"})
+    @Profile({"local-bsv-mainnet", "docker-bsv-mainnet"})
     ProtocolConfig protocolLocalMainConfig() {
         return new ProtocolBSVMainConfig().toBuilder().build();
     }
@@ -38,7 +38,7 @@ public class HeaderSVConfig {
      * The Network Protocol Configuration
      */
     @Bean
-    @Profile({"local-bsv-stnnet", "prod-bsv-stnnet"})
+    @Profile({"local-bsv-stnnet", "docker-bsv-stnnet"})
     ProtocolConfig protocolLocalStnConfig() {
         return new ProtocolBSVStnConfig().toBuilder().build();
     }
