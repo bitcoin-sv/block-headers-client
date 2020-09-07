@@ -22,7 +22,7 @@ public class BlockHeaderQueryResult {
     private BlockHeader blockHeader;
     private String state;
     private double work;
-    private int height;
+    private Integer height;
     private boolean bestChain;
 
 }

@@ -1,6 +1,5 @@
 package com.nchain.headerSV.service.cache;
 
-import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.cache.cached.CachedHeader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +34,7 @@ public class BlockChainFacade {
 
         queryResult = blockHeader != null ? BlockHeaderQueryResult.builder()
                .blockHeader(blockHeader.getBlockHeader())
-               .height(0)
+               .height(null)
                .work(0)
                .state(BranchState.ORPHAN.name())
                .build(): getBlockHeaderQueryResult(hash);
@@ -64,7 +63,7 @@ public class BlockChainFacade {
 
             queryResult = BlockHeaderQueryResult.builder()
                     .blockHeader(cachedHeader.getBlockHeader())
-                    .height(cachedHeader.getHeight())
+                    .height(Integer.valueOf(cachedHeader.getHeight()))
                     .work(cachedHeader.getWork())
                     .bestChain(mainBranch)
                     .state(branchstate).build();
