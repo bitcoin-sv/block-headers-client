@@ -28,5 +28,5 @@ else
 fi
 
 export JAVA_SPRING_PROFILE=docker-bsv-mainnet
-docker-compose up -d
+docker-compose -f docker-compose-windows.yml up -d
 echo "HeaderSV client started in the background."
