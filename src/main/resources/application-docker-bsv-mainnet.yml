@@ -1,0 +1,50 @@
+debug: false
+
+spring:
+  jpa:
+    hibernate.ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 2000
+          non_contextual_creation: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+  datasource:
+      url: jdbc:postgresql://localhost:5432/headerSV
+      username: headerSV
+      password: test
+      driverClassName: org.postgresql.Driver
+
+
+# Application Configuration:
+headersv:
+  # This variable will determine what Repositories are loaded into the Spring context (postgresql or the mongodb ones)
+  persistenceEngine: postgresql
+
+  # Listener Configuration params:
+  p2p:
+    maxPeers: 10
+    minPeers: 5
+    relayTxs: false
+
+  sync:
+    headersToIgnore: 00000000000000000019f1679932c8a69051fca08d0934ac0c6cad56077d0c66, 0000000000000000004626ff6e3b936941d341c5932ece4357eeccac44e6d56c
+    requestHeadersRefreshIntervalMs: 30000
+
+  cache:
+    cacheFlushThreshold: 6000
+    lastFlushTimeMaxIntervalMs: 10000
+
+  propagation:
+    buffer:
+      enabled: true
+      threads: 1
+      bufferSize: 100000
+    persistence:
+      block:
+        enabled: true
+        batchSize: 2000
+      lastFlushTimeMaxIntervalMs: 5000
+
