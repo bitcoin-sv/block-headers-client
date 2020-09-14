@@ -1,0 +1,44 @@
+version: "3"
+services:
+  headersv-db:
+    image: postgres:11.5
+    container_name: headersv-db
+    volumes:
+      - headerSV-postgres-volume:/var/lib/postgresql/data:Z
+    environment:
+      - POSTGRES_DB=headerSV
+      - POSTGRES_USER=headerSV
+      - POSTGRES_PASSWORD=test
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - 54320:5432
+    stop_grace_period: 120s
+    networks:
+      - headersv-network
+
+  headersv-app:
+    image: squishy.hardfork.cash:443/headersv-app:latest
+    container_name: headersv-app
+    volumes:
+      - ./headersv-data/log:/headersv-data
+    environment:
+      - JAVA_OPTS=-XX:+PrintFlagsFinal
+      - spring.profiles.active=${JAVA_SPRING_PROFILE}
+      - spring.datasource.url=jdbc:postgresql://headersv-db:5432/headerSV
+      - spring.datasource.username=headerSV
+      - spring.datasource.password=test
+    depends_on:
+      - headersv-db
+    ports:
+      - 8080:8080
+    networks:
+      - headersv-network
+    command: ["/wait-for-it.sh", "headersv-db:5432", "-t", "55", "--", "java","-jar","-XX:MaxRAMFraction=1","-XshowSettings:vm", "-Djava.security.egd=file:/dev/./urandom", "/headerSV.jar","--stacktrace"]
+
+volumes:
+  headerSV-postgres-volume:
+    external: true
+
+networks:
+  headersv-network:
+    driver: bridge
