@@ -16,6 +16,6 @@ import lombok.Getter;
 public class CachedHeader {
     private BlockHeader blockHeader;
     private String branchId;
-    private double work;
-    private int height;
+    private Double work;
+    private Integer height;
 }
