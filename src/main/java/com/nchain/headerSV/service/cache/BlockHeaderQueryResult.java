@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 public class BlockHeaderQueryResult {
     private BlockHeader blockHeader;
     private String state;
-    private double work;
+    private Double work;
     private Integer height;
     private boolean bestChain;
-
+    private Integer confirmations;
 }
