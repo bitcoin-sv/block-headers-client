@@ -26,7 +26,7 @@ services:
       - ./headersv-data/log:/headersv-data
     environment:
       - JAVA_OPTS=-XX:+PrintFlagsFinal
-      - spring.profiles.active=docker-bsv-mainnet
+      - spring.profiles.active=docker-bsv-testnet
       - spring.datasource.url=jdbc:postgresql://headersv-db:5432/headerSV
     depends_on:
       - headersv-db

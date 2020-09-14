@@ -33,5 +33,30 @@
             <appender-ref ref="TIME_BASED_FILE"/>
         </logger>
     </springProfile>
+    <springProfile name="docker-bsv-stnnet">
+        <root level="INFO">
+            <appender-ref ref="STDOUT" />
+        </root>
+        <logger name="com.nchain.headerSV" additivity="false">
+            <level value="INFO" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+    </springProfile>
+    <springProfile name="docker-bsv-testnet">
+        <root level="TRACE">
+            <appender-ref ref="STDOUT" />
+        </root>
+        <logger name="com.nchain.headerSV" additivity="false">
+            <level value="TRACE" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+        <logger name="com.nchain.jcl" additivity="false">
+            <level value="TRACE" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+    </springProfile>
 
 </configuration>
