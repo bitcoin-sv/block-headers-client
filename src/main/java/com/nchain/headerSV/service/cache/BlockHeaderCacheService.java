@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author m.fletcher@nchain.com
- * Copyright (c) 2018-2020 nChain Ltd
+  * Copyright (c) 2018-2020 nChain Ltd
  * @date 06/08/2020
  */
 @Service

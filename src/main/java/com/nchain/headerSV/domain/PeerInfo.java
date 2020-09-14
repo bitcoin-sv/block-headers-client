@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * @author i.fernandez@nchain.com
  * Copyright (c) 2018-2019 Bitcoin Association
- * Distributed under the Open BSV software license, see the accompanying file LICENSE.
+  * Copyright (c) 2018-2020 nChain Ltd
  * @date 2019-10-10 15:39
  *
  * Information to store for each Peer in the P2P Network.

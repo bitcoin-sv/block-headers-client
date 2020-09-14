@@ -12,6 +12,14 @@ import org.springframework.context.event.EventListener;
 
 import javax.annotation.PreDestroy;
 
+/**
+ * @author m.jose@nchain.com
+ * Copyright (c) 2009-2010 Satoshi Nakamoto
+ * Copyright (c) 2009-2016 The Bitcoin Core developers
+  * Copyright (c) 2018-2020 nChain Ltd
+ * @date 10/09/2020
+ */
+
 @SpringBootApplication
 public class HeaderSVApplication {
 
