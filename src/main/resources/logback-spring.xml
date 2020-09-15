@@ -38,6 +38,18 @@
         </logger>
     </springProfile>
 
+
+    <springProfile name="local-bsv-mainnet">
+        <root level="INFO">
+            <appender-ref ref="STDOUT" />
+        </root>
+        <logger name="com.nchain.headerSV" additivity="false">
+            <level value="INFO" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+    </springProfile>
+
     <!-- TEST Net: -->
 
     <springProfile name="local-bsv-testnet">
@@ -75,6 +87,16 @@
     <!-- STRESS Net: -->
 
     <springProfile name="docker-bsv-stnnet">
+        <root level="INFO">
+            <appender-ref ref="STDOUT" />
+        </root>
+        <logger name="com.nchain.headerSV" additivity="false">
+            <level value="INFO" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+    </springProfile>
+    <springProfile name="local-bsv-stnnet">
         <root level="INFO">
             <appender-ref ref="STDOUT" />
         </root>

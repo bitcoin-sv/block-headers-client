@@ -36,6 +36,7 @@ headersv:
   cache:
     cacheFlushThreshold: 6000
     lastFlushTimeMaxIntervalMs: 10000
+    lastFlushTimeMinIntervalMs: 30000
 
   propagation:
     buffer:
