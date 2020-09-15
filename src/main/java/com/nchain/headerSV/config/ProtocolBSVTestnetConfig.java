@@ -18,7 +18,13 @@ import com.nchain.jcl.net.protocol.handlers.pingPong.PingPongHandlerConfig;
 public class ProtocolBSVTestnetConfig  extends ProtocolConfigBase implements ProtocolConfig {
 
     private static String id = "BSV [Test Net]";
-    private static long magicPackage = 0x0b110907;
+
+    // NOTE: The magic Number in BitcoinJ is specified in Reverse order as it's sent over the wire. In JCL, the value
+    // is specified in the Java code in the SAME order as it traves throught the network. That's why, if we take the
+    // value of the "magic2 number from BitcoinJ, we need to turn it around (in pairs, as this is hexadecimal and each
+    // pair of characters represents 1 byte).
+    //private static long magicPackage = 0x0b110907; // as its used in BitcoinJ
+    private static long magicPackage = 0x0709110b;   // as its used in JCL
     private static int services;
     private static int port;
     private static int protocolVersion;
@@ -41,6 +47,7 @@ public class ProtocolBSVTestnetConfig  extends ProtocolConfigBase implements Pro
         protocolVersion = ProtocolVersion.CURRENT.getBitcoinProtocolVersion();
         userAgentBlacklist = new String[]{"Bitcoin ABC:", "BUCash:"};
         userAgentWhitelist = new String[]{"Bitcoin SV:", "/bitcoinj-sv:0.0.7/"};
+
         dns = new String[] {
                 "testnet-seed.bitcoin.jonasschnelli.ch", // Jonas Schnelli
                 "seed.tbtc.petertodd.org",               // Peter Todd
