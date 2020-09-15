@@ -5,15 +5,18 @@ import com.nchain.headerSV.api.service.BlockHeaderService;
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.model.PeerConnected;
 import com.nchain.headerSV.service.cache.BlockHeaderQueryResult;
+import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.network.NetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -62,4 +65,16 @@ public class BlockHeaderController {
             return peerConnected;
 
     }
+
+    @RequestMapping("/getBranches")
+    public List<CachedBranch> getBranches(){
+        return blockHeaderService.getBranches();
+    }
+
+    @RequestMapping("/purgeOrphanedBlocks")
+    public void purgeOrphanedBlocks() {
+        blockHeaderService.purgeOrphanedBlocks();
+    }
+
+
 }

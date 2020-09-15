@@ -5,9 +5,12 @@ import com.nchain.headerSV.dao.model.BlockHeaderDTO;
 import com.nchain.headerSV.dao.service.PersistenceService;
 import com.nchain.headerSV.service.cache.BlockChainFacade;
 import com.nchain.headerSV.service.cache.BlockHeaderQueryResult;
+import com.nchain.headerSV.service.cache.cached.CachedBranch;
+import com.nchain.headerSV.service.cache.cached.CachedHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -42,5 +45,13 @@ public class BlockHeaderService {
 
         return block;
 
+    }
+
+    public void purgeOrphanedBlocks(){
+        blockChainFacade.purgeOrphanedBlocks();
+    }
+
+    public List<CachedBranch> getBranches(){
+       return blockChainFacade.getBranches();
     }
 }

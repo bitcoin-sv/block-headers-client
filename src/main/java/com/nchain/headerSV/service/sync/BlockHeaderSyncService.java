@@ -157,7 +157,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
 
     private void requestHeaders(){
         blockHeaderCacheService.getBranches().values().forEach(b -> {
-            log.debug("Requesting headers for branch: " + b.getLeafNode());
+            log.info("Requesting headers for branch: " + b.getLeafNode());
             networkService.broadcast(getHeaderFromHash(b.getLeafNode()));
         });
     }

@@ -38,4 +38,16 @@ public class Util {
             .creationTimestamp(1231006505)
             .confidence(0)
             .build();
+
+    public static BlockHeader ROOT_BLOCK_HEADER = BlockHeader.builder()
+            .prevBlockHash(HashMsg.builder().hash(Sha256Wrapper.ZERO_HASH.getBytes()).build().toString())
+            .hash(HashMsg.builder().hash(Sha256Wrapper.ZERO_HASH.getBytes()).build().toString())
+            .version(1)
+            .merkleRoot(HashMsg.builder().hash(Sha256Wrapper.ZERO_HASH.getBytes()).build().toString())
+            .difficultyTarget(0)
+            .nonce(0)
+            .transactionCount(0)
+            .creationTimestamp(0)
+            .confidence(0)
+            .build();
 }

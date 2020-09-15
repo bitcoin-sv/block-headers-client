@@ -5,8 +5,10 @@ import com.nchain.headerSV.service.cache.cached.CachedHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author m.jose@nchain.com
@@ -25,6 +27,13 @@ public class BlockChainFacade {
         STALE
     }
 
+    public List<CachedBranch> getBranches(){
+        return new ArrayList<>(blockHeaderCacheService.getBranches().values());
+    }
+
+    public void purgeOrphanedBlocks(){
+        blockHeaderCacheService.purgeOrphanedBlocks();
+    }
 
     public BlockHeaderQueryResult getBlockFromCache(String hash) {
         BlockHeaderQueryResult queryResult = null;

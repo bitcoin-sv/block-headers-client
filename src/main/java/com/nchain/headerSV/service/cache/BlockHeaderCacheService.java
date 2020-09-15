@@ -10,6 +10,7 @@ import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.Graph;
+import org.jgrapht.event.*;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 import org.jgrapht.traverse.DepthFirstIterator;
@@ -65,16 +66,16 @@ public class BlockHeaderCacheService implements HeaderSvService {
                 .allowingSelfLoops(false).edgeClass(DefaultEdge.class).weighted(true).buildGraph();
 
         //create and add the root branch the genesis will connect too
-        String rootBranchId = generateBranchId(Sha256Wrapper.ZERO_HASH.toString());
+        String rootBranchId = generateBranchId(Util.ROOT_BLOCK_HEADER.getHash());
         CachedBranch cachedRootBranch = CachedBranch.builder()
                 .id(rootBranchId)
-                .leafNode(Sha256Wrapper.ZERO_HASH.toString())
+                .leafNode(Util.ROOT_BLOCK_HEADER.getHash())
                 .work(Double.valueOf(0)).build();
 
         branches.put(cachedRootBranch.getId(), cachedRootBranch);
 
         //initialize the root hash for genesis to append too
-        BlockHeader rootBlockHeader = BlockHeader.builder().hash(Sha256Wrapper.ZERO_HASH.toString()).build();
+        BlockHeader rootBlockHeader = BlockHeader.builder().hash(Util.ROOT_BLOCK_HEADER.getHash()).build();
         CachedHeader rootBlockHeaderCached = CachedHeader.builder().blockHeader(rootBlockHeader).work(Double.valueOf(0)).height(-1).branchId(rootBranchId).build();
 
         //root 'header' is connected by default
@@ -103,23 +104,11 @@ public class BlockHeaderCacheService implements HeaderSvService {
         return branches;
     }
 
-    public Integer getMinBranchHeight() {
-        Set<Integer> brachHeights = branches.values().stream().map(b-> connectedBlocks.get(b.getLeafNode()).getHeight()).collect(Collectors.toSet());
-
-        return Collections.min(brachHeights);
-    }
-
-    public Integer getMaxBranchHeight() {
-        Set<Integer> brachHeights = branches.values().stream().map(b-> connectedBlocks.get(b.getLeafNode()).getHeight()).collect(Collectors.toSet());
-
-        return Collections.max(brachHeights);
-    }
-
     public CachedBranch getBranch(String branchId){
         return branches.get(branchId);
     }
 
-    public Set<BlockHeader> addToCache(List<BlockHeader> blockHeaders){
+    public synchronized Set<BlockHeader> addToCache(List<BlockHeader> blockHeaders){
         return addToCache(blockHeaders, true);
     }
 
@@ -151,6 +140,11 @@ public class BlockHeaderCacheService implements HeaderSvService {
         if(blocksToPersist.size() >= cacheFlushThreshold){
             flush();
         }
+
+        //log the branch heights if we've added to cache
+//        if(uniqueBlockHeaders.size() > 0) {
+//            log.info("Added " + uniqueBlockHeaders.size() + " blockheaders to cache. Branch Heights:  " + branches.values().stream().map(b -> b.getHeight()).collect(Collectors.toList()));
+//        }
 
         return uniqueBlockHeaders;
     }
@@ -266,7 +260,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         connectedBlocks.put(blockHeader.getHash(), blockHeaderCached);
         unconnectedBlocks.remove(blockHeader.getHash());
 
-        log.info("Added block: " + blockHeader.getHash() + " to cache at height: " + height);
+        log.debug("Added blockheader: " + blockHeader.getHash() + " to cache at height: " + height);
     }
 
     public HashMap<String, CachedHeader> getUnconnectedBlocks() {
@@ -304,4 +298,16 @@ public class BlockHeaderCacheService implements HeaderSvService {
             lastFlushTime = System.currentTimeMillis();
         }
     }
+
+    public synchronized void purgeOrphanedBlocks(){
+        List<BlockHeader> orphanBlockHashes = unconnectedBlocks.values().stream().map(bh -> bh.getBlockHeader()).peek(bh -> blockChain.removeVertex(bh.getHash())).collect(Collectors.toList());
+
+        blockHeaderRepository.deleteAll(orphanBlockHashes);
+
+        log.info("Purging " + orphanBlockHashes.size() + " blockheaders blocks from database and cache");
+
+        unconnectedBlocks.clear();
+    }
+
+
 }
