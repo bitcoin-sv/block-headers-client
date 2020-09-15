@@ -1,7 +1,7 @@
 package com.nchain.headerSV.service.propagation.persistence;
 
 
-import com.nchain.headerSV.service.geolocation.GeolocationService;
+
 import com.nchain.headerSV.service.propagation.buffer.BufferedBlockHeaders;
 import com.nchain.headerSV.service.propagation.buffer.BufferedMessage;
 import lombok.AllArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class BufferedMessagePersistenceService {
 
-    public final GeolocationService geoService;
+
     public final BlockHeaderPersistence blockHeaderPersistence;
 
     public void persist(BufferedMessage bufferedMessage) {
