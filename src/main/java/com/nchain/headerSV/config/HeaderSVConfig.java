@@ -40,6 +40,13 @@ public class HeaderSVConfig {
         return new ProtocolBSVStnConfig().toBuilder().build();
     }
 
+
+    @Bean
+    @Profile({"local-bsv-testnet", "docker-bsv-testnet"})
+    ProtocolConfig protocolLocalTestnetConfig() {
+        return new ProtocolBSVTestnetConfig().toBuilder().build();
+    }
+
     /**
      * The FileUtils instance, to perform operations on the file system.
      * If one Data folder is specified, it returns a FileUtils that uses a OS temporary folder, otherwise

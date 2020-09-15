@@ -20,10 +20,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +35,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @ConfigurationProperties(prefix = "headersv.sync")
-public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsumer {
+public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer {
 
     private final NetworkService networkService;
     private final ProtocolConfig protocolConfig;
@@ -50,13 +48,13 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
     @Setter
     private int requestHeadersRefreshIntervalMs;
 
-    private Set<Long> processedMessages = new HashSet<>();
+    private Set<Long> processedMessages = Collections.synchronizedSet(new HashSet<>());
 
     private static int REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS = 5000;
 
-    protected BlockHeaderSyncServiceImpl(NetworkService networkService,
-                                         ProtocolConfig protocolConfig,
-                                         BlockHeaderCacheService blockHeaderCacheService) {
+    protected BlockHeaderSyncService(NetworkService networkService,
+                                     ProtocolConfig protocolConfig,
+                                     BlockHeaderCacheService blockHeaderCacheService) {
         this.networkService = networkService;
         this.protocolConfig = protocolConfig;
         this.blockHeaderCacheService = blockHeaderCacheService;
@@ -114,7 +112,7 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
     }
 
     private void consumeHeaders(HeadersMsg headerMsg){
-        Set<BlockHeader> validBlockHeaders = headerMsg.getBlockHeaderMsgList().stream().filter(this::validBlockHeader).map(b -> BlockHeader.of(b, networkService.getConnectedPeersCount())).collect(Collectors.toSet());
+        List<BlockHeader> validBlockHeaders = headerMsg.getBlockHeaderMsgList().stream().filter(this::validBlockHeader).map(b -> BlockHeader.of(b, networkService.getConnectedPeersCount())).collect(Collectors.toList());
 
         //if any headers are invalid, reject the whole message
         if(validBlockHeaders.size() < headerMsg.getBlockHeaderMsgList().size()){
@@ -158,7 +156,7 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
     }
 
     private void requestHeaders(){
-        blockHeaderCacheService.getBranches().forEach(b -> {
+        blockHeaderCacheService.getBranches().values().forEach(b -> {
             log.debug("Requesting headers for branch: " + b.getLeafNode());
             networkService.broadcast(getHeaderFromHash(b.getLeafNode()));
         });

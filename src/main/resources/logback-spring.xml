@@ -23,6 +23,10 @@
         </encoder>
     </appender>
 
+    <!-- Different Log levels depending on the Profile: -->
+
+    <!-- MAIN Net: -->
+
     <springProfile name="docker-bsv-mainnet">
         <root level="INFO">
             <appender-ref ref="STDOUT" />
@@ -33,5 +37,54 @@
             <appender-ref ref="TIME_BASED_FILE"/>
         </logger>
     </springProfile>
+
+    <!-- TEST Net: -->
+
+    <springProfile name="local-bsv-testnet">
+        <root level="INFO">
+            <appender-ref ref="STDOUT" />
+        </root>
+        <logger name="com.nchain.headerSV" additivity="false">
+            <level value="DEBUG" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+        <logger name="com.nchain.jcl" additivity="false">
+            <level value="INFO" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+    </springProfile>
+
+    <springProfile name="docker-bsv-testnet">
+        <root level="ERROR">
+            <appender-ref ref="STDOUT" />
+        </root>
+        <logger name="com.nchain.headerSV" additivity="false">
+            <level value="INFO" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+        <logger name="com.nchain.jcl" additivity="false">
+            <level value="INFO" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+    </springProfile>
+
+    <!-- STRESS Net: -->
+
+    <springProfile name="docker-bsv-stnnet">
+        <root level="INFO">
+            <appender-ref ref="STDOUT" />
+        </root>
+        <logger name="com.nchain.headerSV" additivity="false">
+            <level value="INFO" />
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="TIME_BASED_FILE"/>
+        </logger>
+    </springProfile>
+
+
 
 </configuration>
