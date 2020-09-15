@@ -23,8 +23,7 @@ public class ProtocolBSVTestnetConfig  extends ProtocolConfigBase implements Pro
     // is specified in the Java code in the SAME order as it traves throught the network. That's why, if we take the
     // value of the "magic2 number from BitcoinJ, we need to turn it around (in pairs, as this is hexadecimal and each
     // pair of characters represents 1 byte).
-    //private static long magicPackage = 0x0b110907; // as its used in BitcoinJ
-    private static long magicPackage = 0x0709110b;   // as its used in JCL
+    private static long magicPackage = 0xf4f3e5f4L;
     private static int services;
     private static int port;
     private static int protocolVersion;
@@ -49,11 +48,9 @@ public class ProtocolBSVTestnetConfig  extends ProtocolConfigBase implements Pro
         userAgentWhitelist = new String[]{"Bitcoin SV:", "/bitcoinj-sv:0.0.7/"};
 
         dns = new String[] {
-                "testnet-seed.bitcoin.jonasschnelli.ch", // Jonas Schnelli
-                "seed.tbtc.petertodd.org",               // Peter Todd
-                "seed.testnet.bitcoin.sprovoost.nl",     // Sjors Provoost
-                "testnet-seed.bluematt.me",              // Matt Corallo
-                "bitcoin-testnet.bloqseeds.net",         // Bloq
+                "testnet-seed.bitcoinsv.io",
+                "testnet-seed.cascharia.com",
+                "testnet-seed.bitcoincloud.net"
         };
     }
 }

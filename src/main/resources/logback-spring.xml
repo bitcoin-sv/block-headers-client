@@ -45,7 +45,7 @@
             <appender-ref ref="STDOUT" />
         </root>
         <logger name="com.nchain.headerSV" additivity="false">
-            <level value="INFO" />
+            <level value="DEBUG" />
             <appender-ref ref="STDOUT" />
             <appender-ref ref="TIME_BASED_FILE"/>
         </logger>
