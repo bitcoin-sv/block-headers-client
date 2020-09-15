@@ -4,8 +4,6 @@ import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 /**
  * @author m.jose@nchain.com
  * Copyright (c) 2018-2020 nChain Ltd
@@ -13,6 +11,5 @@ import java.util.List;
  */
 @Repository
 public interface BlockHeaderRepository extends JpaRepository<BlockHeader, Long> {
-
    BlockHeader findByHash(String hash);
 }

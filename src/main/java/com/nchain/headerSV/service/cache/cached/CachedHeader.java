@@ -4,6 +4,7 @@ import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * @author m.fletcher@nchain.com
@@ -13,6 +14,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 @Getter
+@Setter
 public class CachedHeader {
     private BlockHeader blockHeader;
     private String branchId;
