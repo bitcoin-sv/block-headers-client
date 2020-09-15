@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @ConfigurationProperties(prefix = "headersv.sync")
-public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsumer {
+public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer {
 
     private final NetworkService networkService;
     private final ProtocolConfig protocolConfig;
@@ -52,9 +52,9 @@ public class BlockHeaderSyncServiceImpl implements HeaderSvService, MessageConsu
 
     private static int REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS = 5000;
 
-    protected BlockHeaderSyncServiceImpl(NetworkService networkService,
-                                         ProtocolConfig protocolConfig,
-                                         BlockHeaderCacheService blockHeaderCacheService) {
+    protected BlockHeaderSyncService(NetworkService networkService,
+                                     ProtocolConfig protocolConfig,
+                                     BlockHeaderCacheService blockHeaderCacheService) {
         this.networkService = networkService;
         this.protocolConfig = protocolConfig;
         this.blockHeaderCacheService = blockHeaderCacheService;

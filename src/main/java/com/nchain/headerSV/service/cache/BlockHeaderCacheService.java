@@ -5,7 +5,6 @@ import com.nchain.headerSV.dao.postgresql.repository.BlockHeaderRepository;
 import com.nchain.headerSV.service.HeaderSvService;
 import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.cache.cached.CachedHeader;
-import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import com.nchain.headerSV.tools.Util;
 import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 import lombok.Setter;
@@ -34,7 +33,6 @@ import java.util.stream.Collectors;
 public class BlockHeaderCacheService implements HeaderSvService {
 
     private final BlockHeaderRepository blockHeaderRepository;
-    private final MessageBufferService messageBufferService;
 
     private Graph<String, DefaultEdge> blockChain;
     private HashMap<String, CachedHeader> unconnectedBlocks = new HashMap<>();
@@ -50,11 +48,13 @@ public class BlockHeaderCacheService implements HeaderSvService {
     @Setter
     private Integer lastFlushTimeMaxIntervalMs;
 
+    @Setter
+    private Integer lastFlushTimeMinIntervalMs;
 
-    public BlockHeaderCacheService(BlockHeaderRepository blockHeaderRepository,
-                                   MessageBufferService messageBufferService){
+    private long lastFlushTime;
+
+    public BlockHeaderCacheService(BlockHeaderRepository blockHeaderRepository){
         this.blockHeaderRepository = blockHeaderRepository;
-        this.messageBufferService = messageBufferService;
 
         this.executor = Executors.newSingleThreadScheduledExecutor();
     }
@@ -266,7 +266,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         connectedBlocks.put(blockHeader.getHash(), blockHeaderCached);
         unconnectedBlocks.remove(blockHeader.getHash());
 
-        log.debug("Added block: " + blockHeader.getHash() + " to cache at height: " + height);
+        log.info("Added block: " + blockHeader.getHash() + " to cache at height: " + height);
     }
 
     public HashMap<String, CachedHeader> getUnconnectedBlocks() {
@@ -295,10 +295,13 @@ public class BlockHeaderCacheService implements HeaderSvService {
     }
 
     public synchronized void flush(){
-        if(blocksToPersist.size() > 0) {
+        if((blocksToPersist.size() > 0 &&
+                (System.currentTimeMillis() - lastFlushTimeMinIntervalMs >= lastFlushTime))) {
             blockHeaderRepository.saveAll(new ArrayList<>(blocksToPersist.values()));
 
             blocksToPersist.clear();
+
+            lastFlushTime = System.currentTimeMillis();
         }
     }
 }
