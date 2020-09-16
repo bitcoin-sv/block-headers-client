@@ -15,7 +15,7 @@ import com.nchain.jcl.net.protocol.handlers.pingPong.PingPongHandlerConfig;
  *  Copyright (c) 2018-2020 nChain Ltd
  *  @date 14/09/2020, 12:02
  */
-public class ProtocolBSVTestnetConfig  extends ProtocolConfigBase implements ProtocolConfig {
+public class ProtocolBSVTestnetConfig  extends ProtocolConfigImpl implements ProtocolConfig  {
 
     private static String id = "BSV [Test Net]";
 
