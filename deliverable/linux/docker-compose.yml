@@ -16,7 +16,7 @@ services:
       - headersv-network
 
   headersv-app:
-    image: squishy.hardfork.cash:443/headersv-app:latest
+    image:  167.99.192.165:5000/headersv-app:latest
     container_name: headersv-app
     volumes:
       - ./headersv-data/log:/headersv-data
