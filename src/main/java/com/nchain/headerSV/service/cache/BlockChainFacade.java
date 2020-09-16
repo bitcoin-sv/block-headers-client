@@ -75,6 +75,7 @@ public class BlockChainFacade {
                     .work(cachedHeader.getWork())
                     .bestChain(mainBranch)
                     .confirmations(confirmations)
+                    .chainConfidence(branch.getConfidence())
                     .state(branchstate).build();
         }
         return queryResult;

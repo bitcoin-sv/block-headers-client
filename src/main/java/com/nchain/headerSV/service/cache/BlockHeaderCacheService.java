@@ -6,11 +6,9 @@ import com.nchain.headerSV.service.HeaderSvService;
 import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.cache.cached.CachedHeader;
 import com.nchain.headerSV.tools.Util;
-import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.Graph;
-import org.jgrapht.event.*;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 import org.jgrapht.traverse.DepthFirstIterator;
@@ -70,12 +68,13 @@ public class BlockHeaderCacheService implements HeaderSvService {
         CachedBranch cachedRootBranch = CachedBranch.builder()
                 .id(rootBranchId)
                 .leafNode(Util.ROOT_BLOCK_HEADER.getHash())
+                .confidence(Long.MAX_VALUE)
                 .work(Double.valueOf(0)).build();
 
         branches.put(cachedRootBranch.getId(), cachedRootBranch);
 
         //initialize the root hash for genesis to append too
-        BlockHeader rootBlockHeader = BlockHeader.builder().hash(Util.ROOT_BLOCK_HEADER.getHash()).build();
+        BlockHeader rootBlockHeader = Util.ROOT_BLOCK_HEADER;
         CachedHeader rootBlockHeaderCached = CachedHeader.builder().blockHeader(rootBlockHeader).work(Double.valueOf(0)).height(-1).branchId(rootBranchId).build();
 
         //root 'header' is connected by default
@@ -119,6 +118,10 @@ public class BlockHeaderCacheService implements HeaderSvService {
         //we want to process the unique headers
         Set<BlockHeader> headersToProcess = new HashSet<>(uniqueBlockHeaders);
 
+        //record the cache sizes to identify how many entries have been added
+        int connectedSize = connectedBlocks.size();
+        int unconnectedSize = unconnectedBlocks.size();
+
         //add the new vertex's
         headersToProcess.forEach(this::addVertex);
         //reattempt connecting any existing unconnectedBlocks
@@ -141,10 +144,15 @@ public class BlockHeaderCacheService implements HeaderSvService {
             flush();
         }
 
-        //log the branch heights if we've added to cache
-//        if(uniqueBlockHeaders.size() > 0) {
-//            log.info("Added " + uniqueBlockHeaders.size() + " blockheaders to cache. Branch Heights:  " + branches.values().stream().map(b -> b.getHeight()).collect(Collectors.toList()));
-//        }
+        //if we've connected blocks, log the quantity
+        if(connectedBlocks.size() > connectedSize) {
+            log.info("Added " + (connectedBlocks.size() - connectedSize) + " blockheaders to cache. Branch Height:  " + branches.values().stream().map(b -> b.getHeight()).collect(Collectors.toList()));
+        }
+
+        //if we've added unconnected blocks, log the quantity
+        if(unconnectedBlocks.size() > unconnectedSize){
+            log.info("Added " + (unconnectedBlocks.size() - unconnectedSize) + " orphaned blockheaders to cache.");
+        }
 
         return uniqueBlockHeaders;
     }
@@ -239,6 +247,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         //dynamically calculate and get the parent branch and the cumulative work
         String branchId = parentCachedBlockHeader.getBranchId();
         double branchWork = branches.get(branchId).getWork();
+        Long branchConfidence = Math.min(branches.get(branchId).getConfidence(), blockHeader.getConfidence());
 
         //if the vertex's parent has more than 1 edge, there's a fork (new branch)
         if(blockChain.outgoingEdgesOf(blockHeader.getPrevBlockHash()).size() > 1) {
@@ -246,7 +255,14 @@ public class BlockHeaderCacheService implements HeaderSvService {
         }
 
         //update the work for the existing branch
-        branches.put(branchId, CachedBranch.builder().id(branchId).work(branchWork + work).parentBranchId(parentCachedBlockHeader.getBranchId()).leafNode(blockHeader.getHash()).height(height).build());
+        branches.put(branchId, CachedBranch.builder()
+                .id(branchId)
+                .work(branchWork + work)
+                .parentBranchId(parentCachedBlockHeader.getBranchId())
+                .leafNode(blockHeader.getHash())
+                .height(height)
+                .confidence(branchConfidence)
+                .build());
 
         //cache the block header
         CachedHeader blockHeaderCached = CachedHeader.builder()

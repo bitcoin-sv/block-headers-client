@@ -152,12 +152,13 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     }
 
     private void requestHeadersFromHash(String hash){
+        log.debug("Requesting headers for hash: " + hash);
         networkService.broadcast(getHeaderFromHash(hash));
     }
 
     private void requestHeaders(){
         blockHeaderCacheService.getBranches().values().forEach(b -> {
-            log.info("Requesting headers for branch: " + b.getLeafNode());
+            log.debug("Requesting headers for branch: " + b.getLeafNode());
             networkService.broadcast(getHeaderFromHash(b.getLeafNode()));
         });
     }

@@ -22,4 +22,5 @@ public class BlockHeaderQueryResult {
     private Integer height;
     private boolean bestChain;
     private Integer confirmations;
+    private Long chainConfidence;
 }
