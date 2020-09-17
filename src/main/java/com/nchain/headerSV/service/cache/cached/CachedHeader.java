@@ -19,5 +19,6 @@ public class CachedHeader {
     private BlockHeader blockHeader;
     private String branchId;
     private Double work;
+    private Double cumulativeWork;
     private Integer height;
 }

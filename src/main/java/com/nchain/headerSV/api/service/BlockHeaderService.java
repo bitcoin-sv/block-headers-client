@@ -51,6 +51,10 @@ public class BlockHeaderService {
         blockChainFacade.purgeOrphanedBlocks();
     }
 
+    public void purgeHeadersFromHash(String hash){
+        blockChainFacade.purgeHeadersFromHash(hash);
+    }
+
     public List<CachedBranch> getBranches(){
        return blockChainFacade.getBranches();
     }

@@ -21,4 +21,5 @@ public class CachedBranch {
     private String leafNode;
     private Double work;
     private Integer height;
+    private Long confidence;
 }

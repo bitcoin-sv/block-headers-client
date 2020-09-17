@@ -19,7 +19,9 @@ public class BlockHeaderQueryResult {
     private BlockHeader blockHeader;
     private String state;
     private Double work;
+    private Double cumulativeWork;
     private Integer height;
     private boolean bestChain;
     private Integer confirmations;
+    private Long chainConfidence;
 }

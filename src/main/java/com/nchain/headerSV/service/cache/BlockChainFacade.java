@@ -2,6 +2,8 @@ package com.nchain.headerSV.service.cache;
 
 import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.cache.cached.CachedHeader;
+import com.nchain.headerSV.service.network.NetworkService;
+import com.nchain.headerSV.service.sync.BlockHeaderSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,9 @@ public class BlockChainFacade {
     @Autowired
     BlockHeaderCacheService blockHeaderCacheService;
 
+    @Autowired
+    BlockHeaderSyncService blockHeaderSyncService;
+
     private enum BranchState {
         MAIN_CHAIN,
         ORPHAN,
@@ -33,6 +38,12 @@ public class BlockChainFacade {
 
     public void purgeOrphanedBlocks(){
         blockHeaderCacheService.purgeOrphanedBlocks();
+    }
+
+    public void purgeHeadersFromHash(String headerHash) {
+        blockHeaderCacheService.purgeHeadersFromHash(headerHash);
+        blockHeaderSyncService.clearMesssageCache();
+        blockHeaderSyncService.requestHeaders();
     }
 
     public BlockHeaderQueryResult getBlockFromCache(String hash) {
@@ -73,8 +84,10 @@ public class BlockChainFacade {
                     .blockHeader(cachedHeader.getBlockHeader())
                     .height(Integer.valueOf(cachedHeader.getHeight()))
                     .work(cachedHeader.getWork())
+                    .cumulativeWork(cachedHeader.getCumulativeWork())
                     .bestChain(mainBranch)
                     .confirmations(confirmations)
+                    .chainConfidence(branch.getConfidence())
                     .state(branchstate).build();
         }
         return queryResult;

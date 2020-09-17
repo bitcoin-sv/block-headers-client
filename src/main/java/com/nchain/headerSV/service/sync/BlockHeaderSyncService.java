@@ -119,10 +119,10 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
             return;
         }
 
-        Set<BlockHeader> headersAddedToCache = blockHeaderCacheService.addToCache(validBlockHeaders);
+        int headersAdded = blockHeaderCacheService.addToCache(validBlockHeaders);
 
         //if we received new headers, request the next batch
-        if(headersAddedToCache.size() > 0) {
+        if(headersAdded > 0) {
             String lastHash = headerMsg.getBlockHeaderMsgList().get(headerMsg.getBlockHeaderMsgList().size() - 1).getHash().toString();
             requestHeadersFromHash(lastHash);
         }
@@ -147,19 +147,20 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         return true;
     }
 
-    private void requestHeadersFromHash(String hash, PeerAddress peerAddress){
-        networkService.send(getHeaderFromHash(hash), peerAddress);
-    }
-
-    private void requestHeadersFromHash(String hash){
+    public void requestHeadersFromHash(String hash){
+        log.info("Requesting headers for hash: " + hash);
         networkService.broadcast(getHeaderFromHash(hash));
     }
 
-    private void requestHeaders(){
+    public void requestHeaders(){
         blockHeaderCacheService.getBranches().values().forEach(b -> {
             log.info("Requesting headers for branch: " + b.getLeafNode());
             networkService.broadcast(getHeaderFromHash(b.getLeafNode()));
         });
+    }
+
+    public void clearMesssageCache(){
+        processedMessages.clear();
     }
 
     private GetHeadersMsg getHeaderFromHash(String hash){
