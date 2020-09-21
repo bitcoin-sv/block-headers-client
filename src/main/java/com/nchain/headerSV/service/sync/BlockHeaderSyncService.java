@@ -43,7 +43,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     private ScheduledExecutorService executor;
 
     @Setter
-    private HashSet<String> headersToIgnore;
+    private HashSet<String> headersToIgnore = new HashSet<>();
 
     @Setter
     private int requestHeadersRefreshIntervalMs;
@@ -67,6 +67,8 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         log.info("Listening for incoming Headers...");
         networkService.subscribe(HeadersMsg.class, this::consume);
         networkService.subscribe(InvMessage.class, this::consume);
+
+        headersToIgnore.forEach(h -> log.info("Added header: " + h + " to the ignore list."));
 
         /* periodically check for new incoming headers */
         executor.scheduleAtFixedRate(this::requestHeaders, REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS, requestHeadersRefreshIntervalMs, TimeUnit.MILLISECONDS);

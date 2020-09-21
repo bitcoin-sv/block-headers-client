@@ -9,6 +9,7 @@ import com.nchain.headerSV.tools.Util;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.util.NeighborCache;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 import org.jgrapht.traverse.DepthFirstIterator;
@@ -236,18 +237,20 @@ public class BlockHeaderCacheService implements HeaderSvService {
 
         //Get the branch we're currently on and it's confidence
         String branchId = parentCachedBlockHeader.getBranchId();
+        String parentBranchId = branches.get(branchId).getParentBranchId();
         Long branchConfidence = Math.min(branches.get(branchId).getConfidence(), blockHeader.getConfidence());
 
         //if the vertex's parent has more than 1 edge, there's a fork (new branch)
         if(blockChain.outgoingEdgesOf(blockHeader.getPrevBlockHash()).size() > 1) {
             branchId = generateBranchId(blockHeader.getHash());
+            parentBranchId = parentCachedBlockHeader.getBranchId();
         }
 
         //update the work for the existing branch
         branches.put(branchId, CachedBranch.builder()
                 .id(branchId)
                 .work(cumulativeWork + work)
-                .parentBranchId(parentCachedBlockHeader.getBranchId())
+                .parentBranchId(parentBranchId)
                 .leafNode(blockHeader.getHash())
                 .height(height)
                 .confidence(branchConfidence)
@@ -330,6 +333,7 @@ public class BlockHeaderCacheService implements HeaderSvService {
         List<BlockHeader> blocksToPurge = new ArrayList<>();
         Set<String> branchesToPurge = new HashSet<>();
 
+        //remove below the given node
         while(iterator.hasNext()) {
             CachedHeader cachedHeaderToRemove = connectedBlocks.get(iterator.next());
             BlockHeader blockHeaderToRemove = cachedHeaderToRemove.getBlockHeader();
@@ -348,19 +352,41 @@ public class BlockHeaderCacheService implements HeaderSvService {
             blocksToPersist.remove(blockHeaderToRemove.getHash());
         }
 
-        // if branch has nodes above it still. Update the leaf node and work then remove it from delete batch
-        String generatedBranchId = generateBranchId(cachedHeader.getBlockHeader().getHash());
-        if(!branches.containsKey(generatedBranchId)){
+        // if branch has nodes above it still. Update the leaf node and work as we want to keep this branch
+        boolean branchRoot = branches.containsKey(generateBranchId(cachedHeader.getBlockHeader().getHash()));
+        if(!branchRoot){
             branchesToPurge.remove(cachedHeader.getBranchId());
 
             CachedBranch headerBranch = branches.get(cachedHeader.getBranchId());
             headerBranch.setLeafNode(cachedHeader.getBlockHeader().getPrevBlockHash());
             headerBranch.setHeight(cachedHeader.getHeight() - 1);
             headerBranch.setWork(cachedHeaderParent.getCumulativeWork());
+        } else {
+            //else rebuild the tree from the parent node, as that node has no longer diverged
+            iterator = new DepthFirstIterator(blockChain, cachedHeaderParent.getBlockHeader().getHash());
+
+            //we don't want to include the parent
+            iterator.next();
+
+            while(iterator.hasNext()) {
+                CachedHeader cachedHeaderToRemove = connectedBlocks.get(iterator.next());
+                BlockHeader blockHeaderToRemove = cachedHeaderToRemove.getBlockHeader();
+
+                //remove all branches associated with this subtree, as they'll be regenerated
+                branches.remove(cachedHeaderToRemove.getBranchId());
+
+                //disconnect the blocks
+                connectedBlocks.remove(blockHeaderToRemove.getHash());
+                unconnectedBlocks.put(blockHeaderToRemove.getHash(), cachedHeaderToRemove);
+            }
+
+            //rebuild the graph and branch data
+            buildGraph();
         }
 
-        //remove branches from memory
+        //remove branches we no longer need from memory
         branchesToPurge.forEach(branches::remove);
+
 
         //purge headers from database
         if(blocksToPurge.size() > 0) {
