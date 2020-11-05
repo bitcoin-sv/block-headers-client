@@ -77,8 +77,6 @@ public class NetworkServiceImpl implements NetworkService {
 
         p2p = new P2PBuilder("headersv")
                 .config(protocolConfig)
-                .minPeers(p2pConfig.getMinPeers())
-                .maxPeers(p2pConfig.getMaxPeers())
                 .config(handshakeHandlerConfig)
                 .excludeHandler(BlockDownloaderHandler.HANDLER_ID)
                 .build();
@@ -155,6 +153,7 @@ public class NetworkServiceImpl implements NetworkService {
         SendHeadersMsg sendHeadersMsg = SendHeadersMsg.builder().build();
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), sendHeadersMsg);
 
+        //TODO:: getheadersen need to check the version and then send the HeadersEn message appropriately.
         p2p.REQUESTS.MSGS.send(event.getPeerAddress(), bitcoinMsgBuilder.build()).submit();
 
         PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());

@@ -1,13 +1,7 @@
 package com.nchain.headerSV.config;
 
-import com.nchain.jcl.net.network.config.NetworkConfig;
+import com.nchain.jcl.base.domain.api.base.BlockHeader;
 import com.nchain.jcl.net.protocol.config.*;
-import com.nchain.jcl.net.protocol.handlers.blacklist.BlacklistHandlerConfig;
-import com.nchain.jcl.net.protocol.handlers.block.BlockDownloaderHandlerConfig;
-import com.nchain.jcl.net.protocol.handlers.discovery.DiscoveryHandlerConfig;
-import com.nchain.jcl.net.protocol.handlers.handshake.HandshakeHandlerConfig;
-import com.nchain.jcl.net.protocol.handlers.message.MessageHandlerConfig;
-import com.nchain.jcl.net.protocol.handlers.pingPong.PingPongHandlerConfig;
 
 /*
  *   @author m.jose
@@ -30,10 +24,39 @@ public class ProtocolBSVTestnetConfig  extends ProtocolConfigImpl implements Pro
     private static String[] userAgentBlacklist;
     private static String[] userAgentWhitelist;
     private static String[] dns;
+    // Genesis Block for BSV-Main:
+    private static BlockHeader genesisBlock = BlockHeader.builder()
+            .difficultyTarget(0x1d00ffffL)
+            .nonce(2083236893)
+            .time(1231006505L)
+            .build();
+
+    // Basic Configuration:
+    private static ProtocolBasicConfig basicConfig = ProtocolBasicConfig.builder()
+            .id(id)
+            .magicPackage(magicPackage)
+            .servicesSupported(services)
+            .port(port)
+            .protocolVersion(protocolVersion)
+            .dns(dns)
+            .userAgentBlacklist(userAgentBlacklist)
+            .userAgentWhitelist(userAgentWhitelist)
+            .build();
 
 
     public ProtocolBSVTestnetConfig() {
-        super(id, magicPackage, services, port, protocolVersion, userAgentBlacklist, userAgentWhitelist, dns, (Integer)null, (Integer)null, (new ProtocolBasicConfig()).toBuilder().id(id).magicPackage(magicPackage).servicesSupported(services).port(port).protocolVersion(protocolVersion).build(), (NetworkConfig)null, (MessageHandlerConfig)null, (new HandshakeHandlerConfig()).toBuilder().userAgentBlacklistPatterns(userAgentBlacklist).userAgentWhitelistPatterns(userAgentWhitelist).build(), (PingPongHandlerConfig)null, (new DiscoveryHandlerConfig()).toBuilder().dnsSeeds(dns).build(), (BlacklistHandlerConfig)null, (BlockDownloaderHandlerConfig)null);
+        super( null,
+                null,
+                null,
+                genesisBlock,
+                basicConfig,
+                null,            // Default Network Config
+                null,           // Default Message Config
+                null,          // Default Gandshake Config
+                null,           // Default PingPong Config
+                null,           // Default Discovery Config
+                null,            // Default Blacklist Config
+                null);    // Default Block Downloader Config
     }
 
     public String getId() {
