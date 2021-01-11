@@ -12,9 +12,9 @@ spring:
     show-sql: false
 
   datasource:
-      url: jdbc:postgresql://localhost:5432/headerSV
-      username: headerSV
-      password: test
+      url: jdbc:postgresql://localhost:5432/headersv
+      username: headersv
+      password: headersv
       driverClassName: org.postgresql.Driver
 
 

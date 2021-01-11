@@ -1,9 +1,7 @@
 package com.nchain.headerSV.service.network;
 
 import com.nchain.headerSV.config.P2PConfig;
-import com.nchain.headerSV.domain.PeerInfo;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
-import com.nchain.headerSV.service.propagation.buffer.MessageBufferService;
 import com.nchain.jcl.net.network.PeerAddress;
 import com.nchain.jcl.net.network.events.PeerDisconnectedEvent;
 import com.nchain.jcl.net.protocol.config.ProtocolConfig;
@@ -46,11 +44,9 @@ public class NetworkServiceImpl implements NetworkService {
     // Serialization of messages.
     private P2P p2p;
 
-    // Service to store the info from the Network into the Repository as they come along
-    private final MessageBufferService messageBufferService;
-
     // A Collection to keep track of the Peers handshaked:
-    private final Map<PeerAddress, PeerInfo> peersInfo = new ConcurrentHashMap<>();
+    //TODO
+//    private final Map<PeerAddress, PeerInfo> peersInfo = new ConcurrentHashMap<>();
 
     private ScheduledExecutorService executor;
 
@@ -59,11 +55,9 @@ public class NetworkServiceImpl implements NetworkService {
 
     @Autowired
     protected NetworkServiceImpl(ProtocolConfig protocolConfig,
-                                 P2PConfig p2pConfig,
-                                 MessageBufferService messageBufferService) {
+                                 P2PConfig p2pConfig) {
         this.p2pConfig = p2pConfig;
         this.protocolConfig = protocolConfig;
-        this.messageBufferService = messageBufferService;
 
         this.executor = Executors.newSingleThreadScheduledExecutor();
     }
@@ -140,32 +134,37 @@ public class NetworkServiceImpl implements NetworkService {
 
     private void onPeerDisconnected(PeerDisconnectedEvent event) {
         log.debug("onPeerDisconnected: IP:" + event.getPeerAddress().toString()+":Reason:" + event.getReason().toString());
-        PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
-
-        if(peerInfo!= null) {
-            peerInfo.setPeerConnectedStatus(false);
-        }
+        //TODO
+//        PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
+//
+//        if(peerInfo!= null) {
+//            peerInfo.setPeerConnectedStatus(false);
+//        }
     }
 
     private void onPeerHandshaked(PeerHandshakedEvent event) {
         log.debug("onPeerHandshaked: IP:" + event.getPeerAddress().toString()+":User Agent:"+ event.getVersionMsg().getUser_agent() +": Version :" + event.getVersionMsg().getVersion());
 
+        //TODO Seems SendHeadersMsg might not be working
         SendHeadersMsg sendHeadersMsg = SendHeadersMsg.builder().build();
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), sendHeadersMsg);
 
         //TODO:: getheadersen need to check the version and then send the HeadersEn message appropriately.
         p2p.REQUESTS.MSGS.send(event.getPeerAddress(), bitcoinMsgBuilder.build()).submit();
 
-        PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
-        if (peerInfo == null) {
-            peerInfo = new PeerInfo(event.getPeerAddress(), event.getVersionMsg(), Optional.empty(), true);
-            peersInfo.put(event.getPeerAddress(), peerInfo);
-        }
+        //TODO
+//        PeerInfo peerInfo = peersInfo.get(event.getPeerAddress());
+//        if (peerInfo == null) {
+//            peerInfo = new PeerInfo(event.getPeerAddress(), event.getVersionMsg(), Optional.empty(), true);
+//            peersInfo.put(event.getPeerAddress(), peerInfo);
+//        }
      }
 
 
     public int getConnectedPeersCount(){
-        return peersInfo.values().stream().filter(PeerInfo::isPeerConnectedStatus).collect(Collectors.toList()).size();
+        //TODO
+//        return peersInfo.values().stream().filter(PeerInfo::isPeerConnectedStatus).collect(Collectors.toList()).size();
+        return 0;
     }
 
 }

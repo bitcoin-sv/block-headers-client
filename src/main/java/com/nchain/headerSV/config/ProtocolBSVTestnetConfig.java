@@ -2,6 +2,8 @@ package com.nchain.headerSV.config;
 
 import com.nchain.jcl.base.domain.api.base.BlockHeader;
 import com.nchain.jcl.net.protocol.config.*;
+import com.nchain.jcl.net.protocol.handlers.discovery.DiscoveryHandlerConfig;
+import com.nchain.jcl.net.protocol.handlers.handshake.HandshakeHandlerConfig;
 
 /*
  *   @author m.jose
@@ -18,12 +20,18 @@ public class ProtocolBSVTestnetConfig  extends ProtocolConfigImpl implements Pro
     // value of the "magic2 number from BitcoinJ, we need to turn it around (in pairs, as this is hexadecimal and each
     // pair of characters represents 1 byte).
     private static long magicPackage = 0xf4f3e5f4L;
-    private static int services;
-    private static int port;
-    private static int protocolVersion;
-    private static String[] userAgentBlacklist;
-    private static String[] userAgentWhitelist;
-    private static String[] dns;
+    private static int services = ProtocolServices.NODE_BLOOM.getProtocolServices();
+    private static int port = 18333;
+    private static int protocolVersion  = ProtocolVersion.CURRENT.getBitcoinProtocolVersion();
+
+    private static String[] userAgentBlacklist = new String[]{"Bitcoin ABC:", "BUCash:"};;
+    private static String[] userAgentWhitelist = new String[]{"Bitcoin SV:", "/bitcoinj-sv:0.0.7/"};
+    private static String[] dns = new String[] {
+            "testnet-seed.bitcoinsv.io",
+            "testnet-seed.cascharia.com",
+            "testnet-seed.bitcoincloud.net"
+    };
+
     // Genesis Block for BSV-Main:
     private static BlockHeader genesisBlock = BlockHeader.builder()
             .difficultyTarget(0x1d00ffffL)
@@ -35,14 +43,19 @@ public class ProtocolBSVTestnetConfig  extends ProtocolConfigImpl implements Pro
     private static ProtocolBasicConfig basicConfig = ProtocolBasicConfig.builder()
             .id(id)
             .magicPackage(magicPackage)
-            .servicesSupported(services)
             .port(port)
             .protocolVersion(protocolVersion)
-            .dns(dns)
-            .userAgentBlacklist(userAgentBlacklist)
-            .userAgentWhitelist(userAgentWhitelist)
             .build();
 
+    private static HandshakeHandlerConfig handshakeHandlerConfig =HandshakeHandlerConfig.builder()
+            .userAgentBlacklist(userAgentBlacklist)
+            .userAgentWhitelist(userAgentWhitelist)
+            .servicesSupported(services)
+            .build();
+
+    private static DiscoveryHandlerConfig discoveryHandlerConfig =   DiscoveryHandlerConfig.builder()
+            .dns(dns)
+            .build();
 
     public ProtocolBSVTestnetConfig() {
         super( null,
@@ -52,9 +65,9 @@ public class ProtocolBSVTestnetConfig  extends ProtocolConfigImpl implements Pro
                 basicConfig,
                 null,            // Default Network Config
                 null,           // Default Message Config
-                null,          // Default Gandshake Config
+                handshakeHandlerConfig,// Default Gandshake Config
                 null,           // Default PingPong Config
-                null,           // Default Discovery Config
+                discoveryHandlerConfig,           // Default Discovery Config
                 null,            // Default Blacklist Config
                 null);    // Default Block Downloader Config
     }
@@ -63,17 +76,4 @@ public class ProtocolBSVTestnetConfig  extends ProtocolConfigImpl implements Pro
         return id;
     }
 
-    static {
-        services = ProtocolServices.NODE_BLOOM.getProtocolServices();
-        port = 18333;
-        protocolVersion = ProtocolVersion.CURRENT.getBitcoinProtocolVersion();
-        userAgentBlacklist = new String[]{"Bitcoin ABC:", "BUCash:"};
-        userAgentWhitelist = new String[]{"Bitcoin SV:", "/bitcoinj-sv:0.0.7/"};
-
-        dns = new String[] {
-                "testnet-seed.bitcoinsv.io",
-                "testnet-seed.cascharia.com",
-                "testnet-seed.bitcoincloud.net"
-        };
-    }
 }

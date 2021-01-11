@@ -3,9 +3,6 @@ package com.nchain.headerSV.api.controller;
 import com.nchain.headerSV.api.exception.BlockNotFoundException;
 import com.nchain.headerSV.api.service.BlockHeaderService;
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
-import com.nchain.headerSV.dao.model.PeerConnected;
-import com.nchain.headerSV.service.cache.BlockHeaderQueryResult;
-import com.nchain.headerSV.service.cache.cached.CachedBranch;
 import com.nchain.headerSV.service.network.NetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,31 +39,32 @@ public class BlockHeaderController {
         }
     }
 
-    @RequestMapping("/getHeaderStateByHash/{hash}")
-    public BlockHeaderQueryResult getHeaderDetails(@PathVariable String hash) {
-        try {
+    //TODO
+//    @RequestMapping("/getHeaderStateByHash/{hash}")
+//    public BlockHeaderQueryResult getHeaderDetails(@PathVariable String hash) {
+//        try {
+//
+//            final BlockHeaderQueryResult blockStateByHash = blockHeaderService.getBlockStateByHash(hash);
+//            return blockStateByHash;
+//        }catch (BlockNotFoundException| NoSuchElementException  ex){
+//            throw new ResponseStatusException(
+//                    HttpStatus.NOT_FOUND, "Block not found"
+//            );
+//        }
+//    }
+//
+//    @RequestMapping("/getConnectedPeersCount")
+//    public PeerConnected getConnectedPeersCount() {
+//            final int connectedPeersCount = networkService.getConnectedPeersCount();
+//            PeerConnected peerConnected = PeerConnected.builder().peerCount(connectedPeersCount).build();
+//            return peerConnected;
+//
+//    }
 
-            final BlockHeaderQueryResult blockStateByHash = blockHeaderService.getBlockStateByHash(hash);
-            return blockStateByHash;
-        }catch (BlockNotFoundException| NoSuchElementException  ex){
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Block not found"
-            );
-        }
-    }
-
-    @RequestMapping("/getConnectedPeersCount")
-    public PeerConnected getConnectedPeersCount() {
-            final int connectedPeersCount = networkService.getConnectedPeersCount();
-            PeerConnected peerConnected = PeerConnected.builder().peerCount(connectedPeersCount).build();
-            return peerConnected;
-
-    }
-
-    @RequestMapping("/getBranches")
-    public List<CachedBranch> getBranches(){
-        return blockHeaderService.getBranches();
-    }
+//    @RequestMapping("/getBranches")
+//    public List<CachedBranch> getBranches(){
+//        return blockHeaderService.getBranches();
+//    }
 
     @RequestMapping("/purgeOrphanedBlocks")
     public void purgeOrphanedBlocks() {

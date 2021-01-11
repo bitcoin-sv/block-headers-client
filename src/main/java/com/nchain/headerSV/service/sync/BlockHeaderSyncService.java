@@ -1,12 +1,10 @@
 package com.nchain.headerSV.service.sync;
 
 
-import com.nchain.headerSV.dao.postgresql.domain.BlockHeader;
 import com.nchain.headerSV.service.HeaderSvService;
-import com.nchain.headerSV.service.cache.BlockHeaderCacheService;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.headerSV.service.network.NetworkService;
-import com.nchain.headerSV.tools.Util;
+import com.nchain.jcl.base.domain.api.base.BlockHeader;
 import com.nchain.jcl.base.tools.bytes.HEX;
 import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 import com.nchain.jcl.net.network.PeerAddress;
@@ -14,12 +12,12 @@ import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.messages.*;
 import com.nchain.jcl.net.protocol.messages.common.BitcoinMsg;
 import com.nchain.jcl.net.protocol.messages.common.Message;
+import com.nchain.jcl.store.blockChainStore.BlockChainStore;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
 
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -39,25 +37,25 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
 
     private final NetworkService networkService;
     private final ProtocolConfig protocolConfig;
-    private final BlockHeaderCacheService blockHeaderCacheService;
     private ScheduledExecutorService executor;
 
-    @Setter
-    private HashSet<String> headersToIgnore = new HashSet<>();
+    //TODO logging
+
+    private Set<Long> processedMessages = Collections.synchronizedSet(new HashSet<>());
+
+    private BlockChainStore blockStore;
 
     @Setter
     private int requestHeadersRefreshIntervalMs;
-
-    private Set<Long> processedMessages = Collections.synchronizedSet(new HashSet<>());
 
     private static int REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS = 5000;
 
     protected BlockHeaderSyncService(NetworkService networkService,
                                      ProtocolConfig protocolConfig,
-                                     BlockHeaderCacheService blockHeaderCacheService) {
+                                     BlockChainStore blockStore) {
         this.networkService = networkService;
         this.protocolConfig = protocolConfig;
-        this.blockHeaderCacheService = blockHeaderCacheService;
+        this.blockStore = blockStore;
 
         this.executor = Executors.newSingleThreadScheduledExecutor();
     }
@@ -68,7 +66,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         networkService.subscribe(HeadersMsg.class, this::consume);
         networkService.subscribe(InvMessage.class, this::consume);
 
-        headersToIgnore.forEach(h -> log.info("Added header: " + h + " to the ignore list."));
+        blockStore.start();
 
         /* periodically check for new incoming headers */
         executor.scheduleAtFixedRate(this::requestHeaders, REQUEST_HEADER_SCHEDULE_TIME_INITIAL_DELAY_MS, requestHeadersRefreshIntervalMs, TimeUnit.MILLISECONDS);
@@ -110,62 +108,48 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     private void consumeInv(InvMessage invMsg){
         List<InventoryVectorMsg> inventoryVectorMsgs = invMsg.getInvVectorList().stream().filter(iv -> iv.getType() == InventoryVectorMsg.VectorType.MSG_BLOCK).collect(Collectors.toList());
 
-        inventoryVectorMsgs.forEach(iv -> requestHeadersFromHash(Sha256Wrapper.wrapReversed(iv.getHashMsg().getHashBytes()).toString()));
+        //TODO someone could blacklist all connected nodes by spamming us with inv messages
+        //TODO Do we need to periodically check for new headers?
+        //TODO we won't need this if SendHeaders worked correctly
+        requestHeaders();
     }
 
     private void consumeHeaders(HeadersMsg headerMsg){
-        List<BlockHeader> validBlockHeaders = headerMsg.getBlockHeaderMsgList().stream().filter(this::validBlockHeader).map(b -> BlockHeader.of(b, networkService.getConnectedPeersCount())).collect(Collectors.toList());
 
-        //if any headers are invalid, reject the whole message
-        if(validBlockHeaders.size() < headerMsg.getBlockHeaderMsgList().size()){
-            return;
-        }
-
-        int headersAdded = blockHeaderCacheService.addToCache(validBlockHeaders);
-
-        //if we received new headers, request the next batch
-        if(headersAdded > 0) {
-            String lastHash = headerMsg.getBlockHeaderMsgList().get(headerMsg.getBlockHeaderMsgList().size() - 1).getHash().toString();
-            requestHeadersFromHash(lastHash);
-        }
-    }
+        List<BlockHeader> blockHeaders = headerMsg.getBlockHeaderMsgList().stream().map(b ->
+                BlockHeader.builder()
+                        .version(b.getVersion())
+                        .hash(Sha256Wrapper.of(b.getHash().getHashBytes()))
+                        .prevBlockHash(Sha256Wrapper.of(b.getPrevBlockHash().getHashBytes()))
+                        .merkleRoot(Sha256Wrapper.of(b.getMerkleRoot().getHashBytes()))
+                        .time(b.getCreationTimestamp())
+                        .difficultyTarget(b.getDifficultyTarget())
+                        .nonce(b.getNonce())
+                        .numTxs(b.getTransactionCount().getValue())
+                        .build()
+        ).collect(Collectors.toList());
 
 
-    private boolean validBlockHeader(BlockHeaderMsg blockHeader){
-        //check proof of work
-        BigInteger target = Util.decompressCompactBits(blockHeader.getDifficultyTarget());
-        BigInteger blockHashValue = Sha256Wrapper.wrap(blockHeader.getHash().getHashBytes()).toBigInteger();
 
-        if(blockHashValue.compareTo(target) > 0){
-            log.info("Header: " + blockHeader + " has been rejected due to an invalid proof of work");
-            return false;
-        }
+        blockStore.saveBlocks(blockHeaders);
 
-        if(headersToIgnore.contains(blockHeader.getHash().toString())){
-            log.info("Header: " + blockHeader + " has been rejected due to being in the ignore list");
-            return false;
-        }
+        //TODO if we fork, only continue down the configured chain
 
-        return true;
-    }
-
-    public void requestHeadersFromHash(String hash){
-        log.info("Requesting headers for hash: " + hash);
-        networkService.broadcast(getHeaderFromHash(hash));
+        requestHeaders();
     }
 
     public void requestHeaders(){
-        blockHeaderCacheService.getBranches().values().forEach(b -> {
-            log.info("Requesting headers for branch: " + b.getLeafNode());
-            networkService.broadcast(getHeaderFromHash(b.getLeafNode()));
+        blockStore.getTipsChains().forEach(b -> {
+            log.info("Requesting headers for branch: " + b.toString());
+            networkService.broadcast(getHeaderMsgFromHash(b.toString()));
         });
     }
 
-    public void clearMesssageCache(){
-        processedMessages.clear();
+    public void requestHeadersFromHash(Sha256Wrapper hash){
+        networkService.broadcast(getHeaderMsgFromHash(hash.toString()));
     }
 
-    private GetHeadersMsg getHeaderFromHash(String hash){
+    private GetHeadersMsg getHeaderMsgFromHash(String hash){
         HashMsg hashMsg = HashMsg.builder().hash(HEX.decode(hash)).build();
         List<HashMsg> hashMsgs = Arrays.asList(hashMsg);
 

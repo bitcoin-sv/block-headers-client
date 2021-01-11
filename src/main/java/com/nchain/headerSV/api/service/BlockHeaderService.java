@@ -2,16 +2,10 @@ package com.nchain.headerSV.api.service;
 
 import com.nchain.headerSV.api.exception.BlockNotFoundException;
 import com.nchain.headerSV.dao.model.BlockHeaderDTO;
-import com.nchain.headerSV.dao.service.PersistenceService;
 import com.nchain.headerSV.service.cache.BlockChainFacade;
-import com.nchain.headerSV.service.cache.BlockHeaderQueryResult;
-import com.nchain.headerSV.service.cache.cached.CachedBranch;
-import com.nchain.headerSV.service.cache.cached.CachedHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
 
 /**
  * @author m.jose@nchain.com
@@ -22,29 +16,29 @@ import java.util.Optional;
 public class BlockHeaderService {
 
     @Autowired
-    private PersistenceService persistenceService;
-
-    @Autowired
     private BlockChainFacade blockChainFacade;
 
     public BlockHeaderDTO getBlockHeader(String hash) throws BlockNotFoundException {
-        Optional<BlockHeaderDTO> blockHeaderDTO = persistenceService.retrieveBlockHeader(hash);
-        BlockHeaderDTO blockHeader  =  blockHeaderDTO.get();
-
-        if(null == blockHeader) throw new BlockNotFoundException();
-
-        return blockHeader;
+        //TODO
+//        Optional<BlockHeaderDTO> blockHeaderDTO = persistenceService.retrieveBlockHeader(hash);
+//        BlockHeaderDTO blockHeader  =  blockHeaderDTO.get();
+//
+//        if(null == blockHeader) throw new BlockNotFoundException();
+//
+//        return blockHeader;
+        return null;
 
     }
 
-    public BlockHeaderQueryResult  getBlockStateByHash(String hash) throws BlockNotFoundException{
+    public BlockHeaderDTO  getBlockStateByHash(String hash) throws BlockNotFoundException{
+    //TODO
+//        BlockHeaderQueryResult block = blockChainFacade.getBlockFromCache(hash);
+//
+//        if(null == block) throw new BlockNotFoundException();
+//
+//        return block;
 
-        BlockHeaderQueryResult block = blockChainFacade.getBlockFromCache(hash);
-
-        if(null == block) throw new BlockNotFoundException();
-
-        return block;
-
+        return null;
     }
 
     public void purgeOrphanedBlocks(){
@@ -55,7 +49,7 @@ public class BlockHeaderService {
         blockChainFacade.purgeHeadersFromHash(hash);
     }
 
-    public List<CachedBranch> getBranches(){
-       return blockChainFacade.getBranches();
-    }
+//    public List<CachedBranch> getBranches(){
+//       return blockChainFacade.getBranches();
+//    }
 }
