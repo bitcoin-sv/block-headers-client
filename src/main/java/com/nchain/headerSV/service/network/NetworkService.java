@@ -4,6 +4,8 @@ import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.jcl.net.network.PeerAddress;
 import com.nchain.jcl.net.protocol.messages.common.Message;
 
+import java.util.List;
+
 
 /**
  * @author m.jose@nchain.com
@@ -21,8 +23,6 @@ public interface NetworkService {
     void broadcast(Message message);
     /** subscribe to network events */
     void subscribe(Class<? extends Message> eventClass, MessageConsumer eventHandler);
-    /** unsubscribe to network events */
-    void unsubscribe(Class<? extends Message> eventClass, MessageConsumer eventHandler);
-    /** return the number of connected peers*/
-    int getConnectedPeersCount();
+    /** amount of connected peers */
+    List<PeerAddress> getConnectedPeers();
 }

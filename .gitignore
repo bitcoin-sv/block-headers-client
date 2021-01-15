@@ -5,6 +5,7 @@ build/
 !**/src/main/**
 !**/src/test/**
 /src/main/lib
+/src/main/resources/jcl
 
 ### STS ###
 .apt_generated
