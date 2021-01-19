@@ -1,6 +1,5 @@
 package com.nchain.headerSV.config;
 
-import com.nchain.headerSV.config.NetworkConfiguration;
 import com.nchain.jcl.base.tools.config.provided.RuntimeConfigDefault;
 import com.nchain.jcl.store.blockChainStore.BlockChainStore;
 import com.nchain.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDB;
@@ -35,7 +34,7 @@ public class StorageConfiguration {
                 .build();
     }
 
-    @Bean //TODO can we make this generic?
+    @Bean
     public BlockChainStore getBlockStore() {
        return blockChainStore;
     }

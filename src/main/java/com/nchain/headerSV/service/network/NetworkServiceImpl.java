@@ -1,16 +1,16 @@
 package com.nchain.headerSV.service.network;
 
+import com.nchain.headerSV.service.consumer.ConsumerConfig;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.jcl.net.network.PeerAddress;
+import com.nchain.jcl.net.network.events.PeerConnectedEvent;
 import com.nchain.jcl.net.network.events.PeerDisconnectedEvent;
 import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.events.MsgReceivedEvent;
 import com.nchain.jcl.net.protocol.events.PeerHandshakedEvent;
-import com.nchain.jcl.net.protocol.handlers.block.BlockDownloaderHandler;
 import com.nchain.jcl.net.protocol.messages.common.BitcoinMsgBuilder;
 import com.nchain.jcl.net.protocol.messages.common.Message;
 import com.nchain.jcl.net.protocol.wrapper.P2P;
-import com.nchain.jcl.net.protocol.wrapper.P2PBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,8 +36,14 @@ public class NetworkServiceImpl implements NetworkService {
     // A Collection to keep track of the Peers handshaked:
     private List<PeerAddress> connectedPeers = Collections.synchronizedList(new ArrayList<>());
 
-    private Map<Class<? extends Message>, Set<MessageConsumer>> messageConsumers = new ConcurrentHashMap<>();
+    //Map all the subscribers by message
+    private Map<Class<? extends Message>, Map<MessageConsumer, ConsumerConfig>> messageConsumers = new ConcurrentHashMap<>();
 
+    // keep track of service state
+    private boolean serviceStarted = false;
+
+    //keep track of received messages
+    private Set<Long> processedMessages = Collections.synchronizedSet(new HashSet<>());
 
     @Autowired
     protected NetworkServiceImpl(ProtocolConfig protocolConfig) {
@@ -47,9 +53,8 @@ public class NetworkServiceImpl implements NetworkService {
     private void init() {
         log.info("Initalizing Network Service");
 
-        p2p = new P2PBuilder("headersv") //TODO const
+        p2p = P2P.builder(protocolConfig.getId())
                 .config(protocolConfig)
-                .excludeHandler(BlockDownloaderHandler.HANDLER_ID)
                 .build();
 
         p2p.EVENTS.PEERS.DISCONNECTED.forEach(this::onPeerDisconnected);
@@ -59,34 +64,50 @@ public class NetworkServiceImpl implements NetworkService {
 
 
     @Override
-    public void start() {
+    public synchronized void start() {
+        serviceStarted = true;
         init();
         p2p.start();
+        log.info("Network service started");
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
+        serviceStarted = false;
         p2p.stop();
+        log.info("Network service stopped");
     }
 
     @Override
-    public void broadcast(Message message) {
+    public void broadcast(Message message, boolean requiresMinimumPeers) {
+        if(requiresMinimumPeers){
+            checkMinimumPeersConnected();
+        }
+
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
         p2p.REQUESTS.MSGS.broadcast(bitcoinMsgBuilder.build()).submit();
     }
 
     @Override
-    public void send(Message message, PeerAddress peerAddress) {
+    public void send(Message message, PeerAddress peerAddress, boolean requiresMinimumPeers) {
+        if(requiresMinimumPeers){
+            checkMinimumPeersConnected();
+        }
+
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
         p2p.REQUESTS.MSGS.send(peerAddress, bitcoinMsgBuilder.build()).submit();
     }
 
     @Override
-    public void subscribe(Class<? extends Message> eventClass, MessageConsumer messageConsumer) {
-        Set<MessageConsumer> consumers = new HashSet<>();
-        consumers.add(messageConsumer);
-        messageConsumers.merge(eventClass, consumers, (w, prev) -> {
-            prev.addAll(w);
+    public synchronized void subscribe(Class<? extends Message> eventClass, MessageConsumer messageConsumer, boolean requiresMinimumPeers, boolean sendDuplicates) {
+        HashMap<MessageConsumer, ConsumerConfig> entry = new HashMap<>();
+        entry.put(messageConsumer, ConsumerConfig.builder()
+                .requiresMinimumPeers(Boolean.valueOf(requiresMinimumPeers))
+                .sendDuplcates(sendDuplicates)
+                .build());
+
+        messageConsumers.merge(eventClass, entry, (w, prev) -> {
+            prev.putAll(w);
             return prev;
         });
     }
@@ -96,30 +117,77 @@ public class NetworkServiceImpl implements NetworkService {
         return new ArrayList<>(connectedPeers);
     }
 
+    @Override
+    public void disconnectPeer(PeerAddress peerAddress) {
+        log.info("Peer: " + peerAddress + " has been disconnected by the application");
+        p2p.REQUESTS.PEERS.disconnect(peerAddress);
+    }
+
+    @Override
+    public void blacklistPeer(PeerAddress peerAddress) {
+        log.info("Peer: " + peerAddress + " has been blacklisted by the application");
+        p2p.REQUESTS.PEERS.disconnect(peerAddress); //TODO change to blacklist once implemented
+    }
+
     private void onMessage(MsgReceivedEvent msgReceivedEvent) {
         log.debug("Incoming Message coming from:" + msgReceivedEvent.getPeerAddress() + "type: " + msgReceivedEvent.getBtcMsg().getHeader().getCommand());
-        Set<MessageConsumer> handlers = messageConsumers.get(msgReceivedEvent.getBtcMsg().getBody().getClass());
 
-        //TODO need to handle version?
+        Map<MessageConsumer, ConsumerConfig> handlers = messageConsumers.get(msgReceivedEvent.getBtcMsg().getBody().getClass());
+
         if (handlers == null) {
             return;
         }
 
-        handlers.forEach(handler -> handler.consume(msgReceivedEvent.getBtcMsg(), msgReceivedEvent.getPeerAddress()));
+        handlers.forEach((consumer, config) -> {
+            if (config.isRequiresMinimumPeers()) {
+                if(!checkMinimumPeersConnected()) {
+                    return;
+                }
+            }
+
+            // Check if we've already processed this header message
+            if(!config.isSendDuplcates()) {
+                if (processedMessages.contains(msgReceivedEvent.getBtcMsg().getHeader().getChecksum())) {
+                    return;
+                } else {
+                    processedMessages.add(msgReceivedEvent.getBtcMsg().getHeader().getChecksum());
+                }
+            }
+
+            consumer.consume(msgReceivedEvent.getBtcMsg(), msgReceivedEvent.getPeerAddress());
+        });
     }
 
     private void onPeerDisconnected(PeerDisconnectedEvent event) {
-        log.debug("onPeerDisconnected: IP:" + event.getPeerAddress().toString() + ":Reason:" + event.getReason().toString());
+        log.debug("Peer disconnected IP:" + event.getPeerAddress().toString() + ": Reason:" + event.getReason().toString());
 
         connectedPeers.remove(event.getPeerAddress());
     }
 
     private void onPeerHandshaked(PeerHandshakedEvent event) {
-        log.debug("onPeerHandshaked: IP:" + event.getPeerAddress().toString() + ":User Agent:" + event.getVersionMsg().getUser_agent() + ": Version :" + event.getVersionMsg().getVersion());
+        log.debug("Peer connected IP:" + event.getPeerAddress().toString() + ": User Agent:" + event.getVersionMsg().getUser_agent() + ": Version :" + event.getVersionMsg().getVersion());
 
         connectedPeers.add(event.getPeerAddress());
     }
 
+    private synchronized boolean checkMinimumPeersConnected() {
+        if(connectedPeers.size() < protocolConfig.getBasicConfig().getMinPeers().getAsInt()) {
+            if(serviceStarted) {
+                log.warn("Network activity has been paused due to peer connections falling below the minimum threshold.");
 
+                serviceStarted = false;
+            }
+
+            return false;
+        }
+
+        if(!serviceStarted) {
+            log.warn("Network activity has resumed as peer count has risen above the minimum threshold");
+
+            serviceStarted = true;
+        }
+
+        return true;
+    }
 
 }

@@ -14,13 +14,13 @@ import com.nchain.jcl.net.protocol.handlers.handshake.HandshakeHandlerConfig;
 public class BSVStnnetConfig extends ProtocolConfigImpl implements ProtocolConfig {
 
     private static String id = "BSV [STN Net]";
-    private static long magicPackage = 0xf9c4cefbL;
-    private static int services = ProtocolServices.NODE_BLOOM.getProtocolServices();
+    private static long magicPackage = 0xF9C4CEFBL; //0xF9C4CEFB
+    private static int services = ProtocolServices.NODE_NETWORK.getProtocolServices();
     private static int port = 9333;
-    private static int protocolVersion = ProtocolVersion.CURRENT.getBitcoinProtocolVersion();
+    private static int protocolVersion = 70015;
     private static String[] userAgentBlacklist = new String[] {"Bitcoin ABC:", "BUCash:" };
     private static String[] userAgentWhitelist = new String[] {"Bitcoin SV:", HandshakeHandlerConfig.DEFAULT_USER_AGENT };
-    private static String[] dns = new String[]{"stn-seed.bitcoinsv.io"};
+    private static String[] dns = new String[]{"stn-seed.bitcoinsv.io", "stn-seed.cascharia.com", "stn-seed.bitcoincloud.net"};
     private static BlockHeader genesisBlock = Util.GENESIS_BLOCK_HEADER_STNNET;
 
     private static ProtocolBasicConfig basicConfig = ProtocolBasicConfig.builder().id(id).magicPackage(magicPackage).port(port).protocolVersion(protocolVersion).build();;

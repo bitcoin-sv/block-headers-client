@@ -1,5 +1,6 @@
 package com.nchain.headerSV.api.v1.controller;
 
+import com.nchain.headerSV.domain.dto.BlockHeaderDTO;
 import com.nchain.headerSV.domain.dto.ChainStateDTO;
 import com.nchain.headerSV.service.query.HSVFacade;
 import org.springframework.http.HttpStatus;
@@ -32,12 +33,28 @@ public class BlockChainControllerV1 {
         return chainStateDTOList;
     }
 
+    @RequestMapping("/orphans")
+    public void getOrphans() {
+        List<BlockHeaderDTO> orphanBlocks = hsvFacade.getOrphans();
+    }
+
+    @RequestMapping("/orphans/prune")
+    public void pruneOrphans() {
+        hsvFacade.pruneOrphans();
+    }
+
+    @RequestMapping("/tips/prune")
+    public void pruneAllTips(){
+        hsvFacade.pruneAllTips();
+    }
+
     @RequestMapping("/tips/prune/{hash}")
-    public void prune(@PathVariable String hash) {
+    public void pruneChain(@PathVariable String hash) {
         try{
             hsvFacade.pruneChain(hash);
         } catch (RuntimeException exception){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
         }
     }
+
 }

@@ -1,0 +1,19 @@
+# Application Configuration:
+headersv:
+  # Listener Configuration params:
+  network:
+    networkId: "testnet"
+    minPeers: 5
+    maxPeers: 15
+
+  sync:
+    headersToIgnore:
+    powLimit: "00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+
+
+  storage:
+    enableAutomaticPrunning: true
+
+logging:
+  level:
+    ROOT: info

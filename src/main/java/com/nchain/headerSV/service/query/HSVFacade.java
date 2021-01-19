@@ -69,7 +69,9 @@ public class HSVFacade {
             blockHeaderState = ChainState.STALE;
         }
 
+
         ChainStateDTO chainStateDTO = ChainStateDTO.builder()
+                .tip(null) //TODO
                 .state(blockHeaderState.name())
                 .chainWork(headerChainInfo.getChainWork())
                 .height(headerChainInfo.getHeight())
@@ -77,8 +79,10 @@ public class HSVFacade {
 
         return BlockHeaderStateDTO.builder()
                 .blockHeader(BlockHeaderDTO.of(blockHeader)) //TODO confirmations
-                .chainState(chainStateDTO) //TODO confidence
+                .chainState(chainStateDTO) //TODO confidence, only process message if connected to minimum peers
                 .build(); //TODO should we consider returning which network we're connected too?
+        // TODO Check auto puring works and what branch
+        // TODO Create easy to to identify forks to ignore
     }
 
 
@@ -114,4 +118,19 @@ public class HSVFacade {
     public void pruneChain(String hash) {
         blockChainStore.prune(Sha256Wrapper.wrap(hash), false);
     }
+
+    public void pruneAllTips() {
+        //TODO automatic pruning prune all chains with least work
+    }
+
+    public void pruneOrphans() {
+        //TODO prune orphans
+    }
+
+    public List<BlockHeaderDTO> getOrphans() {
+        return Collections.emptyList();
+    }
+
+
+
 }

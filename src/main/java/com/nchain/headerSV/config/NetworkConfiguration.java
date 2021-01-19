@@ -25,41 +25,35 @@ public class NetworkConfiguration {
     private final ProtocolConfig protocolConfig;
     private final BlockHeader genesisBlock;
 
-    //TODO logging for all classes
-    public NetworkConfiguration(@Value("${headersv.network.networkId:mainnet}") String networkId,
+    public NetworkConfiguration(@Value("${headersv.network.networkId:}") String networkId,
                                 @Value("${headersv.network.minPeers:5}") int minPeers,
-                                @Value("${headersv.network.maxPeers:15}") int maxPeers,
-                                @Value("${headersv.network.relayTxs:false}") boolean relayTxs) throws ConfigurationException {
-
-        HandshakeHandlerConfig handshakeHandlerConfig = HandshakeHandlerConfig.builder().relayTxs(relayTxs).build();
+                                @Value("${headersv.network.maxPeers:15}") int maxPeers) throws ConfigurationException {
 
         switch(networkId){
-            case "stnnet": //TODO
-                genesisBlock = Util.GENESIS_BLOCK_HEADER_STNNET;
-                protocolConfig = new BSVStnnetConfig().toBuilder()
-                        .minPeers(minPeers)
-                        .maxPeers(maxPeers)
-                        .handshakeConfig(handshakeHandlerConfig)
-                        .build();
-                break;
-
-            case "testnet": //TODO
-                genesisBlock = Util.GENESIS_BLOCK_HEADER_TESTNET;
-                protocolConfig = new BSVTestnetConfig().toBuilder()
-                        .minPeers(minPeers)
-                        .maxPeers(maxPeers)
-                        .handshakeConfig(handshakeHandlerConfig)
-                        .build();
-                break;
-
             case "mainnet":
                 genesisBlock = Util.GENESIS_BLOCK_HEADER_MAINNET;
                 protocolConfig = new BSVMainnetConfig().toBuilder()
                         .minPeers(minPeers)
                         .maxPeers(maxPeers)
-                        .handshakeConfig(handshakeHandlerConfig)
                         .build();
                 break;
+
+            case "stnnet":
+                genesisBlock = Util.GENESIS_BLOCK_HEADER_STNNET;
+                protocolConfig = new BSVStnnetConfig().toBuilder()
+                        .minPeers(minPeers)
+                        .maxPeers(maxPeers)
+                        .build();
+                break;
+
+            case "testnet":
+                genesisBlock = Util.GENESIS_BLOCK_HEADER_TESTNET;
+                protocolConfig = new BSVTestnetConfig().toBuilder()
+                        .minPeers(minPeers)
+                        .maxPeers(maxPeers)
+                        .build();
+                break;
+
 
             default:
                 throw new ConfigurationException("Invalid configuration 'networkId'. Either 'mainnet', 'stnnet' or 'testnet'");

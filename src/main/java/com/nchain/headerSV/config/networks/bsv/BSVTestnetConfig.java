@@ -15,15 +15,16 @@ import com.nchain.jcl.net.protocol.handlers.handshake.HandshakeHandlerConfig;
 public class BSVTestnetConfig extends ProtocolConfigImpl implements ProtocolConfig {
 
     private static String id = "BSV [Test Net]";
-    private static long magicPackage = 3908297187L;
-    private static int services;
-    private static int port;
-    private static int protocolVersion;
-    private static String[] userAgentBlacklist;
-    private static String[] userAgentWhitelist;
-    private static String[] dns;
-    private static BlockHeader genesisBlock;
-    private static ProtocolBasicConfig basicConfig;
+    private static long magicPackage = 4109624820L; //0xF4F3E5F4
+    private static int services = ProtocolServices.NODE_BLOOM.getProtocolServices();
+    private static int port = 18333;
+    private static int protocolVersion = ProtocolVersion.CURRENT.getBitcoinProtocolVersion();
+    private static String[] userAgentBlacklist = new String[] {"Bitcoin ABC:", "BUCash:" };
+    private static String[] userAgentWhitelist = new String[] {"Bitcoin SV:", HandshakeHandlerConfig.DEFAULT_USER_AGENT };
+    private static String[] dns = new String[]{"testnet-seed.bitcoinsv.io", "testnet-seed.cascharia.com", "testnet-seed.bitcoincloud.net"};
+    private static BlockHeader genesisBlock = Util.GENESIS_BLOCK_HEADER_STNNET;
+
+    private static ProtocolBasicConfig basicConfig = ProtocolBasicConfig.builder().id(id).magicPackage(magicPackage).port(port).protocolVersion(protocolVersion).build();;
 
     public BSVTestnetConfig() {
         super(null, null, null, genesisBlock, basicConfig, null, null, HandshakeHandlerConfig.builder().userAgentBlacklist(userAgentBlacklist).userAgentWhitelist(userAgentWhitelist).servicesSupported(services).build(), null, DiscoveryHandlerConfig.builder().dns(dns).build(), null, null);
@@ -31,16 +32,5 @@ public class BSVTestnetConfig extends ProtocolConfigImpl implements ProtocolConf
 
     public String getId() {
         return id;
-    }
-
-    static {
-        services = ProtocolServices.NODE_BLOOM.getProtocolServices();
-        port = 8333;
-        protocolVersion = ProtocolVersion.CURRENT.getBitcoinProtocolVersion();
-        userAgentBlacklist = new String[]{"Bitcoin ABC:", "BUCash:"};
-        userAgentWhitelist = new String[]{"Bitcoin SV:", "/bitcoinj-sv:0.0.7/"};
-        dns = new String[]{"testnet-seed.bitcoinsv.io", "testnet-seed.cascharia.com", "testnet-seed.satoshivision.network"};
-        genesisBlock = Util.GENESIS_BLOCK_HEADER_TESTNET;
-        basicConfig = ProtocolBasicConfig.builder().id(id).magicPackage(magicPackage).port(port).protocolVersion(protocolVersion).build();
     }
 }

@@ -32,4 +32,5 @@ public class NetworkControllerV1 {
     public int getConnectedPeersCount() {
         return hsvFacade.getConnectedPeers().size();
     }
+
 }
