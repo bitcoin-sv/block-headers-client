@@ -64,7 +64,7 @@ public class NetworkServiceImpl implements NetworkService {
 
 
     @Override
-    public synchronized void start() {
+    public void start() {
         serviceStarted = true;
         init();
         p2p.start();
@@ -72,7 +72,7 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     @Override
-    public synchronized void stop() {
+    public void stop() {
         serviceStarted = false;
         p2p.stop();
         log.info("Network service stopped");
@@ -99,7 +99,7 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     @Override
-    public synchronized void subscribe(Class<? extends Message> eventClass, MessageConsumer messageConsumer, boolean requiresMinimumPeers, boolean sendDuplicates) {
+    public void subscribe(Class<? extends Message> eventClass, MessageConsumer messageConsumer, boolean requiresMinimumPeers, boolean sendDuplicates) {
         HashMap<MessageConsumer, ConsumerConfig> entry = new HashMap<>();
         entry.put(messageConsumer, ConsumerConfig.builder()
                 .requiresMinimumPeers(Boolean.valueOf(requiresMinimumPeers))

@@ -2,7 +2,7 @@ package com.nchain.headerSV.api.v1.controller;
 
 import com.nchain.headerSV.domain.dto.BlockHeaderDTO;
 import com.nchain.headerSV.domain.dto.ChainStateDTO;
-import com.nchain.headerSV.service.query.HSVFacade;
+import com.nchain.headerSV.api.HSVFacade;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

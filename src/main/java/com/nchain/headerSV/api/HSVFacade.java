@@ -1,4 +1,4 @@
-package com.nchain.headerSV.service.query;
+package com.nchain.headerSV.api;
 
 import com.nchain.headerSV.domain.ChainState;
 import com.nchain.headerSV.domain.dto.BlockHeaderDTO;

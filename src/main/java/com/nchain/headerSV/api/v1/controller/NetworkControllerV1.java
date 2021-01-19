@@ -1,7 +1,7 @@
 package com.nchain.headerSV.api.v1.controller;
 
 import com.nchain.headerSV.domain.dto.PeerAddressDTO;
-import com.nchain.headerSV.service.query.HSVFacade;
+import com.nchain.headerSV.api.HSVFacade;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 

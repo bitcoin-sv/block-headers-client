@@ -57,7 +57,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     }
 
     @Override
-    public synchronized void start() {
+    public void start() {
         networkService.subscribe(HeadersMsg.class, this::consume, true, false);
         networkService.subscribe(InvMessage.class, this::consume, true, true);
         networkService.subscribe(VersionAckMsg.class, this::consume, false, true);
@@ -72,7 +72,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     }
 
     @Override
-    public synchronized void stop() {}
+    public void stop() {}
 
     @Override
     public synchronized <T extends Message> void consume(BitcoinMsg<T> message, PeerAddress peerAddress) {
