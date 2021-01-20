@@ -8,12 +8,8 @@ headersv:
 
   sync:
     headersToIgnore:
-    powLimit: "00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    powLimit: 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 
   storage:
     enableAutomaticPrunning: true
-
-logging:
-  level:
-    ROOT: trace

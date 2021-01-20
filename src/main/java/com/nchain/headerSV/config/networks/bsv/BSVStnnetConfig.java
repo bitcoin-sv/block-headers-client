@@ -15,7 +15,7 @@ public class BSVStnnetConfig extends ProtocolConfigImpl implements ProtocolConfi
 
     private static String id = "BSV [STN Net]";
     private static long magicPackage = 0xF9C4CEFBL; //0xF9C4CEFB
-    private static int services = ProtocolServices.NODE_NETWORK.getProtocolServices();
+    private static int services = ProtocolServices.NODE_BLOOM.getProtocolServices();
     private static int port = 9333;
     private static int protocolVersion = 70015;
     private static String[] userAgentBlacklist = new String[] {"Bitcoin ABC:", "BUCash:" };

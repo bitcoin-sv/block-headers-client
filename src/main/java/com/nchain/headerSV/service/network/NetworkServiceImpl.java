@@ -141,6 +141,7 @@ public class NetworkServiceImpl implements NetworkService {
         handlers.forEach((consumer, config) -> {
             if (config.isRequiresMinimumPeers()) {
                 if(!checkMinimumPeersConnected()) {
+                    log.info("Message " + msgReceivedEvent.getBtcMsg().getHeader().getCommand() + " rejected. Not enough connected peers.");
                     return;
                 }
             }
@@ -173,7 +174,7 @@ public class NetworkServiceImpl implements NetworkService {
     private synchronized boolean checkMinimumPeersConnected() {
         if(connectedPeers.size() < protocolConfig.getBasicConfig().getMinPeers().getAsInt()) {
             if(serviceStarted) {
-                log.warn("Network activity has been paused due to peer connections falling below the minimum threshold.");
+                log.warn("Network activity has been paused due to peer connections falling below the minimum threshold. Waiting for additional peers..");
 
                 serviceStarted = false;
             }

@@ -58,24 +58,30 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
 
     @Override
     public void start() {
-        networkService.subscribe(HeadersMsg.class, this::consume, true, false);
-        networkService.subscribe(InvMessage.class, this::consume, true, true);
-        networkService.subscribe(VersionAckMsg.class, this::consume, false, true);
-
         log.info("Starting blockstore..");
         blockStore.start();
         log.info("Blockstore started");
 
-        powLimitValue = Sha256Wrapper.wrap(powLimit).toBigInteger();
+        log.info("Current blockchain state: ");
+        blockStore.getTipsChains().forEach(t -> {
+            log.info("Chain Id: " + blockStore.getBlockChainInfo(t).get().getHeader().getHash() + " Height: " + blockStore.getBlockChainInfo(t).get().getHeight());
+        });
 
-        log.info("Requesting latest headers...");
+
+        log.info("Listening for headers...");
+
+        networkService.subscribe(HeadersMsg.class, this::consume, true, false);
+        networkService.subscribe(InvMessage.class, this::consume, false, true);
+        networkService.subscribe(VersionAckMsg.class, this::consume, false, true);
+
+        powLimitValue = Sha256Wrapper.wrap(powLimit).toBigInteger();
     }
 
     @Override
     public void stop() {}
 
     @Override
-    public synchronized <T extends Message> void consume(BitcoinMsg<T> message, PeerAddress peerAddress) {
+    public <T extends Message> void consume(BitcoinMsg<T> message, PeerAddress peerAddress) {
         log.debug("Consuming message type: " + message.getHeader().getCommand());
 
         switch(message.getHeader().getCommand()){
@@ -99,6 +105,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     private void consumeVersionAckMsg(VersionAckMsg versionAckMsg, PeerAddress peerAddress) {
         // request headers for each tip, at this point we don't know which nodes are SV and which are not
         blockStore.getTipsChains().forEach(h -> requestHeadersFromHash(h, peerAddress));
+
     }
 
     private void consumeInvMsg(InvMessage invMsg, PeerAddress peerAddress){
@@ -111,7 +118,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
 
     /* Although blockStore is synchronized, we need to ensure another thread does not access
        simultaneously else we risk requesting multiple headers for already processed blocks. */
-    private void consumeHeadersMsg(HeadersMsg headerMsg, PeerAddress peerAddress){
+    private synchronized void consumeHeadersMsg(HeadersMsg headerMsg, PeerAddress peerAddress){
 
         //Convert each BlockHeaderMsg to a BlockHeader
         List<BlockHeader> blockHeaders = new ArrayList<>(headerMsg.getBlockHeaderMsgList().size());
@@ -187,7 +194,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
 
     private void requestHeadersFromHash(Sha256Wrapper hash, PeerAddress peerAddress){
         log.debug("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
-        networkService.send(buildGetHeaderMsgFromHash(hash.toString()), peerAddress, true);
+        networkService.send(buildGetHeaderMsgFromHash(hash.toString()), peerAddress, false);
     }
 
     private GetHeadersMsg buildGetHeaderMsgFromHash(String hash){

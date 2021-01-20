@@ -1,3 +1,4 @@
 spring:
   profiles:
-    active: bsv-mainnet
+    active: bsv-stnnet
+

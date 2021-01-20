@@ -36,8 +36,8 @@ public class HeaderSVApplication {
 
 	@EventListener
 	public void onStart(ApplicationReadyEvent event) {
-		networkService.start();
 		blockHeadersSyncService.start();
+		networkService.start();
 	}
 
 	@PreDestroy
