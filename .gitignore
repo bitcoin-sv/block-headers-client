@@ -6,6 +6,8 @@ build/
 !**/src/test/**
 /src/main/lib
 /src/main/resources/jcl
+/META-INF
+/deliverable
 
 ### STS ###
 .apt_generated

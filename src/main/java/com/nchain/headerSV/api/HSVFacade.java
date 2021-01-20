@@ -71,7 +71,7 @@ public class HSVFacade {
 
 
         ChainStateDTO chainStateDTO = ChainStateDTO.builder()
-                .tip(null) //TODO
+                .header(null) //TODO
                 .state(blockHeaderState.name())
                 .chainWork(headerChainInfo.getChainWork())
                 .height(headerChainInfo.getHeight())
@@ -108,7 +108,7 @@ public class HSVFacade {
                         .chainWork(ci.getChainWork())
                         .height(ci.getHeight())
                         .state(mainChainTip.equals(ci) ? ChainState.MAIN_CHAIN.name() : ChainState.ORPHAN.name())
-                        .tip(BlockHeaderDTO.of(ci.getHeader())) //TODO calculate work properly
+                        .header(BlockHeaderDTO.of(ci.getHeader())) //TODO calculate work properly
                         .build())
                 .collect(Collectors.toList());
 

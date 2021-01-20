@@ -9,9 +9,12 @@ services:
     volumes:
       - /tmp/jcl
     environment:
-      - spring.profiles.active='bsv-testnet'
+      - spring.profiles.active=bsv-testnet
+
+        #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
       - headersv.network.minPeers=5
       - headersv.network.maxPeers=15
+
     ports:
       - 8080:8080
     networks:
@@ -20,3 +23,5 @@ services:
 networks:
   sv-network:
     driver: bridge
+
+    

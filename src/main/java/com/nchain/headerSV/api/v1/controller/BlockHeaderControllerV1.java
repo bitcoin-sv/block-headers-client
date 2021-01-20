@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
  * @date 28/07/2020
  */
 @RestController
-@RequestMapping("/api/v1/chain")
+@RequestMapping("/api/v1/chain/header")
 public class BlockHeaderControllerV1 {
 
     HSVFacade hsvFacade;

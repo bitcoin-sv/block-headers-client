@@ -17,7 +17,7 @@ import java.math.BigInteger;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChainStateDTO {
-    private BlockHeaderDTO tip;
+    private BlockHeaderDTO header;
     private String state;
     private BigInteger chainWork;
     private int height;
