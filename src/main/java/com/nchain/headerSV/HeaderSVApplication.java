@@ -1,8 +1,6 @@
 package com.nchain.headerSV;
 
-import com.nchain.headerSV.service.cache.BlockHeaderCacheService;
 import com.nchain.headerSV.service.network.NetworkService;
-import com.nchain.headerSV.service.propagation.PropagationDBService;
 import com.nchain.headerSV.service.sync.BlockHeaderSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -31,11 +29,6 @@ public class HeaderSVApplication {
 	@Autowired
 	private NetworkService networkService;
 
-	@Autowired
-	private PropagationDBService propagationDBService;
-
-	@Autowired
-	private BlockHeaderCacheService blockHeaderCacheService;
 
 	@Autowired
 	private BlockHeaderSyncService blockHeadersSyncService;
@@ -43,8 +36,6 @@ public class HeaderSVApplication {
 
 	@EventListener
 	public void onStart(ApplicationReadyEvent event) {
-		propagationDBService.start();
-		blockHeaderCacheService.start();
 		blockHeadersSyncService.start();
 		networkService.start();
 	}
@@ -52,9 +43,7 @@ public class HeaderSVApplication {
 	@PreDestroy
 	public void onStop() {
 		networkService.stop();
-		blockHeaderCacheService.stop();
 		blockHeadersSyncService.stop();
-		propagationDBService.stop();
 	}
 
 }

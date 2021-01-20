@@ -1,41 +1,27 @@
 # A docker-compose file for testing the App in docker and the local environment:
-version: "3"
-services:
-  headersv-db:
-    image: postgres
-    container_name: headersv-db
-    volumes:
-      - ./headersv-data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=headerSV
-      - POSTGRES_USER=headerSV
-      - POSTGRES_PASSWORD=test
-      - PGDATA=/var/lib/postgresql/data/headersv
-    ports:
-      - 5432:5432
-    networks:
-      - headersv-network
+version: "3.7"
 
-  headersv-app:
-    image: headersv-app:latest
-    container_name: headersv-app
+services:
+  headersv:
+    image: local.headersv
     build:
       context: .
-      dockerfile: Dockerfile
     volumes:
-      - ./headersv-data/log:/headersv-data
+      - /tmp/jcl
     environment:
-      - JAVA_OPTS=-XX:+PrintFlagsFinal
-      - spring.profiles.active=docker-bsv-testnet
-      - spring.datasource.url=jdbc:postgresql://headersv-db:5432/headerSV
+      - spring.profiles.active=bsv-testnet
+
+        #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
+      - headersv.network.minPeers=5
+      - headersv.network.maxPeers=15
+
     ports:
       - 8080:8080
-    depends_on:
-      - headersv-db
     networks:
-      - headersv-network
-    command: ["/wait-for-it.sh", "headersv-db:5432", "-t", "55", "--", "java","-jar","-XshowSettings:vm", "-Djava.security.egd=file:/dev/./urandom", "/headerSV.jar","--stacktrace"]
+      - sv-network
 
 networks:
-  headersv-network:
+  sv-network:
     driver: bridge
+
+    
