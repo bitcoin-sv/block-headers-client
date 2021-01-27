@@ -170,6 +170,8 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
             return false;
         }
 
+        //TODO ensure minimum target aligns with expected from the network
+
         //Reject the whole message if any of them are in the ignore list
         if(headersToIgnore.contains(blockHeaderMsg.getHash().toString())){
             log.info("Message containing header: " + blockHeaderMsg.getHash().toString() + " has been rejected due to being in the ignore list");
@@ -188,7 +190,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     }
 
     private void requestHeadersFromHash(Sha256Wrapper hash){
-        log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight()); //TODO add chain id to identify chain being sync'd
+        log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight());
         networkService.broadcast(buildGetHeaderMsgFromHash(hash.toString()), true);
     }
 

@@ -2,7 +2,6 @@ package com.nchain.headerSV.api;
 
 import com.nchain.headerSV.domain.ChainState;
 import com.nchain.headerSV.domain.dto.BlockHeaderDTO;
-import com.nchain.headerSV.domain.dto.BlockHeaderStateDTO;
 import com.nchain.headerSV.domain.dto.ChainStateDTO;
 import com.nchain.headerSV.domain.dto.PeerAddressDTO;
 import com.nchain.headerSV.service.network.NetworkService;
@@ -44,7 +43,7 @@ public class HSVFacade {
         return BlockHeaderDTO.of(blockHeader.get());
     }
 
-    public BlockHeaderStateDTO getBlockHeaderState(String hash){
+    public ChainStateDTO getBlockHeaderState(String hash){
         Optional<BlockHeader> blockHeaderOptional = blockChainStore.getBlock(Sha256Wrapper.wrap(hash));
 
         if(blockHeaderOptional.isEmpty()){
@@ -60,29 +59,31 @@ public class HSVFacade {
             blockHeaderState = ChainState.ORPHAN;
         }
 
-        //Get the chain info for this block and the longest chain
+        //Get the chain info for this block
         ChainInfo headerChainInfo = chainInfoOptional.get();
+
+        //Get the longest chain info
         ChainInfo longestChainInfo = blockChainStore.getLongestChain().get();
 
-        //Check if the block is in the longest chain
-        if(!headerChainInfo.equals(longestChainInfo)){
+        //Get the longest chain this header appears in
+        ChainInfo headerlongestChainInfo = blockChainStore.getTipsChains(Sha256Wrapper.wrap(hash))
+                .stream()
+                .map(headerHash -> blockChainStore.getBlockChainInfo(headerHash))
+                .max(Comparator.comparing(chainInfo -> chainInfo.get().getChainWork()))
+                .get().get();
+
+        //If the tip of the requested headers work is less than the work of the longest chain, then it's stale
+        if(headerlongestChainInfo.getChainWork().compareTo(longestChainInfo.getChainWork()) < 0){
             blockHeaderState = ChainState.STALE;
         }
 
-
-        ChainStateDTO chainStateDTO = ChainStateDTO.builder()
-                .header(null) //TODO
-                .state(blockHeaderState.name())
-                .chainWork(headerChainInfo.getChainWork())
-                .height(headerChainInfo.getHeight())
-                .build();
-
-        return BlockHeaderStateDTO.builder()
-                .blockHeader(BlockHeaderDTO.of(blockHeader)) //TODO confirmations
-                .chainState(chainStateDTO) //TODO confidence, only process message if connected to minimum peers
-                .build(); //TODO should we consider returning which network we're connected too?
-        // TODO Check auto puring works and what branch
-        // TODO Create easy to to identify forks to ignore
+        return ChainStateDTO.builder()
+                    .header(BlockHeaderDTO.of(blockHeader))
+                    .state(blockHeaderState.name())
+                    .chainWork(headerChainInfo.getChainWork())
+                    .height(headerChainInfo.getHeight())
+                    .confirmations(headerlongestChainInfo.getHeight() - headerChainInfo.getHeight())
+                    .build();
     }
 
 
@@ -97,9 +98,9 @@ public class HSVFacade {
             return Collections.emptyList();
         }
 
-        //Get the tip hash and convert to ChanInfo
+        //Get the tip hash and convert to ChainInfo
         List<ChainInfo> chainTips = blockChainStore.getTipsChains().stream().map(h -> blockChainStore.getBlockChainInfo(h).get()).collect(Collectors.toList());
-        //Find the tip with the most work to identify main chain
+        //Find the tip with the most work to identify main chain used for identifying state
         ChainInfo mainChainTip = chainTips.stream().max(Comparator.comparing(ChainInfo::getChainWork)).get();
 
         //Build DTO from tips
@@ -107,8 +108,9 @@ public class HSVFacade {
                 .map(ci -> ChainStateDTO.builder()
                         .chainWork(ci.getChainWork())
                         .height(ci.getHeight())
-                        .state(mainChainTip.equals(ci) ? ChainState.MAIN_CHAIN.name() : ChainState.ORPHAN.name())
-                        .header(BlockHeaderDTO.of(ci.getHeader())) //TODO calculate work properly
+                        .state(mainChainTip.equals(ci) ? ChainState.MAIN_CHAIN.name() : ChainState.STALE.name())
+                        .header(BlockHeaderDTO.of(ci.getHeader()))
+                        .confirmations(0)
                         .build())
                 .collect(Collectors.toList());
 
@@ -119,18 +121,9 @@ public class HSVFacade {
         blockChainStore.prune(Sha256Wrapper.wrap(hash), false);
     }
 
-    public void pruneAllTips() {
-        //TODO automatic pruning prune all chains with least work
+    public void pruneStaleTips() {
+        //prune all except the longest chain
+        blockChainStore.getTipsChains().forEach(h -> blockChainStore.prune(h, false));
     }
-
-    public void pruneOrphans() {
-        //TODO prune orphans
-    }
-
-    public List<BlockHeaderDTO> getOrphans() {
-        return Collections.emptyList();
-    }
-
-
 
 }

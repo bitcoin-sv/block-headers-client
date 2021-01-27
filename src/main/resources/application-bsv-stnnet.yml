@@ -10,6 +10,11 @@ headersv:
     headersToIgnore:
     powLimit: 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-
   storage:
-    enableAutomaticPrunning: true
+    pruning:
+      fork:
+        enabled: false
+        pruneAfterConfirmations: 7
+      orphan:
+        enabled: false
+        pruneAfterInterval: 600

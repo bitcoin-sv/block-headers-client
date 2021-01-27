@@ -3,8 +3,8 @@ package com.nchain.headerSV.tools;
 import com.nchain.jcl.base.domain.api.base.BlockHeader;
 import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 
-import java.math.BigInteger;
 
+import java.math.BigInteger;
 
 /**
  * @author m.fletcher@nchain.com
@@ -57,6 +57,5 @@ public class Util {
             .numTxs(1)
             .time(1296688928)
             .build();
-
 
 }
