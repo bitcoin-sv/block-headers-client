@@ -22,4 +22,5 @@ public class ChainStateDTO {
     private BigInteger chainWork;
     private int height;
     private int confirmations;
+    private String genesis;
 }

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * @author m.jose@nchain.com
+ * @author m.fletcher@nchain.com
  * Copyright (c) 2018-2020 nChain Ltd
  * @date 28/07/2020
  */

@@ -59,7 +59,7 @@ public class HSVFacade {
             blockHeaderState = ChainState.ORPHAN;
         }
 
-        //Get the chain info for this block and the longest chain
+        //Get the chain info for this block
         ChainInfo headerChainInfo = chainInfoOptional.get();
 
         //Get the longest chain info
@@ -73,18 +73,17 @@ public class HSVFacade {
                 .get().get();
 
         //If the tip of the requested headers work is less than the work of the longest chain, then it's stale
-        if(headerlongestChainInfo.getChainWork().compareTo(longestChainInfo.getChainWork()) >= 0){
+        if(headerlongestChainInfo.getChainWork().compareTo(longestChainInfo.getChainWork()) < 0){
             blockHeaderState = ChainState.STALE;
         }
 
-
-        return  ChainStateDTO.builder()
-                .header(BlockHeaderDTO.of(blockHeader)) //TODO
-                .state(blockHeaderState.name())
-                .chainWork(headerChainInfo.getChainWork())
-                .height(headerChainInfo.getHeight())
-                .confirmations(headerlongestChainInfo.getHeight() - headerChainInfo.getHeight())
-                .build();
+        return ChainStateDTO.builder()
+                    .header(BlockHeaderDTO.of(blockHeader))
+                    .state(blockHeaderState.name())
+                    .chainWork(headerChainInfo.getChainWork())
+                    .height(headerChainInfo.getHeight())
+                    .confirmations(headerlongestChainInfo.getHeight() - headerChainInfo.getHeight())
+                    .build();
     }
 
 
@@ -109,7 +108,7 @@ public class HSVFacade {
                 .map(ci -> ChainStateDTO.builder()
                         .chainWork(ci.getChainWork())
                         .height(ci.getHeight())
-                        .state(mainChainTip.equals(ci) ? ChainState.MAIN_CHAIN.name() : ChainState.ORPHAN.name())
+                        .state(mainChainTip.equals(ci) ? ChainState.MAIN_CHAIN.name() : ChainState.STALE.name())
                         .header(BlockHeaderDTO.of(ci.getHeader()))
                         .confirmations(0)
                         .build())
@@ -122,19 +121,9 @@ public class HSVFacade {
         blockChainStore.prune(Sha256Wrapper.wrap(hash), false);
     }
 
-    public void pruneAllTips() {
+    public void pruneStaleTips() {
         //prune all except the longest chain
         blockChainStore.getTipsChains().forEach(h -> blockChainStore.prune(h, false));
     }
-
-    public void pruneOrphans() {
-        //TODO
-    }
-
-    public List<BlockHeaderDTO> getOrphans() {
-        return Collections.emptyList();
-    }
-
-
 
 }

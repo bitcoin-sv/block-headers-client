@@ -33,19 +33,9 @@ public class BlockChainControllerV1 {
         return chainStateDTOList;
     }
 
-    @RequestMapping("/orphans")
-    public void getOrphans() {
-        List<BlockHeaderDTO> orphanBlocks = hsvFacade.getOrphans();
-    }
-
-    @RequestMapping("/orphans/prune")
-    public void pruneOrphans() {
-        hsvFacade.pruneOrphans();
-    }
-
     @RequestMapping("/tips/prune")
-    public void pruneAllTips(){
-        hsvFacade.pruneAllTips();
+    public void pruneStaleTips(){
+        hsvFacade.pruneStaleTips();
     }
 
     @RequestMapping("/tips/prune/{hash}")
