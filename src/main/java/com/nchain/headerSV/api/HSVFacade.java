@@ -51,7 +51,7 @@ public class HSVFacade {
         }
 
         BlockHeader blockHeader = blockHeaderOptional.get();
-        ChainState blockHeaderState = ChainState.MAIN_CHAIN;
+        ChainState blockHeaderState = ChainState.LONGEST_CHAIN;
 
         //Empty if the block is not connected
         Optional<ChainInfo> chainInfoOptional = blockChainStore.getBlockChainInfo(blockHeader.getHash());
@@ -108,7 +108,7 @@ public class HSVFacade {
                 .map(ci -> ChainStateDTO.builder()
                         .chainWork(ci.getChainWork())
                         .height(ci.getHeight())
-                        .state(mainChainTip.equals(ci) ? ChainState.MAIN_CHAIN.name() : ChainState.STALE.name())
+                        .state(mainChainTip.equals(ci) ? ChainState.LONGEST_CHAIN.name() : ChainState.STALE.name())
                         .header(BlockHeaderDTO.of(ci.getHeader()))
                         .confirmations(0)
                         .build())
@@ -118,12 +118,16 @@ public class HSVFacade {
     }
 
     public void pruneChain(String hash) {
-        blockChainStore.prune(Sha256Wrapper.wrap(hash), false);
-    }
+        //Get the tip hash and convert to ChainInfo
+        List<ChainInfo> chainTips = blockChainStore.getTipsChains().stream().map(h -> blockChainStore.getBlockChainInfo(h).get()).collect(Collectors.toList());
+        //Find the tip with the most work to identify main chain used for identifying state
+        ChainInfo mainChainTip = chainTips.stream().max(Comparator.comparing(ChainInfo::getChainWork)).get();
+        
+        if(mainChainTip.getHeader().getHash().toString().equals(hash)){
+            throw new UnsupportedOperationException("Cannot prune the longest chain.");
+        }
 
-    public void pruneStaleTips() {
-        //prune all except the longest chain
-        blockChainStore.getTipsChains().forEach(h -> blockChainStore.prune(h, false));
+        blockChainStore.prune(Sha256Wrapper.wrap(hash), false);
     }
 
 }

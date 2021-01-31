@@ -168,7 +168,6 @@ public class NetworkServiceImpl implements NetworkService {
     private void onPeerHandshaked(PeerHandshakedEvent event) {
         log.debug("Peer connected IP:" + event.getPeerAddress().toString() + ": User Agent:" + event.getVersionMsg().getUser_agent() + ": Version :" + event.getVersionMsg().getVersion());
 
-        //TODO check version and magic bytes
         connectedPeers.add(event.getPeerAddress());
     }
 

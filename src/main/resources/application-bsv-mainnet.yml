@@ -4,7 +4,7 @@ headersv:
   network:
     networkId: "mainnet"
     minPeers: 15
-    maxPeers: 50
+    maxPeers: 30
 
   sync:
     headersToIgnore: 000000000000000000afe19d2ba3afbbc2627b1a6d7ee2425f998ddabd6134ed, 00000000000000000019f1679932c8a69051fca08d0934ac0c6cad56077d0c66, 0000000000000000004626ff6e3b936941d341c5932ece4357eeccac44e6d56c, 0000000000000000055de705ef722c11d90c1a52de52c21aa646c6bb46de3770
@@ -13,13 +13,8 @@ headersv:
   storage:
     pruning:
       fork:
-        enabled: false
+        enabled: true
         pruneAfterConfirmations: 7
       orphan:
-        enabled: false
+        enabled: true
         pruneAfterInterval: 600
-
-
-logging:
-  level:
-    ROOT: info
