@@ -39,8 +39,8 @@ public class StorageConfiguration {
                 .config(blockChainStoreLevelDBConfig)
                 .enableAutomaticForkPrunning(forkPruningEnabled)
                 .enableAutomaticOrphanPrunning(orphanPruningEnabled)
-                .orphanPrunningFrequency(Duration.ofSeconds(30))
-                .forkPrunningFrequency(Duration.ofSeconds(30))
+                .orphanPrunningFrequency(Duration.ofSeconds(180))
+                .forkPrunningFrequency(Duration.ofSeconds(180))
                 .build();
     }
 

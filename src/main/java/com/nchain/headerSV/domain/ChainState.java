@@ -6,7 +6,7 @@ package com.nchain.headerSV.domain;
  * @date 15/01/2021
  */
 public enum ChainState {
-    MAIN_CHAIN,
+    LONGEST_CHAIN,
     ORPHAN,
     STALE
 }
