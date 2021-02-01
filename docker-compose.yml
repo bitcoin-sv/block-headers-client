@@ -16,7 +16,6 @@ services:
       - headersv.network.maxPeers=15
     ports:
       - 8080:8080
-
 volumes:
   headersv-data:
     external: false
