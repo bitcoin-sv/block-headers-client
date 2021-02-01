@@ -126,7 +126,7 @@ public class NetworkServiceImpl implements NetworkService {
     @Override
     public void blacklistPeer(PeerAddress peerAddress) {
         log.info("Peer: " + peerAddress + " has been blacklisted by the application");
-        p2p.REQUESTS.PEERS.disconnect(peerAddress); //TODO change to blacklist once implemented
+        p2p.REQUESTS.PEERS.blacklist(peerAddress);
     }
 
     private void onMessage(MsgReceivedEvent msgReceivedEvent) {

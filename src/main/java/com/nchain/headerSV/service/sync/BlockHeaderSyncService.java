@@ -170,7 +170,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
             return false;
         }
 
-        //TODO ensure minimum target aligns with expected from the network
+        //TODO additional block validation incl ensuring minimum target aligns with expected from the network
 
         //Reject the whole message if any of them are in the ignore list
         if(headersToIgnore.contains(blockHeaderMsg.getHash().toString())){
