@@ -33,17 +33,12 @@ public class BlockChainControllerV1 {
         return chainStateDTOList;
     }
 
-    @RequestMapping("/tips/prune")
-    public void pruneStaleTips(){
-        hsvFacade.pruneStaleTips();
-    }
-
     @RequestMapping("/tips/prune/{hash}")
     public void pruneChain(@PathVariable String hash) {
         try{
             hsvFacade.pruneChain(hash);
         } catch (RuntimeException exception){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
         }
     }
 
