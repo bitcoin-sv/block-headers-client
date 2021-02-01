@@ -9,7 +9,7 @@ services:
     volumes:
       - headersv-data:/tmp/jcl
     environment:
-      - spring.profiles.active=bsv-testnet
+      - spring.profiles.active=bsv-mainnet
 
         #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
       - headersv.network.minPeers=5
