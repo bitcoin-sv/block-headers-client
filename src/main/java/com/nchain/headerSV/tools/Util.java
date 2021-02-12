@@ -1,8 +1,13 @@
 package com.nchain.headerSV.tools;
 
-import com.nchain.jcl.base.domain.api.base.BlockHeader;
-import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 
+
+
+import com.nchain.jcl.net.protocol.messages.BlockHeaderMsg;
+import com.nchain.jcl.net.protocol.messages.HashMsg;
+import io.bitcoinj.bitcoin.Genesis;
+import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinj.params.Net;
 
 import java.math.BigInteger;
 
@@ -23,39 +28,8 @@ public class Util {
         return coefficent.multiply(BigInteger.valueOf(2).pow(BigInteger.valueOf(8).multiply(index.subtract(BigInteger.valueOf(3L))).intValue()));
     }
 
-    public static BlockHeader GENESIS_BLOCK_HEADER_STNNET = BlockHeader.builder()
-            .prevBlockHash(Sha256Wrapper.ZERO_HASH)
-            .hash(Sha256Wrapper.wrap("000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"))
-            .version(1)
-            .merkleRoot(Sha256Wrapper.wrap("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"))
-            .difficultyTarget(0x1d00ffffL)
-            .nonce(414098458)
-            .numTxs(1)
-            .time(1296688602L)
-            .build();
-
-
-    public static BlockHeader GENESIS_BLOCK_HEADER_MAINNET = BlockHeader.builder()
-            .prevBlockHash(Sha256Wrapper.ZERO_HASH)
-            .hash(Sha256Wrapper.wrap("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"))
-            .version(1)
-            .merkleRoot(Sha256Wrapper.wrap("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"))
-            .difficultyTarget(486604799)
-            .nonce(2083236893L)
-            .numTxs(1L)
-            .time(1231006505)
-            .build();
-
-
-    public static BlockHeader GENESIS_BLOCK_HEADER_TESTNET = BlockHeader.builder()
-            .prevBlockHash(Sha256Wrapper.ZERO_HASH)
-            .hash(Sha256Wrapper.wrap("000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"))
-            .version(1)
-            .merkleRoot(Sha256Wrapper.wrap("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"))
-            .difficultyTarget(486604799)
-            .nonce(1924588547L)
-            .numTxs(1)
-            .time(1296688928)
-            .build();
+    public static HeaderReadOnly GENESIS_BLOCK_HEADER_MAINNET = Genesis.getHeaderFor(Net.MAINNET).getHeader();
+    public static HeaderReadOnly GENESIS_BLOCK_HEADER_STNNET = Genesis.getHeaderFor(Net.STN).getHeader();
+    public static HeaderReadOnly GENESIS_BLOCK_HEADER_TESTNET  = Genesis.getHeaderFor(Net.TESTNET3).getHeader();
 
 }

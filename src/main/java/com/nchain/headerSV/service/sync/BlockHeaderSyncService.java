@@ -5,15 +5,15 @@ import com.nchain.headerSV.service.HeaderSvService;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.headerSV.service.network.NetworkService;
 import com.nchain.headerSV.tools.Util;
-import com.nchain.jcl.base.domain.api.base.BlockHeader;
-import com.nchain.jcl.base.tools.bytes.HEX;
-import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 import com.nchain.jcl.net.network.PeerAddress;
 import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.messages.*;
 import com.nchain.jcl.net.protocol.messages.common.BitcoinMsg;
 import com.nchain.jcl.net.protocol.messages.common.Message;
 import com.nchain.jcl.store.blockChainStore.BlockChainStore;
+import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinj.bitcoin.bean.base.HeaderBean;
+import io.bitcoinj.core.Sha256Hash;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static io.bitcoinj.core.Utils.HEX;
 
 /**
  * @author {m.fletcher}@nchain.com
@@ -74,7 +76,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         networkService.subscribe(InvMessage.class, this::consume, false, true);
         networkService.subscribe(VersionAckMsg.class, this::consume, false, true);
 
-        powLimitValue = Sha256Wrapper.wrap(powLimit).toBigInteger();
+        powLimitValue = Sha256Hash.wrap(powLimit).toBigInteger();
     }
 
     @Override
@@ -121,7 +123,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     private synchronized void consumeHeadersMsg(HeadersMsg headerMsg, PeerAddress peerAddress){
 
         //Convert each BlockHeaderMsg to a BlockHeader
-        List<BlockHeader> blockHeaders = new ArrayList<>(headerMsg.getBlockHeaderMsgList().size());
+        List<HeaderReadOnly> blockHeaders = new ArrayList<>(headerMsg.getBlockHeaderMsgList().size());
         for(BlockHeaderMsg blockHeaderMsg : headerMsg.getBlockHeaderMsgList()){
 
             //Reject the whole mesage if the peer is sending bad blocks
@@ -129,26 +131,16 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
                 return;
             }
 
-            //Convert a BlockHeaderMsg to a BlockHeader
-            blockHeaders.add(BlockHeader.builder()
-                    .version(blockHeaderMsg.getVersion())
-                    .hash(Sha256Wrapper.wrap(blockHeaderMsg.getHash().getHashBytes()))
-                    .prevBlockHash(Sha256Wrapper.wrap(blockHeaderMsg.getPrevBlockHash().getHashBytes()))
-                    .merkleRoot(Sha256Wrapper.wrap(blockHeaderMsg.getMerkleRoot().getHashBytes()))
-                    .time(blockHeaderMsg.getCreationTimestamp())
-                    .difficultyTarget(blockHeaderMsg.getDifficultyTarget())
-                    .nonce(blockHeaderMsg.getNonce())
-                    .numTxs(blockHeaderMsg.getTransactionCount().getValue())
-                    .build());
+            blockHeaders.add(blockHeaderMsg.toBean());
         }
 
         //We only want to request headers for tips that have changed
-        List<Sha256Wrapper> branchTips = blockStore.getTipsChains();
+        List<Sha256Hash> branchTips = blockStore.getTipsChains();
 
         blockStore.saveBlocks(blockHeaders);
 
         //check which tips have changed
-        List<Sha256Wrapper> updatedtips = blockStore.getTipsChains().stream().filter(h -> !branchTips.contains(h)).collect(Collectors.toList());
+        List<Sha256Hash> updatedtips = blockStore.getTipsChains().stream().filter(h -> !branchTips.contains(h)).collect(Collectors.toList());
 
         //For the tips that have changed,
         updatedtips.stream().forEach(this::requestHeadersFromHash);
@@ -156,7 +148,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
 
     private boolean validBlockHeader(BlockHeaderMsg blockHeaderMsg, PeerAddress peerAddress){
         BigInteger target = Util.decompressCompactBits(blockHeaderMsg.getDifficultyTarget());
-        BigInteger blockWork = Sha256Wrapper.wrap(blockHeaderMsg.getHash().getHashBytes()).toBigInteger();
+        BigInteger blockWork = Sha256Hash.wrap(blockHeaderMsg.getHash().getHashBytes()).toBigInteger();
 
         if(blockWork.compareTo(target) > 0){
             log.info("Message containing header: " + blockHeaderMsg.getHash().toString() + " has been rejected due to not enough work");
@@ -181,7 +173,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
 
         /* We don't want to process this message, even it has some headers. Oherwise the different threads may request a branch that has already been processed, slowing down sync times.
            This also catches duplicate messages, so there's no need to store the message checksum and compare each message*/
-        if (blockStore.getTipsChains().contains(Sha256Wrapper.wrap(blockHeaderMsg.getHash().getHashBytes()))) {
+        if (blockStore.getTipsChains().contains(Sha256Hash.wrap(blockHeaderMsg.getHash().getHashBytes()))) {
             log.debug("Message containing header: " + blockHeaderMsg.getHash().toString() + " has been rejected due to it containing processed headers");
             return false;
         }
@@ -189,12 +181,12 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         return true;
     }
 
-    private void requestHeadersFromHash(Sha256Wrapper hash){
+    private void requestHeadersFromHash(Sha256Hash hash){
         log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight());
         networkService.broadcast(buildGetHeaderMsgFromHash(hash.toString()), true);
     }
 
-    private void requestHeadersFromHash(Sha256Wrapper hash, PeerAddress peerAddress){
+    private void requestHeadersFromHash(Sha256Hash hash, PeerAddress peerAddress){
         log.debug("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
         networkService.send(buildGetHeaderMsgFromHash(hash.toString()), peerAddress, false);
     }
@@ -207,7 +199,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
                 .version(protocolConfig.getBasicConfig().getProtocolVersion())
                 .blockLocatorHash(hashMsgs)
                 .hashCount(VarIntMsg.builder().value(1).build())
-                .hashStop(HashMsg.builder().hash(Sha256Wrapper.ZERO_HASH.getBytes()).build())
+                .hashStop(HashMsg.builder().hash(Sha256Hash.ZERO_HASH.getBytes()).build())
                 .build();
 
         GetHeadersMsg getHeadersMsg = GetHeadersMsg.builder()

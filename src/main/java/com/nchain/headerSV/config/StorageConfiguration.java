@@ -1,9 +1,9 @@
 package com.nchain.headerSV.config;
 
-import com.nchain.jcl.base.tools.config.provided.RuntimeConfigDefault;
 import com.nchain.jcl.store.blockChainStore.BlockChainStore;
 import com.nchain.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDB;
 import com.nchain.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDBConfig;
+import com.nchain.jcl.tools.config.provided.RuntimeConfigDefault;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,6 +1,5 @@
 package com.nchain.headerSV.domain.dto;
 
-import com.nchain.jcl.base.domain.api.base.BlockHeader;
 import com.nchain.jcl.net.network.PeerAddress;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -5,10 +5,11 @@ import com.nchain.headerSV.domain.dto.BlockHeaderDTO;
 import com.nchain.headerSV.domain.dto.ChainStateDTO;
 import com.nchain.headerSV.domain.dto.PeerAddressDTO;
 import com.nchain.headerSV.service.network.NetworkService;
-import com.nchain.jcl.base.domain.api.base.BlockHeader;
-import com.nchain.jcl.base.domain.api.extended.ChainInfo;
-import com.nchain.jcl.base.tools.crypto.Sha256Wrapper;
 import com.nchain.jcl.store.blockChainStore.BlockChainStore;
+import com.nchain.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDB;
+import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinj.bitcoin.api.extended.ChainInfo;
+import io.bitcoinj.core.Sha256Hash;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 
 /**
- * @author m.jose@nchain.com
+ * @author m.fletcher@nchain.com
  * Copyright (c) 2018-2020 nChain Ltd
  * @date 12/08/2020
  */
@@ -34,7 +35,7 @@ public class HSVFacade {
     }
 
     public BlockHeaderDTO getBlockHeader(String hash){
-        Optional<BlockHeader> blockHeader = blockChainStore.getBlock(Sha256Wrapper.wrap(hash));
+        Optional<HeaderReadOnly> blockHeader = blockChainStore.getBlock(Sha256Hash.wrap(hash));
 
         if(blockHeader.isEmpty()){
             return null;
@@ -44,13 +45,13 @@ public class HSVFacade {
     }
 
     public ChainStateDTO getBlockHeaderState(String hash){
-        Optional<BlockHeader> blockHeaderOptional = blockChainStore.getBlock(Sha256Wrapper.wrap(hash));
+        Optional<HeaderReadOnly> blockHeaderOptional = blockChainStore.getBlock(Sha256Hash.wrap(hash));
 
         if(blockHeaderOptional.isEmpty()){
             return null;
         }
 
-        BlockHeader blockHeader = blockHeaderOptional.get();
+        HeaderReadOnly blockHeader = blockHeaderOptional.get();
         ChainState blockHeaderState = ChainState.LONGEST_CHAIN;
 
         //Empty if the block is not connected
@@ -66,7 +67,7 @@ public class HSVFacade {
         ChainInfo longestChainInfo = blockChainStore.getLongestChain().get();
 
         //Get the longest chain this header appears in
-        ChainInfo headerlongestChainInfo = blockChainStore.getTipsChains(Sha256Wrapper.wrap(hash))
+        ChainInfo headerlongestChainInfo = blockChainStore.getTipsChains(Sha256Hash.wrap(hash))
                 .stream()
                 .map(headerHash -> blockChainStore.getBlockChainInfo(headerHash))
                 .max(Comparator.comparing(chainInfo -> chainInfo.get().getChainWork()))
@@ -127,7 +128,7 @@ public class HSVFacade {
             throw new UnsupportedOperationException("Cannot prune the longest chain.");
         }
 
-        blockChainStore.prune(Sha256Wrapper.wrap(hash), false);
+        blockChainStore.prune(Sha256Hash.wrap(hash), false);
     }
 
 }

@@ -1,12 +1,14 @@
 package com.nchain.headerSV.config;
 
-import com.nchain.headerSV.config.networks.bsv.BSVMainnetConfig;
-import com.nchain.headerSV.config.networks.bsv.BSVStnnetConfig;
-import com.nchain.headerSV.config.networks.bsv.BSVTestnetConfig;
 import com.nchain.headerSV.tools.Util;
-import com.nchain.jcl.base.domain.api.base.BlockHeader;
 import com.nchain.jcl.net.protocol.config.ProtocolConfig;
-import com.nchain.jcl.net.protocol.handlers.handshake.HandshakeHandlerConfig;
+import com.nchain.jcl.net.protocol.config.ProtocolConfigBuilder;
+import com.nchain.jcl.net.protocol.config.provided.ProtocolBSVMainConfig;
+import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinj.params.MainNetParams;
+import io.bitcoinj.params.Net;
+import io.bitcoinj.params.STNParams;
+import io.bitcoinj.params.TestNet3Params;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +25,7 @@ import javax.naming.ConfigurationException;
 public class NetworkConfiguration {
 
     private final ProtocolConfig protocolConfig;
-    private final BlockHeader genesisBlock;
+    private final HeaderReadOnly genesisBlock;
 
     public NetworkConfiguration(@Value("${headersv.network.networkId:}") String networkId,
                                 @Value("${headersv.network.minPeers:5}") int minPeers,
@@ -32,7 +34,7 @@ public class NetworkConfiguration {
         switch(networkId){
             case "mainnet":
                 genesisBlock = Util.GENESIS_BLOCK_HEADER_MAINNET;
-                protocolConfig = new BSVMainnetConfig().toBuilder()
+                protocolConfig = ProtocolConfigBuilder.get(new MainNetParams(Net.MAINNET)).toBuilder()
                         .minPeers(minPeers)
                         .maxPeers(maxPeers)
                         .build();
@@ -40,7 +42,7 @@ public class NetworkConfiguration {
 
             case "stnnet":
                 genesisBlock = Util.GENESIS_BLOCK_HEADER_STNNET;
-                protocolConfig = new BSVStnnetConfig().toBuilder()
+                protocolConfig = ProtocolConfigBuilder.get(new STNParams(Net.STN)).toBuilder()
                         .minPeers(minPeers)
                         .maxPeers(maxPeers)
                         .build();
@@ -48,7 +50,7 @@ public class NetworkConfiguration {
 
             case "testnet":
                 genesisBlock = Util.GENESIS_BLOCK_HEADER_TESTNET;
-                protocolConfig = new BSVTestnetConfig().toBuilder()
+                protocolConfig = ProtocolConfigBuilder.get(new TestNet3Params(Net.TESTNET3)).toBuilder()
                         .minPeers(minPeers)
                         .maxPeers(maxPeers)
                         .build();
@@ -66,7 +68,7 @@ public class NetworkConfiguration {
         return protocolConfig;
     }
 
-    public BlockHeader getGenesisBlock(){
+    public HeaderReadOnly getGenesisBlock(){
         return genesisBlock;
     }
 

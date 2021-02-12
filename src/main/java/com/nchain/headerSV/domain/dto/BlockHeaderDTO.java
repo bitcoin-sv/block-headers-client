@@ -1,6 +1,7 @@
 package com.nchain.headerSV.domain.dto;
 
-import com.nchain.jcl.base.domain.api.base.BlockHeader;
+
+import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,7 @@ public class BlockHeaderDTO {
     private long transactionCount;
     private BigInteger work;
 
-    public static BlockHeaderDTO of(BlockHeader blockHeader) {
+    public static BlockHeaderDTO of(HeaderReadOnly blockHeader) {
         return BlockHeaderDTO.builder()
                 .hash(blockHeader.getHash().toString())
                 .creationTimestamp(blockHeader.getTime())
@@ -37,7 +38,7 @@ public class BlockHeaderDTO {
                 .prevBlockHash(blockHeader.getPrevBlockHash().toString())
                 .version(blockHeader.getVersion())
                 .nonce(blockHeader.getNonce())
-                .transactionCount(blockHeader.getNumTxs())
+                .transactionCount(0)
                 .work(blockHeader.getWork())
                 .build();
     }
