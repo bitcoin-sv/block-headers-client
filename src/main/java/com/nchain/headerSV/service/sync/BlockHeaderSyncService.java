@@ -181,7 +181,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     }
 
     private void requestHeadersFromHash(Sha256Hash hash, PeerAddress peerAddress){
-        log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
+        log.debug("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
         networkService.send(buildGetHeaderMsgFromHash(hash), peerAddress, false);
     }
 

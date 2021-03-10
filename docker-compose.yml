@@ -3,7 +3,7 @@ version: "3.7"
 
 services:
   headersv:
-    image: local.headersv
+    image: headersv
     build:
       context: .
     volumes:
