@@ -5,10 +5,7 @@ import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.config.ProtocolConfigBuilder;
 import com.nchain.jcl.net.protocol.config.provided.ProtocolBSVMainConfig;
 import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
-import io.bitcoinj.params.MainNetParams;
-import io.bitcoinj.params.Net;
-import io.bitcoinj.params.STNParams;
-import io.bitcoinj.params.TestNet3Params;
+import io.bitcoinj.params.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,42 +23,35 @@ public class NetworkConfiguration {
 
     private final ProtocolConfig protocolConfig;
     private final HeaderReadOnly genesisBlock;
+    private final AbstractBitcoinNetParams networkParams;
 
     public NetworkConfiguration(@Value("${headersv.network.networkId:}") String networkId,
                                 @Value("${headersv.network.minPeers:5}") int minPeers,
                                 @Value("${headersv.network.maxPeers:15}") int maxPeers) throws ConfigurationException {
 
-        switch(networkId){
+        switch (networkId) {
             case "mainnet":
                 genesisBlock = Util.GENESIS_BLOCK_HEADER_MAINNET;
-                protocolConfig = ProtocolConfigBuilder.get(new MainNetParams(Net.MAINNET)).toBuilder()
-                        .minPeers(minPeers)
-                        .maxPeers(maxPeers)
-                        .build();
-                break;
-
-            case "stnnet":
-                genesisBlock = Util.GENESIS_BLOCK_HEADER_STNNET;
-                protocolConfig = ProtocolConfigBuilder.get(new STNParams(Net.STN)).toBuilder()
-                        .minPeers(minPeers)
-                        .maxPeers(maxPeers)
-                        .build();
+                networkParams = new MainNetParams(Net.MAINNET);
                 break;
 
             case "testnet":
                 genesisBlock = Util.GENESIS_BLOCK_HEADER_TESTNET;
-                protocolConfig = ProtocolConfigBuilder.get(new TestNet3Params(Net.TESTNET3)).toBuilder()
-                        .minPeers(minPeers)
-                        .maxPeers(maxPeers)
-                        .build();
+                networkParams = new TestNet3Params(Net.TESTNET3);
                 break;
 
-
+            case "stnnet":
             default:
-                throw new ConfigurationException("Invalid configuration 'networkId'. Either 'mainnet', 'stnnet' or 'testnet'");
+                throw new ConfigurationException("Invalid configuration 'networkId'. Either 'mainnet' or 'testnet'");
 
         }
+
+        protocolConfig = ProtocolConfigBuilder.get(networkParams).toBuilder()
+                .minPeers(minPeers)
+                .maxPeers(maxPeers)
+                .build();
     }
+
 
     @Bean
     public ProtocolConfig getProtocolConfig(){
@@ -71,5 +61,7 @@ public class NetworkConfiguration {
     public HeaderReadOnly getGenesisBlock(){
         return genesisBlock;
     }
+
+    public AbstractBitcoinNetParams getNetworkParams() { return networkParams; }
 
 }

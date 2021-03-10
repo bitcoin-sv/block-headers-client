@@ -1,6 +1,7 @@
 package com.nchain.headerSV.config;
 
 import com.nchain.jcl.store.blockChainStore.BlockChainStore;
+import com.nchain.jcl.store.blockChainStore.validation.RuleConfigBuilder;
 import com.nchain.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDB;
 import com.nchain.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDBConfig;
 import com.nchain.jcl.tools.config.provided.RuntimeConfigDefault;
@@ -33,6 +34,7 @@ public class StorageConfiguration {
                .genesisBlock(networkConfiguration.getGenesisBlock())
                .orphanPrunningBlockAge(Duration.ofSeconds(orphanPruneInterval))
                .forkPrunningHeightDifference(pruneAfterConfirmations)
+               .ruleConfig(RuleConfigBuilder.get(networkConfiguration.getNetworkParams().getNet().params()))
                .build();
 
         blockChainStore = BlockChainStoreLevelDB.chainStoreBuilder()
@@ -42,6 +44,7 @@ public class StorageConfiguration {
                 .orphanPrunningFrequency(Duration.ofSeconds(180))
                 .forkPrunningFrequency(Duration.ofSeconds(180))
                 .build();
+
     }
 
     @Bean

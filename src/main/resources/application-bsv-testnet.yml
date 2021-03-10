@@ -3,12 +3,11 @@ headersv:
   # Listener Configuration params:
   network:
     networkId: "testnet"
-    minPeers: 5
+    minPeers: 2
     maxPeers: 10
 
   sync:
     headersToIgnore:
-    powLimit: 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
   storage:
     pruning:
