@@ -10,7 +10,7 @@ services:
       - headersv-data:/tmp/jcl
     environment:
         #bsv-mainnet | bsv-testnet
-      - SPRING_PROFILES_ACTIVE=bsv-testnet
+      - SPRING_PROFILES_ACTIVE=bsv-mainnet
 
         #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
       - HEADERSV_NETWORK_MINPEERS=2
