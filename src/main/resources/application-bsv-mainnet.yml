@@ -3,7 +3,7 @@ headersv:
   # Listener Configuration params:
   network:
     networkId: "mainnet"
-    minPeers: 5
+    minPeers: 15
     maxPeers: 30
 
   sync:

@@ -1,17 +1,16 @@
 package com.nchain.headerSV.service.sync;
 
 
+import com.nchain.headerSV.config.NetworkConfiguration;
 import com.nchain.headerSV.service.HeaderSvService;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.headerSV.service.network.NetworkService;
-import com.nchain.headerSV.tools.Util;
 import com.nchain.jcl.net.network.PeerAddress;
 import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.messages.*;
 import com.nchain.jcl.net.protocol.messages.common.BitcoinMsg;
 import com.nchain.jcl.net.protocol.messages.common.Message;
 import com.nchain.jcl.store.blockChainStore.BlockChainStore;
-import io.bitcoinj.bitcoin.api.base.AbstractBlock;
 import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
 import io.bitcoinj.bitcoin.bean.base.HeaderBean;
 import io.bitcoinj.bitcoin.bean.extended.LiteBlockBean;
@@ -22,11 +21,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 
-import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.bitcoinj.core.Utils.HEX;
 
 /**
  * @author {m.fletcher}@nchain.com
@@ -39,17 +36,17 @@ import static io.bitcoinj.core.Utils.HEX;
 public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer {
 
     private final NetworkService networkService;
-    private final ProtocolConfig protocolConfig;
+    private final NetworkConfiguration networkConfiguration;
     private final BlockChainStore blockStore;
 
     @Setter
     private Set<String> headersToIgnore = Collections.emptySet();
 
     protected BlockHeaderSyncService(NetworkService networkService,
-                                     ProtocolConfig protocolConfig,
+                                     NetworkConfiguration networkConfiguration,
                                      BlockChainStore blockStore) {
         this.networkService = networkService;
-        this.protocolConfig = protocolConfig;
+        this.networkConfiguration = networkConfiguration;
         this.blockStore = blockStore;
     }
 
@@ -190,7 +187,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         List<HashMsg> hashMsgs = Arrays.asList(hashMsg);
 
         BaseGetDataAndHeaderMsg baseGetDataAndHeaderMsg = BaseGetDataAndHeaderMsg.builder()
-                .version(protocolConfig.getBasicConfig().getProtocolVersion())
+                .version(networkConfiguration.getProtocolConfig().getBasicConfig().getProtocolVersion())
                 .blockLocatorHash(hashMsgs)
                 .hashCount(VarIntMsg.builder().value(1).build())
                 .hashStop(HashMsg.builder().hash(Sha256Hash.ZERO_HASH.getBytes()).build())

@@ -13,7 +13,7 @@ services:
       - SPRING_PROFILES_ACTIVE=bsv-mainnet
 
         #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
-      - HEADERSV_NETWORK_MINPEERS=2
+      - HEADERSV_NETWORK_MINPEERS=15
       - HEADERSV_NETWORK_MAXPEERS=30
     ports:
       - 8080:8080

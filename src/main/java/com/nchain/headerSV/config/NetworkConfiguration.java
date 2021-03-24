@@ -1,13 +1,13 @@
 package com.nchain.headerSV.config;
 
 import com.nchain.headerSV.tools.Util;
+import com.nchain.jcl.net.network.config.NetworkConfig;
+import com.nchain.jcl.net.network.config.provided.NetworkDefaultConfig;
 import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.config.ProtocolConfigBuilder;
-import com.nchain.jcl.net.protocol.config.provided.ProtocolBSVMainConfig;
 import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
 import io.bitcoinj.params.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.naming.ConfigurationException;
@@ -21,9 +21,15 @@ import javax.naming.ConfigurationException;
 @Configuration
 public class NetworkConfiguration {
 
+    /* The JCL attempts to connect to the peers in batches. If 1/10 peers is a good peer, then it will take a long time to connect to 30
+       peers if this number is low. */
+    private final int NUMBER_OF_PEERS_TO_CONNECT_TO_EACH_BATCH = 300;
+
     private final ProtocolConfig protocolConfig;
     private final HeaderReadOnly genesisBlock;
     private final AbstractBitcoinNetParams networkParams;
+    private final NetworkConfig jclNetworkConfig;
+
 
     public NetworkConfiguration(@Value("${headersv.network.networkId:}") String networkId,
                                 @Value("${headersv.network.minPeers:5}") int minPeers,
@@ -46,16 +52,25 @@ public class NetworkConfiguration {
 
         }
 
+        jclNetworkConfig = new NetworkDefaultConfig()
+                .toBuilder()
+                .maxSocketConnectionsOpeningAtSameTime(NUMBER_OF_PEERS_TO_CONNECT_TO_EACH_BATCH)
+                .build();
+
         protocolConfig = ProtocolConfigBuilder.get(networkParams).toBuilder()
                 .minPeers(minPeers)
                 .maxPeers(maxPeers)
                 .build();
+
     }
 
 
-    @Bean
     public ProtocolConfig getProtocolConfig(){
         return protocolConfig;
+    }
+
+    public NetworkConfig getJCLNetworkConfig(){
+        return jclNetworkConfig;
     }
 
     public HeaderReadOnly getGenesisBlock(){

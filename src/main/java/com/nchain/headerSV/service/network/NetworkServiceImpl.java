@@ -1,5 +1,6 @@
 package com.nchain.headerSV.service.network;
 
+import com.nchain.headerSV.config.NetworkConfiguration;
 import com.nchain.headerSV.service.consumer.ConsumerConfig;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.jcl.net.network.PeerAddress;
@@ -26,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class NetworkServiceImpl implements NetworkService {
 
-    private ProtocolConfig protocolConfig;
+    private NetworkConfiguration networkConfiguration;
 
     // Protocol Handlers: This objects will carry out the Bitcoin Protocol and perform the
     // Serialization of messages.
@@ -45,15 +46,16 @@ public class NetworkServiceImpl implements NetworkService {
     private Set<Long> processedMessages = Collections.synchronizedSet(new HashSet<>());
 
     @Autowired
-    protected NetworkServiceImpl(ProtocolConfig protocolConfig) {
-        this.protocolConfig = protocolConfig;
+    protected NetworkServiceImpl(NetworkConfiguration networkConfiguration) {
+        this.networkConfiguration = networkConfiguration;
     }
 
     private void init() {
         log.info("Initalizing Network Service");
 
-        p2p = P2P.builder(protocolConfig.getId())
-                .config(protocolConfig)
+        p2p = P2P.builder(networkConfiguration.getProtocolConfig().getId())
+                .config(networkConfiguration.getProtocolConfig())
+                .config(networkConfiguration.getJCLNetworkConfig())
                 .build();
 
         p2p.EVENTS.PEERS.DISCONNECTED.forEach(this::onPeerDisconnected);
@@ -83,7 +85,7 @@ public class NetworkServiceImpl implements NetworkService {
             checkMinimumPeersConnected();
         }
 
-        BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
+        BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(networkConfiguration.getProtocolConfig().getBasicConfig(), message);
         p2p.REQUESTS.MSGS.broadcast(bitcoinMsgBuilder.build()).submit();
     }
 
@@ -93,7 +95,7 @@ public class NetworkServiceImpl implements NetworkService {
             checkMinimumPeersConnected();
         }
 
-        BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(protocolConfig.getBasicConfig(), message);
+        BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(networkConfiguration.getProtocolConfig().getBasicConfig(), message);
         p2p.REQUESTS.MSGS.send(peerAddress, bitcoinMsgBuilder.build()).submit();
     }
 
@@ -171,7 +173,7 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     private synchronized boolean checkMinimumPeersConnected() {
-        if(connectedPeers.size() < protocolConfig.getBasicConfig().getMinPeers().getAsInt()) {
+        if(connectedPeers.size() < networkConfiguration.getProtocolConfig().getBasicConfig().getMinPeers().getAsInt()) {
             if(serviceStarted) {
                 log.warn("Network activity has been paused due to peer connections falling below the minimum threshold. Waiting for additional peers..");
 
