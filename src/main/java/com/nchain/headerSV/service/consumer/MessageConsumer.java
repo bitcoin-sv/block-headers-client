@@ -12,5 +12,5 @@ import com.nchain.jcl.net.protocol.messages.common.Message;
  */
 public interface MessageConsumer {
     /** message listener to consume given message */
-    <T extends Message> void consume(BitcoinMsg<T> message, PeerAddress peerAddress);
+    void consume(BitcoinMsg message, PeerAddress peerAddress);
 }

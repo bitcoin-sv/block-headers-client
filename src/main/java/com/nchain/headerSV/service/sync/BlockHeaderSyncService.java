@@ -74,7 +74,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     public void stop() {}
 
     @Override
-    public <T extends Message> void consume(BitcoinMsg<T> message, PeerAddress peerAddress) {
+    public void consume(BitcoinMsg message, PeerAddress peerAddress) {
         log.debug("Consuming message type: " + message.getHeader().getCommand());
 
         switch(message.getHeader().getCommand()){
