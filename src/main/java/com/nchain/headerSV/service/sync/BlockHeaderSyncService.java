@@ -6,10 +6,8 @@ import com.nchain.headerSV.service.HeaderSvService;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.headerSV.service.network.NetworkService;
 import com.nchain.jcl.net.network.PeerAddress;
-import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.messages.*;
 import com.nchain.jcl.net.protocol.messages.common.BitcoinMsg;
-import com.nchain.jcl.net.protocol.messages.common.Message;
 import com.nchain.jcl.store.blockChainStore.BlockChainStore;
 import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
 import io.bitcoinj.bitcoin.bean.base.HeaderBean;
@@ -65,9 +63,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         log.info("Listening for headers...");
 
         networkService.subscribe(HeadersMsg.class, this::consume, true, false);
-        networkService.subscribe(InvMessage.class, this::consume, false, true);
         networkService.subscribe(VersionAckMsg.class, this::consume, false, true);
-
     }
 
     @Override
@@ -82,10 +78,6 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
                 consumeHeadersMsg((HeadersMsg) message.getBody(), peerAddress);
                 break;
 
-            case InvMessage.MESSAGE_TYPE:
-                consumeInvMsg((InvMessage) message.getBody(), peerAddress);
-                break;
-
             case VersionAckMsg.MESSAGE_TYPE:
                 consumeVersionAckMsg((VersionAckMsg) message.getBody(), peerAddress);
                 break;
@@ -97,16 +89,17 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
 
     private void consumeVersionAckMsg(VersionAckMsg versionAckMsg, PeerAddress peerAddress) {
         // request headers for each tip, at this point we don't know which nodes are SV and which are not
-        blockStore.getTipsChains().forEach(h -> requestHeadersFromHash(h, peerAddress));
+        blockStore.getTipsChains().forEach(h -> {
+            //Let this peer know where we've sync'd up too
+            updatePeerWithLatestHeader(h, peerAddress);
 
-    }
+            // Ask peer to keep up this node updated of latest headers
+            requestPeerToSendNewHeaders(h, peerAddress);
 
-    private void consumeInvMsg(InvMessage invMsg, PeerAddress peerAddress){
-        List<InventoryVectorMsg> blockHeaderMessages = invMsg.getInvVectorList().stream().filter(iv -> iv.getType() == InventoryVectorMsg.VectorType.MSG_BLOCK).collect(Collectors.toList());
+            //Request any headers the peer has from our latest tip
+            requestHeadersFromHash(h, peerAddress);
+        });
 
-        if(!blockHeaderMessages.isEmpty()) {
-            blockStore.getTipsChains().forEach(h -> requestHeadersFromHash(h, peerAddress));
-        }
     }
 
     /* Although blockStore is synchronized, we need to ensure another thread does not access
@@ -137,8 +130,12 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         //check which tips have changed
         List<Sha256Hash> updatedtips = blockStore.getTipsChains().stream().filter(h -> !branchTips.contains(h)).collect(Collectors.toList());
 
+        //Update the peers with the latest tips
+        updatedtips.stream().forEach(this::updatePeersWithLatestHeader);
+
         //For the tips that have changed,
         updatedtips.stream().forEach(this::requestHeadersFromHash);
+
     }
 
     private HeaderReadOnly BlockHeaderMsgToBean(BlockHeaderMsg headersMsg){
@@ -178,8 +175,38 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
     }
 
     private void requestHeadersFromHash(Sha256Hash hash, PeerAddress peerAddress){
-        log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
+       log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
         networkService.send(buildGetHeaderMsgFromHash(hash), peerAddress, false);
+    }
+
+    private void requestPeerToSendNewHeaders(Sha256Hash hash, PeerAddress peerAddress){
+        log.info("Requesting peer: " + peerAddress + " to inform client of any new headers");
+        networkService.send(buildSendHeadersMsg(), peerAddress, false);
+    }
+
+    private void updatePeerWithLatestHeader(Sha256Hash hash, PeerAddress peerAddress){
+        log.info("Advertising to peer: " + peerAddress + " that chain tip is: " + hash);
+        networkService.send(buildBlockInventoryMsg(hash), peerAddress, false);
+    }
+
+    private void updatePeersWithLatestHeader(Sha256Hash hash){
+        log.info("Advertising to all peers that chain tip is: " + hash);
+        networkService.broadcast(buildBlockInventoryMsg(hash), false);
+    }
+
+    private SendHeadersMsg buildSendHeadersMsg(){
+        SendHeadersMsg sendHeadersMsg = SendHeadersMsg.builder().build();
+
+        return sendHeadersMsg;
+    }
+
+    private InvMessage buildBlockInventoryMsg(Sha256Hash hash) {
+        HashMsg hashMsg = HashMsg.builder().hash(hash.getReversedBytes()).build();
+
+        InventoryVectorMsg inventoryVectorMsg = InventoryVectorMsg.builder().type(InventoryVectorMsg.VectorType.MSG_BLOCK).hashMsg(hashMsg).build();
+        InvMessage invMessage = InvMessage.builder().invVectorMsgList(Arrays.asList(inventoryVectorMsg)).build();
+
+        return invMessage;
     }
 
     private GetHeadersMsg buildGetHeaderMsgFromHash(Sha256Hash hash){

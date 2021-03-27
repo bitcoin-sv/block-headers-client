@@ -11,6 +11,6 @@ import lombok.Data;
 @Data
 @Builder
 public class ConsumerConfig {
-    boolean sendDuplcates;
+    boolean sendDuplicates;
     boolean requiresMinimumPeers;
 }

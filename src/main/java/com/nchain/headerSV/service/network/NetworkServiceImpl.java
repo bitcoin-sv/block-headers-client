@@ -5,7 +5,6 @@ import com.nchain.headerSV.service.consumer.ConsumerConfig;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.jcl.net.network.PeerAddress;
 import com.nchain.jcl.net.network.events.PeerDisconnectedEvent;
-import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.events.control.PeerHandshakedEvent;
 import com.nchain.jcl.net.protocol.events.data.MsgReceivedEvent;
 import com.nchain.jcl.net.protocol.messages.common.BitcoinMsgBuilder;
@@ -104,7 +103,7 @@ public class NetworkServiceImpl implements NetworkService {
         HashMap<MessageConsumer, ConsumerConfig> entry = new HashMap<>();
         entry.put(messageConsumer, ConsumerConfig.builder()
                 .requiresMinimumPeers(Boolean.valueOf(requiresMinimumPeers))
-                .sendDuplcates(sendDuplicates)
+                .sendDuplicates(sendDuplicates)
                 .build());
 
         messageConsumers.merge(eventClass, entry, (w, prev) -> {
@@ -148,7 +147,7 @@ public class NetworkServiceImpl implements NetworkService {
             }
 
             // Check if we've already processed this header message
-            if(!config.isSendDuplcates()) {
+            if(!config.isSendDuplicates()) {
                 if (processedMessages.contains(msgReceivedEvent.getBtcMsg().getHeader().getChecksum())) {
                     return;
                 } else {
