@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 
 /**
- * @author {m.fletcher}@nchain.com
+ * @author m.fletcher@nchain.com
  * Copyright (c) 2018-2020 nChain Ltd
  * @date 27/07/2020
  */
@@ -55,9 +55,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         log.info("Blockstore started");
 
         log.info("Current blockchain state: ");
-        blockStore.getTipsChains().forEach(t -> {
-            log.info("Chain Id: " + blockStore.getBlockChainInfo(t).get().getHeader().getHash() + " Height: " + blockStore.getBlockChainInfo(t).get().getHeight());
-        });
+        blockStore.getTipsChains().forEach(t -> log.info("Chain Id: " + blockStore.getBlockChainInfo(t).get().getHeader().getHash() + " Height: " + blockStore.getBlockChainInfo(t).get().getHeight()));
 
 
         log.info("Listening for headers...");
@@ -94,7 +92,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
             updatePeerWithLatestHeader(h, peerAddress);
 
             // Ask peer to keep up this node updated of latest headers
-            requestPeerToSendNewHeaders(h, peerAddress);
+            requestPeerToSendNewHeaders(peerAddress);
 
             //Request any headers the peer has from our latest tip
             requestHeadersFromHash(h, peerAddress);
@@ -179,7 +177,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         networkService.send(buildGetHeaderMsgFromHash(hash), peerAddress, false);
     }
 
-    private void requestPeerToSendNewHeaders(Sha256Hash hash, PeerAddress peerAddress){
+    private void requestPeerToSendNewHeaders(PeerAddress peerAddress){
         log.info("Requesting peer: " + peerAddress + " to inform client of any new headers");
         networkService.send(buildSendHeadersMsg(), peerAddress, false);
     }

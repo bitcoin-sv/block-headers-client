@@ -15,6 +15,7 @@ services:
         #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
       - HEADERSV_NETWORK_MINPEERS=15
       - HEADERSV_NETWORK_MAXPEERS=30
+      - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75
     ports:
       - 8080:8080
 volumes:
