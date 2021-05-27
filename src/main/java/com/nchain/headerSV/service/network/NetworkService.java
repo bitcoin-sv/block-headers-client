@@ -1,7 +1,9 @@
 package com.nchain.headerSV.service.network;
 
+import com.nchain.headerSV.service.consumer.EventConsumer;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.jcl.net.network.PeerAddress;
+import com.nchain.jcl.net.network.events.P2PEvent;
 import com.nchain.jcl.net.protocol.messages.common.Message;
 
 import java.util.List;
@@ -21,8 +23,10 @@ public interface NetworkService {
     void send(Message message, PeerAddress peerAddress, boolean requiresMinimumPeers);
     /** Broadcasts a message to all connected peers */
     void broadcast(Message message, boolean requiresMinimumPeers);
-    /** subscribe to network events */
+    /** subscribe to network messages */
     void subscribe(Class<? extends Message> eventClass, MessageConsumer eventHandler, boolean requiresMinimumPeers, boolean sendDuplicates);
+    /** subscribe to p2p events */
+    void subscribe(Class<? extends P2PEvent> eventClass, EventConsumer eventConsumer);
     /** amount of connected peers */
     List<PeerAddress> getConnectedPeers();
     /** disconnects a peer */

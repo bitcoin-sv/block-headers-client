@@ -2,8 +2,10 @@ package com.nchain.headerSV.service.network;
 
 import com.nchain.headerSV.config.NetworkConfiguration;
 import com.nchain.headerSV.service.consumer.ConsumerConfig;
+import com.nchain.headerSV.service.consumer.EventConsumer;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.jcl.net.network.PeerAddress;
+import com.nchain.jcl.net.network.events.P2PEvent;
 import com.nchain.jcl.net.network.events.PeerDisconnectedEvent;
 import com.nchain.jcl.net.protocol.events.control.PeerHandshakedEvent;
 import com.nchain.jcl.net.protocol.events.data.MsgReceivedEvent;
@@ -37,6 +39,7 @@ public class NetworkServiceImpl implements NetworkService {
 
     //Map all the subscribers by message
     private Map<Class<? extends Message>, Map<MessageConsumer, ConsumerConfig>> messageConsumers = new ConcurrentHashMap<>();
+    private Map<Class<? extends P2PEvent>, List<EventConsumer>> eventConsumers = new ConcurrentHashMap<>();
 
     // keep track of service state
     private boolean serviceStarted = false;
@@ -113,6 +116,17 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     @Override
+    public void subscribe(Class<? extends P2PEvent> eventClass, EventConsumer messageConsumer) {
+        List<EventConsumer> entry = new ArrayList<>();
+        entry.add(messageConsumer);
+
+        eventConsumers.merge(eventClass, entry, (w, prev) -> {
+            prev.addAll(w);
+            return prev;
+        });
+    }
+
+    @Override
     public List<PeerAddress> getConnectedPeers() {
         return new ArrayList<>(connectedPeers);
     }
@@ -169,6 +183,8 @@ public class NetworkServiceImpl implements NetworkService {
         log.debug("Peer connected IP:" + event.getPeerAddress().toString() + ": User Agent:" + event.getVersionMsg().getUser_agent() + ": Version :" + event.getVersionMsg().getVersion());
 
         connectedPeers.add(event.getPeerAddress());
+
+        eventConsumers.get(event.getClass()).forEach(c -> c.consume(event));
     }
 
     private synchronized boolean checkMinimumPeersConnected() {

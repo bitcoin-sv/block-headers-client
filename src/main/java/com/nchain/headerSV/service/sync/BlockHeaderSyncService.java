@@ -3,9 +3,12 @@ package com.nchain.headerSV.service.sync;
 
 import com.nchain.headerSV.config.NetworkConfiguration;
 import com.nchain.headerSV.service.HeaderSvService;
+import com.nchain.headerSV.service.consumer.EventConsumer;
 import com.nchain.headerSV.service.consumer.MessageConsumer;
 import com.nchain.headerSV.service.network.NetworkService;
 import com.nchain.jcl.net.network.PeerAddress;
+import com.nchain.jcl.net.network.events.P2PEvent;
+import com.nchain.jcl.net.protocol.events.control.PeerHandshakedEvent;
 import com.nchain.jcl.net.protocol.messages.*;
 import com.nchain.jcl.net.protocol.messages.common.BitcoinMsg;
 import com.nchain.jcl.store.blockChainStore.BlockChainStore;
@@ -31,7 +34,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @ConfigurationProperties(prefix = "headersv.sync")
-public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer {
+public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer, EventConsumer {
 
     private final NetworkService networkService;
     private final NetworkConfiguration networkConfiguration;
@@ -61,7 +64,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
         log.info("Listening for headers...");
 
         networkService.subscribe(HeadersMsg.class, this::consume, true, false);
-        networkService.subscribe(VersionAckMsg.class, this::consume, false, true);
+        networkService.subscribe(PeerHandshakedEvent.class, this::consume);
     }
 
     @Override
@@ -76,16 +79,22 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer 
                 consumeHeadersMsg((HeadersMsg) message.getBody(), peerAddress);
                 break;
 
-            case VersionAckMsg.MESSAGE_TYPE:
-                consumeVersionAckMsg((VersionAckMsg) message.getBody(), peerAddress);
-                break;
-
             default:
                 throw new UnsupportedOperationException("Unhandled Message Type: " + message.getBody().getMessageType());
         }
     }
 
-    private void consumeVersionAckMsg(VersionAckMsg versionAckMsg, PeerAddress peerAddress) {
+
+    @Override
+    public void consume(P2PEvent event) {
+        log.debug("Consuming event type: " + event.toString());
+
+        if(event instanceof PeerHandshakedEvent){
+            initiatePeerHandshake(((PeerHandshakedEvent) event).getPeerAddress());
+        }
+    }
+
+    private void initiatePeerHandshake(PeerAddress peerAddress) {
         // request headers for each tip, at this point we don't know which nodes are SV and which are not
         blockStore.getTipsChains().forEach(h -> {
             //Let this peer know where we've sync'd up too
