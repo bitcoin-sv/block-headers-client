@@ -4,6 +4,8 @@ import com.nchain.headerSV.domain.dto.BlockHeaderDTO;
 import com.nchain.headerSV.api.HSVFacade;
 import com.nchain.headerSV.domain.dto.ChainStateDTO;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -23,24 +25,30 @@ public class BlockHeaderControllerV1 {
     }
 
     @RequestMapping("/{hash}")
-    public BlockHeaderDTO getHeader(@PathVariable String hash) {
+    public ResponseEntity<?> getHeader(@PathVariable String hash, @RequestHeader(value = "Content-Type", required = false) MediaType contentType) {
         BlockHeaderDTO blockHeaderDTO = hsvFacade.getBlockHeader(hash);
 
         if (blockHeaderDTO == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "BlockHeader not found");
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
         }
 
-        return blockHeaderDTO;
+        switch (contentType.toString()) {
+            case MediaType.APPLICATION_OCTET_STREAM_VALUE:
+                return new ResponseEntity<>(blockHeaderDTO.getHeaderReadOnly().serialize(), HttpStatus.OK);
+
+            default:
+                return new ResponseEntity<>(blockHeaderDTO, HttpStatus.OK);
+        }
     }
 
     @RequestMapping("/state/{hash}")
-    public ChainStateDTO getHeaderDetails(@PathVariable String hash) {
+    public ResponseEntity<?> getHeaderDetails(@PathVariable String hash) {
         ChainStateDTO blockHeaderStateDTO = hsvFacade.getBlockHeaderState(hash);
 
         if (blockHeaderStateDTO == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "BlockHeader not found");
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
         }
 
-        return blockHeaderStateDTO;
+        return new ResponseEntity<>(blockHeaderStateDTO, HttpStatus.OK);
     }
 }

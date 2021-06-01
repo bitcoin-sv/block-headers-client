@@ -1,6 +1,7 @@
 package com.nchain.headerSV.domain.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,8 @@ import java.math.BigInteger;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BlockHeaderDTO {
+    @JsonIgnore
+    private HeaderReadOnly headerReadOnly;
     private String hash;
     private long version;
     private String prevBlockHash;
@@ -40,6 +43,7 @@ public class BlockHeaderDTO {
                 .nonce(blockHeader.getNonce())
                 .transactionCount(0)
                 .work(blockHeader.getWork())
+                .headerReadOnly(blockHeader)
                 .build();
     }
 }

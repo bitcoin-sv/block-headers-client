@@ -2,12 +2,11 @@
 headersv:
   # Listener Configuration params:
   network:
-    networkId: "testnet"
-    minPeers: 2
+    networkId: "stnnet"
+    minPeers: 5
     maxPeers: 10
     peers:
     discoveryEnabled: true
-
 
   sync:
     headersToIgnore:
