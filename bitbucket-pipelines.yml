@@ -1,0 +1,79 @@
+definitions:
+  steps:
+    - step: &unit-test
+        name: Run Unit Tests
+        image: golang:1.15
+        script:
+          - export GO111MODULE=on
+          - export GOFLAGS="-mod=vendor"
+          - make run-pipeline-unit-tests
+    - step: &lint-test
+        name: Run Lint Tests
+        image: golang:1.15
+        script:
+          - export GO111MODULE=on
+          - export GOFLAGS="-mod=vendor"
+          - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.35.2
+          - make run-linter
+
+    - step: &build-image
+        name: Build Docker Image
+        services:
+          - docker
+        script:
+          # Build image
+          - docker build .
+
+    - step: &bpi-ECR-commit
+        name: Build image & push to ECR (commit hash)
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          # Get first 7 chars of commit hash for docker tag
+          - export DOCKER_TAG=${BITBUCKET_COMMIT:0:7}
+          # Build image
+          - docker build -t $BITBUCKET_REPO_SLUG .
+          # use the pipe to push to AWS ECR
+          - pipe: atlassian/aws-ecr-push-image:1.3.0
+            variables:
+              IMAGE_NAME: $BITBUCKET_REPO_SLUG
+              TAGS: '$DOCKER_TAG'
+
+    - step: &pi-ECR-tag
+        name: Push image to ECR (git tag)
+        image: tstrohmeier/awscli:3.8.3
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          # aws login
+          - eval $(aws ecr get-login --region ${AWS_DEFAULT_REGION} --no-include-email)
+          # pull image tagged with commit hash and tag it with git tag
+          - export COMMIT_IMAGE=$AWS_REGISTRY_URL:${BITBUCKET_COMMIT:0:7}
+          - docker pull $COMMIT_IMAGE
+          # retag image
+          - export GIT_TAG_IMAGE=$AWS_REGISTRY_URL:${BITBUCKET_TAG#?}
+          - docker tag $COMMIT_IMAGE $GIT_TAG_IMAGE
+          # push push with new tag to ECR
+          - docker push $GIT_TAG_IMAGE
+
+pipelines:
+  default:
+    # - parallel:
+    #   - step: *unit-test
+    #   - step: *lint-test
+    - step: *build-image
+
+  branches:
+    master:
+      # - parallel:
+      #     - step: *unit-test
+      #     - step: *lint-test
+      - step: *bpi-ECR-commit
+
+  tags:
+    v*[0-9].*[0-9].*[0-9]*:
+      - step: *pi-ECR-tag
