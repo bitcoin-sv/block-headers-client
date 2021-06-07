@@ -9,15 +9,19 @@ services:
     volumes:
       - headersv-data:/tmp/jcl
     environment:
-        #bsv-mainnet | bsv-testnet
+        #bsv-mainnet | bsv-testnet | bsv-stnnet | bsv-regtest
       - SPRING_PROFILES_ACTIVE=bsv-mainnet
 
         #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
-      - HEADERSV_NETWORK_MINPEERS=15
-      - HEADERSV_NETWORK_MAXPEERS=25
+#      - HEADERSV_NETWORK_MINPEERS=15
+#      - HEADERSV_NETWORK_MAXPEERS=25
+#      - HEADERSV_NETWORK_PEERS=127.0.0.1:18444
+#      - HEADERSV_NETWORK_DISCOVERYENABLED=false
       - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75
     ports:
       - 8080:8080
+    network_mode: "host"
+
 volumes:
   headersv-data:
     external: false
