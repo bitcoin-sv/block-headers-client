@@ -1,0 +1,22 @@
+# Application Configuration:
+headersv:
+  # Listener Configuration params:
+  network:
+    networkId: "regtest"
+    minPeers: 1
+    maxPeers: 1
+    peers: "127.0.0.1:18444"
+    discoveryEnabled: false
+
+
+  sync:
+    headersToIgnore:
+
+  storage:
+    pruning:
+      fork:
+        enabled: false
+        pruneAfterConfirmations: 7
+      orphan:
+        enabled: false
+        pruneAfterInterval: 600

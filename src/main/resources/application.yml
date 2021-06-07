@@ -1,3 +1,3 @@
 spring:
   profiles:
-    active: bsv-mainnet
+    active: bsv-regtest

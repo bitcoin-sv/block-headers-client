@@ -57,7 +57,7 @@ public class NetworkServiceImpl implements NetworkService {
     private void init() {
         log.info("Initalizing Network Service");
 
-        //We want to disable peer discovery, setting the handlerId will disable the peer discovery handler
+        //If we want to disable peer discovery, setting the handlerId will disable the peer discovery handler
         String excludeDiscoveryConfigHandlerId = null;
         if(!networkConfiguration.isDiscoveryEnabled()){
             excludeDiscoveryConfigHandlerId = DiscoveryHandler.HANDLER_ID;

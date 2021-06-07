@@ -57,8 +57,13 @@ public class NetworkConfiguration {
                 networkParams = new STNParams(Net.STN);
                 break;
 
+            case "regtest":
+                genesisBlock = Util.GENESIS_BLOCK_HEADER_REGTEST;
+                networkParams = new RegTestParams(Net.REGTEST);
+                break;
+
             default:
-                throw new ConfigurationException("Invalid configuration 'networkId'. Either 'mainnet' or 'testnet'");
+                throw new ConfigurationException("Invalid configuration 'networkId'. Either 'mainnet', 'stnnet', 'regtest' or 'testnet'");
 
         }
 
