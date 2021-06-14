@@ -64,6 +64,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
         log.info("Listening for headers...");
 
         networkService.subscribe(HeadersMsg.class, this::consume, true, false);
+        networkService.subscribe(InvMessage.class, this::consume, false, true);
         networkService.subscribe(PeerHandshakedEvent.class, this::consume);
     }
 
@@ -77,6 +78,10 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
         switch(message.getHeader().getCommand()){
             case HeadersMsg.MESSAGE_TYPE:
                 consumeHeadersMsg((HeadersMsg) message.getBody(), peerAddress);
+                break;
+
+            case InvMessage.MESSAGE_TYPE:
+                consumeInvMsg((InvMessage) message.getBody(), peerAddress);
                 break;
 
             default:
@@ -106,7 +111,19 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
             //Request any headers the peer has from our latest tip
             requestHeadersFromHash(h, peerAddress);
         });
+    }
 
+    /*
+     * Most of the time, new header updates will be sent via a 'headers' msg in response to 'sendheaders'. But there's some scenarios, such as generating a large volume of blocks via bitcoin-cli,
+     * or by some astronomical odds a large amount of blocks were generated in quick succession, our peer could fall behind and no longer qualify to receive 'headers' and so 'inv' messages will be sent instead. Consuming those Inv messages
+     * and requesting the headers for them will enable our peer to "catch up".
+     */
+    private void consumeInvMsg(InvMessage invMsg, PeerAddress peerAddress){
+        List<InventoryVectorMsg> blockHeaderMessages = invMsg.getInvVectorList().stream().filter(iv -> iv.getType() == InventoryVectorMsg.VectorType.MSG_BLOCK).collect(Collectors.toList());
+
+        if(!blockHeaderMessages.isEmpty()) {
+            blockStore.getTipsChains().forEach(h -> requestHeadersFromHash(h, peerAddress));
+        }
     }
 
     /* Although blockStore is synchronized, we need to ensure another thread does not access
