@@ -25,7 +25,7 @@ public class BlockHeaderControllerV1 {
     }
 
     @RequestMapping("/{hash}")
-    public ResponseEntity<?> getHeader(@PathVariable String hash, @RequestHeader(value = "Content-Type", required = false) MediaType contentType) {
+    public ResponseEntity<?> getHeader(@PathVariable String hash, @RequestHeader(value = "Content-Type", required = false, defaultValue = "application/json") MediaType contentType) {
         BlockHeaderDTO blockHeaderDTO = hsvFacade.getBlockHeader(hash);
 
         if (blockHeaderDTO == null) {
