@@ -83,7 +83,7 @@ public class HSVFacade {
                     .state(blockHeaderState.name())
                     .chainWork(headerChainInfo.getChainWork())
                     .height(headerChainInfo.getHeight())
-                    .confirmations(headerlongestChainInfo.getHeight() - headerChainInfo.getHeight())
+                    .confirmations(headerlongestChainInfo.getHeight() - headerChainInfo.getHeight() + 1)
                     .build();
     }
 
@@ -111,7 +111,7 @@ public class HSVFacade {
                         .height(ci.getHeight())
                         .state(mainChainTip.equals(ci) ? ChainState.LONGEST_CHAIN.name() : ChainState.STALE.name())
                         .header(BlockHeaderDTO.of(ci.getHeader()))
-                        .confirmations(0)
+                        .confirmations(1)
                         .build())
                 .collect(Collectors.toList());
 
