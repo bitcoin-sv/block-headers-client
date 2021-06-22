@@ -17,7 +17,7 @@ services:
 #      - HEADERSV_NETWORK_MAXPEERS=25
 #      - HEADERSV_NETWORK_PEERS=127.0.0.1:18444
 #      - HEADERSV_NETWORK_DISCOVERYENABLED=false
-      - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -Dlogging.level.ROOT=INFO
+      - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=25 -Dlogging.level.ROOT=INFO
     ports:
       - 8080:8080
     network_mode: "host"
