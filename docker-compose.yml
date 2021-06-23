@@ -15,7 +15,8 @@ services:
         #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
 #      - HEADERSV_NETWORK_MINPEERS=15
 #      - HEADERSV_NETWORK_MAXPEERS=25
-#      - HEADERSV_NETWORK_PEERS=127.0.0.1:18444
+#      - HEADERSV_NETWORK_PEERS=127.0.0.1
+#      - HEADERSV_NETWORK_PORT:18444
 #      - HEADERSV_NETWORK_DISCOVERYENABLED=false
       - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=25 -Dlogging.level.ROOT=INFO
     ports:
