@@ -6,7 +6,6 @@ headersv:
     minPeers: 5
     maxPeers: 10
     peers:
-    discoveryEnabled: true
 
   sync:
     headersToIgnore:

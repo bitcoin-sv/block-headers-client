@@ -1,18 +1,23 @@
 package com.nchain.headerSV.config;
 
+import com.google.common.collect.ObjectArrays;
 import com.nchain.headerSV.tools.Util;
 import com.nchain.jcl.net.network.config.NetworkConfig;
 import com.nchain.jcl.net.network.config.provided.NetworkDefaultConfig;
 import com.nchain.jcl.net.protocol.config.ProtocolConfig;
 import com.nchain.jcl.net.protocol.config.ProtocolConfigBuilder;
-import com.nchain.jcl.net.protocol.handlers.discovery.DiscoveryHandlerConfig;
 import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
 import io.bitcoinj.params.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import javax.naming.ConfigurationException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 
 /**
@@ -27,7 +32,6 @@ public class NetworkConfiguration {
        peers if this number is low. */
     private final int NUMBER_OF_PEERS_TO_CONNECT_TO_EACH_BATCH = 300;
     private final String[] peers;
-    private final boolean discoveryEnabled;
 
     private final ProtocolConfig protocolConfig;
     private final HeaderReadOnly genesisBlock;
@@ -38,8 +42,8 @@ public class NetworkConfiguration {
     public NetworkConfiguration(@Value("${headersv.network.networkId:}") String networkId,
                                 @Value("${headersv.network.minPeers:5}") int minPeers,
                                 @Value("${headersv.network.maxPeers:15}") int maxPeers,
-                                @Value("${headersv.network.peers:[]}") String[] peers,
-                                @Value("${headersv.network.discoveryEnabled:true}") boolean discoveryEnabled) throws ConfigurationException {
+                                @Value("${headersv.network.port:-1}") int port,
+                                @Value("${headersv.network.peers:[]}") String[] peers) throws ConfigurationException {
 
         switch (networkId) {
             case "mainnet":
@@ -67,18 +71,34 @@ public class NetworkConfiguration {
 
         }
 
+        List<String> dnsList = new ArrayList<>(Arrays.asList(peers));
+
+        //if there's any default peers, add them
+        if(networkParams.getDnsSeeds() != null) {
+            dnsList.addAll(Arrays.asList(networkParams.getDnsSeeds()));
+        }
+
+        //We might want to override the port if connecting to a custom network
+        ProtocolConfig defaultConfig = ProtocolConfigBuilder.get(networkParams);
+        int requiredPort = port == -1 ? defaultConfig.getBasicConfig().getPort() : port;
+
+        protocolConfig = defaultConfig.toBuilder()
+                .minPeers(minPeers)
+                .maxPeers(maxPeers)
+                .port(requiredPort)
+                .discoveryConfig(defaultConfig.getDiscoveryConfig().toBuilder()
+                        .recoveryHandshakeFrequency(Optional.of(Duration.ofSeconds(30)))
+                        .recoveryHandshakeThreshold(Optional.of(Duration.ofSeconds(30)))
+                        .dns(dnsList.toArray(new String[dnsList.size()]))
+                        .build())
+                .build();
+
         jclNetworkConfig = new NetworkDefaultConfig()
                 .toBuilder()
                 .maxSocketConnectionsOpeningAtSameTime(NUMBER_OF_PEERS_TO_CONNECT_TO_EACH_BATCH)
                 .build();
 
-        protocolConfig = ProtocolConfigBuilder.get(networkParams).toBuilder()
-                .minPeers(minPeers)
-                .maxPeers(maxPeers)
-                .build();
-
         this.peers = peers;
-        this.discoveryEnabled = discoveryEnabled;
     }
 
 
@@ -98,9 +118,5 @@ public class NetworkConfiguration {
 
     public String[] getPeers() {
         return peers;
-    }
-
-    public boolean isDiscoveryEnabled() {
-        return discoveryEnabled;
     }
 }

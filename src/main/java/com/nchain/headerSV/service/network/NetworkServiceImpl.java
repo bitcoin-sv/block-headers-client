@@ -9,7 +9,6 @@ import com.nchain.jcl.net.network.events.P2PEvent;
 import com.nchain.jcl.net.network.events.PeerDisconnectedEvent;
 import com.nchain.jcl.net.protocol.events.control.PeerHandshakedEvent;
 import com.nchain.jcl.net.protocol.events.data.MsgReceivedEvent;
-import com.nchain.jcl.net.protocol.handlers.discovery.DiscoveryHandler;
 import com.nchain.jcl.net.protocol.messages.common.BitcoinMsgBuilder;
 import com.nchain.jcl.net.protocol.messages.common.Message;
 import com.nchain.jcl.net.protocol.wrapper.P2P;
@@ -57,16 +56,10 @@ public class NetworkServiceImpl implements NetworkService {
     private void init() {
         log.info("Initalizing Network Service");
 
-        //If we want to disable peer discovery, setting the handlerId will disable the peer discovery handler
-        String excludeDiscoveryConfigHandlerId = null;
-        if(!networkConfiguration.isDiscoveryEnabled()){
-            excludeDiscoveryConfigHandlerId = DiscoveryHandler.HANDLER_ID;
-        }
 
         p2p = P2P.builder(networkConfiguration.getProtocolConfig().getId())
                 .config(networkConfiguration.getProtocolConfig())
                 .config(networkConfiguration.getJCLNetworkConfig())
-                .excludeHandler(excludeDiscoveryConfigHandlerId)
                 .build();
 
         p2p.EVENTS.PEERS.DISCONNECTED.forEach(this::onPeerDisconnected);
@@ -80,19 +73,6 @@ public class NetworkServiceImpl implements NetworkService {
         serviceStarted = true;
         init();
         p2p.start();
-
-        //connect manually to the specified seeds if discovery has been disabled
-        if(!networkConfiguration.isDiscoveryEnabled()) {
-            List<String> seedList = Arrays.asList(networkConfiguration.getPeers());
-            seedList.forEach(p -> {
-                try {
-                    p2p.REQUESTS.PEERS.connect(PeerAddress.fromIp(p)).submit();
-                } catch (UnknownHostException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
-
         log.info("Network service started");
     }
 
@@ -210,7 +190,7 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     private synchronized boolean checkMinimumPeersConnected() {
-        if(connectedPeers.size() < networkConfiguration.getProtocolConfig().getBasicConfig().getMinPeers().getAsInt() && networkConfiguration.isDiscoveryEnabled()) {
+        if(connectedPeers.size() < networkConfiguration.getProtocolConfig().getBasicConfig().getMinPeers().getAsInt()) {
             if(serviceStarted) {
                 log.warn("Network activity has been paused due to peer connections falling below the minimum threshold. Waiting for additional peers..");
 

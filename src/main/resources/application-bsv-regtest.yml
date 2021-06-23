@@ -4,9 +4,9 @@ headersv:
   network:
     networkId: "regtest"
     minPeers: 1
-    maxPeers: 1
-    peers: "127.0.0.1:18444"
-    discoveryEnabled: false
+    maxPeers: 15
+    peers: "127.0.0.1"
+    port: 18444
 
 
   sync:
