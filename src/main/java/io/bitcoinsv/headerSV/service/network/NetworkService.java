@@ -1,8 +1,8 @@
 package io.bitcoinsv.headerSV.service.network;
 
-import com.nchain.jcl.net.network.PeerAddress;
-import com.nchain.jcl.net.network.events.P2PEvent;
-import com.nchain.jcl.net.protocol.messages.common.Message;
+import io.bitcoinsv.jcl.net.network.PeerAddress;
+import io.bitcoinsv.jcl.net.network.events.P2PEvent;
+import io.bitcoinsv.jcl.net.protocol.messages.common.Message;
 
 import io.bitcoinsv.headerSV.service.consumer.EventConsumer;
 import io.bitcoinsv.headerSV.service.consumer.MessageConsumer;

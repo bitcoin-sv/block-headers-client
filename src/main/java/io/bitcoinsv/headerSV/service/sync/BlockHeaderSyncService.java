@@ -1,16 +1,16 @@
 package io.bitcoinsv.headerSV.service.sync;
 
 
-import com.nchain.jcl.net.network.PeerAddress;
-import com.nchain.jcl.net.network.events.P2PEvent;
-import com.nchain.jcl.net.protocol.events.control.PeerHandshakedEvent;
-import com.nchain.jcl.net.protocol.messages.*;
-import com.nchain.jcl.net.protocol.messages.common.BitcoinMsg;
-import com.nchain.jcl.store.blockChainStore.BlockChainStore;
-import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
-import io.bitcoinj.bitcoin.bean.base.HeaderBean;
-import io.bitcoinj.bitcoin.bean.extended.LiteBlockBean;
-import io.bitcoinj.core.Sha256Hash;
+import io.bitcoinsv.jcl.net.network.PeerAddress;
+import io.bitcoinsv.jcl.net.network.events.P2PEvent;
+import io.bitcoinsv.jcl.net.protocol.events.control.PeerHandshakedEvent;
+import io.bitcoinsv.jcl.net.protocol.messages.*;
+import io.bitcoinsv.jcl.net.protocol.messages.common.BitcoinMsg;
+import io.bitcoinsv.jcl.store.blockChainStore.BlockChainStore;
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinsv.bitcoinjsv.bitcoin.bean.base.HeaderBean;
+import io.bitcoinsv.bitcoinjsv.bitcoin.bean.extended.LiteBlockBean;
+import io.bitcoinsv.bitcoinjsv.core.Sha256Hash;
 import io.bitcoinsv.headerSV.config.NetworkConfiguration;
 import io.bitcoinsv.headerSV.service.HeaderSvService;
 import io.bitcoinsv.headerSV.service.consumer.EventConsumer;

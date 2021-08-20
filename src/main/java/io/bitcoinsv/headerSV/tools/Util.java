@@ -1,8 +1,8 @@
 package io.bitcoinsv.headerSV.tools;
 
-import io.bitcoinj.bitcoin.Genesis;
-import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
-import io.bitcoinj.params.Net;
+import io.bitcoinsv.bitcoinjsv.bitcoin.Genesis;
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinsv.bitcoinjsv.params.Net;
 
 
 /**

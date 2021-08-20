@@ -1,6 +1,6 @@
 package io.bitcoinsv.headerSV.domain.dto;
 
-import com.nchain.jcl.net.network.PeerAddress;
+import io.bitcoinsv.jcl.net.network.PeerAddress;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
