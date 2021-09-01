@@ -2,7 +2,7 @@ package io.bitcoinsv.headerSV.domain.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

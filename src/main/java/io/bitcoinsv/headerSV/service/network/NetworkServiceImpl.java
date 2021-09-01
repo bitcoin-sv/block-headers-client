@@ -1,13 +1,13 @@
 package io.bitcoinsv.headerSV.service.network;
 
-import com.nchain.jcl.net.network.PeerAddress;
-import com.nchain.jcl.net.network.events.P2PEvent;
-import com.nchain.jcl.net.network.events.PeerDisconnectedEvent;
-import com.nchain.jcl.net.protocol.events.control.PeerHandshakedEvent;
-import com.nchain.jcl.net.protocol.events.data.MsgReceivedEvent;
-import com.nchain.jcl.net.protocol.messages.common.BitcoinMsgBuilder;
-import com.nchain.jcl.net.protocol.messages.common.Message;
-import com.nchain.jcl.net.protocol.wrapper.P2P;
+import io.bitcoinsv.jcl.net.network.PeerAddress;
+import io.bitcoinsv.jcl.net.network.events.P2PEvent;
+import io.bitcoinsv.jcl.net.network.events.PeerDisconnectedEvent;
+import io.bitcoinsv.jcl.net.protocol.events.control.PeerHandshakedEvent;
+import io.bitcoinsv.jcl.net.protocol.events.data.MsgReceivedEvent;
+import io.bitcoinsv.jcl.net.protocol.messages.common.BitcoinMsgBuilder;
+import io.bitcoinsv.jcl.net.protocol.messages.common.Message;
+import io.bitcoinsv.jcl.net.protocol.wrapper.P2P;
 
 import io.bitcoinsv.headerSV.config.NetworkConfiguration;
 import io.bitcoinsv.headerSV.service.consumer.ConsumerConfig;

@@ -1,10 +1,10 @@
 package io.bitcoinsv.headerSV.config;
 
-import com.nchain.jcl.store.blockChainStore.BlockChainStore;
-import com.nchain.jcl.store.blockChainStore.validation.RuleConfigBuilder;
-import com.nchain.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDB;
-import com.nchain.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDBConfig;
-import com.nchain.jcl.tools.config.provided.RuntimeConfigDefault;
+import io.bitcoinsv.jcl.store.blockChainStore.BlockChainStore;
+import io.bitcoinsv.jcl.store.blockChainStore.validation.RuleConfigBuilder;
+import io.bitcoinsv.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDB;
+import io.bitcoinsv.jcl.store.levelDB.blockChainStore.BlockChainStoreLevelDBConfig;
+import io.bitcoinsv.jcl.tools.config.provided.RuntimeConfigDefault;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

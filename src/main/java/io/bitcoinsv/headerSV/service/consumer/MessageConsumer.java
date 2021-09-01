@@ -1,9 +1,9 @@
 package io.bitcoinsv.headerSV.service.consumer;
 
 
-import com.nchain.jcl.net.network.PeerAddress;
-import com.nchain.jcl.net.protocol.messages.common.BitcoinMsg;
-import com.nchain.jcl.net.protocol.messages.common.Message;
+import io.bitcoinsv.jcl.net.network.PeerAddress;
+import io.bitcoinsv.jcl.net.protocol.messages.common.BitcoinMsg;
+import io.bitcoinsv.jcl.net.protocol.messages.common.Message;
 
 /**
  * Distributed under the Open BSV software license, see the accompanying file LICENSE

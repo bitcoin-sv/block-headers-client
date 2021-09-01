@@ -1,11 +1,11 @@
 package io.bitcoinsv.headerSV.config;
 
-import com.nchain.jcl.net.network.config.NetworkConfig;
-import com.nchain.jcl.net.network.config.provided.NetworkDefaultConfig;
-import com.nchain.jcl.net.protocol.config.ProtocolConfig;
-import com.nchain.jcl.net.protocol.config.ProtocolConfigBuilder;
-import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
-import io.bitcoinj.params.*;
+import io.bitcoinsv.jcl.net.network.config.NetworkConfig;
+import io.bitcoinsv.jcl.net.network.config.provided.NetworkDefaultConfig;
+import io.bitcoinsv.jcl.net.protocol.config.ProtocolConfig;
+import io.bitcoinsv.jcl.net.protocol.config.ProtocolConfigBuilder;
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinsv.bitcoinjsv.params.*;
 import io.bitcoinsv.headerSV.tools.Util;
 
 import org.springframework.beans.factory.annotation.Value;

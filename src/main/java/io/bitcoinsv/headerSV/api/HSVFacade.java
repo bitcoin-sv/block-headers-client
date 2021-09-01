@@ -5,10 +5,10 @@ import io.bitcoinsv.headerSV.domain.dto.BlockHeaderDTO;
 import io.bitcoinsv.headerSV.domain.dto.ChainStateDTO;
 import io.bitcoinsv.headerSV.domain.dto.PeerAddressDTO;
 import io.bitcoinsv.headerSV.service.network.NetworkService;
-import com.nchain.jcl.store.blockChainStore.BlockChainStore;
-import io.bitcoinj.bitcoin.api.base.HeaderReadOnly;
-import io.bitcoinj.bitcoin.api.extended.ChainInfo;
-import io.bitcoinj.core.Sha256Hash;
+import io.bitcoinsv.jcl.store.blockChainStore.BlockChainStore;
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.extended.ChainInfo;
+import io.bitcoinsv.bitcoinjsv.core.Sha256Hash;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
