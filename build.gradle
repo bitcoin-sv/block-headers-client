@@ -86,7 +86,7 @@ publishing {
 
 			pom {
 				name = "$hsvName"
-				description = ''
+				description = 'A lightweight header client for the Bitcoin SV Blockchain'
 				url = 'https://github.com/bitcoin-sv/block-headers-client'
 
 				licenses {
