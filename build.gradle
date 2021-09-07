@@ -34,12 +34,12 @@ javadoc {
 
 dependencies {
 	// jcl Modules
-	implementation 'io.bitcoinsv.jcl:jcl-net:1.0.0'
+	implementation 'io.bitcoinsv.jcl:jcl-net:1.0.2'
 	implementation 'io.bitcoinsv.bitcoinjsv:bitcoinj-base:1.0.0'
-	implementation 'io.bitcoinsv.jcl:jcl-tools:1.0.0'
-	implementation 'io.bitcoinsv.jcl:jcl-store:1.0.0'
-	implementation 'io.bitcoinsv.jcl:jcl-store-levelDB:1.0.0'
-	implementation 'io.bitcoinsv.jcl:jcl-store-keyValue:1.0.0'
+	implementation 'io.bitcoinsv.jcl:jcl-tools:1.0.2'
+	implementation 'io.bitcoinsv.jcl:jcl-store:1.0.2'
+	implementation 'io.bitcoinsv.jcl:jcl-store-levelDB:1.0.2'
+	implementation 'io.bitcoinsv.jcl:jcl-store-keyValue:1.0.2'
 
 	// Spring boot
 	implementation 'org.springframework.boot:spring-boot-starter'
@@ -69,6 +69,9 @@ jar {
 	manifest {
 		attributes("Main-Class": mainClassName)
 	}
+	metaInf {
+		from "${project.rootDir}/LICENSE"
+	}
 }
 
 publishing {
@@ -83,7 +86,7 @@ publishing {
 
 			pom {
 				name = "$hsvName"
-				description = ''
+				description = 'A lightweight header client for the Bitcoin SV Blockchain'
 				url = 'https://github.com/bitcoin-sv/block-headers-client'
 
 				licenses {
