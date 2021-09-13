@@ -5,6 +5,8 @@ plugins {
 	id 'java'
 	id 'application'
 	id 'maven-publish'
+
+	id 'com.google.cloud.tools.jib' version '3.1.4'
 }
 
 sourceCompatibility = '11'
@@ -116,5 +118,14 @@ publishing {
 
 	repositories {
 		mavenLocal()
+	}
+}
+
+jib {
+	from {
+		image = 'amazoncorretto:11'
+	}
+	container {
+		labels = [maintainer:'s.krese@nchain.com']
 	}
 }
