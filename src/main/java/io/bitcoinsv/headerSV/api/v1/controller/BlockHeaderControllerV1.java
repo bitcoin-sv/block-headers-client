@@ -10,6 +10,8 @@ import io.bitcoinsv.headerSV.api.HSVFacade;
 import io.bitcoinsv.headerSV.domain.dto.BlockHeaderDTO;
 import io.bitcoinsv.headerSV.domain.dto.ChainStateDTO;
 
+import java.util.List;
+
 /**
  * Distributed under the Open BSV software license, see the accompanying file LICENSE
  * Copyright (c) 2020 Bitcoin Association
