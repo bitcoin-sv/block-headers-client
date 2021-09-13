@@ -33,6 +33,29 @@ public class BlockHeaderControllerV1 {
         return blockHeaderDTO;
     }
 
+    @RequestMapping("/{hash}/ancestors")
+    public ResponseEntity<?> getAncestors(@PathVariable String hash, @RequestBody String ancestorHash){
+        List<BlockHeaderDTO> headerHistory = hsvFacade.getAncestors(hash, ancestorHash);
+
+        if (headerHistory == null) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
+        }
+
+        return new ResponseEntity<>(headerHistory, HttpStatus.OK);
+    }
+
+    @RequestMapping("/commonAncestor")
+    public ResponseEntity<?> getCommonAncestor(@RequestBody List<String> blockHashes){
+        BlockHeaderDTO headerHistory = hsvFacade.findCommonAncestor(blockHashes);
+
+        if (headerHistory == null) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
+        }
+
+        return new ResponseEntity<>(headerHistory, HttpStatus.OK);
+    }
+
+
     @RequestMapping("/state/{hash}")
     public ChainStateDTO getHeaderDetails(@PathVariable String hash) {
         ChainStateDTO blockHeaderStateDTO = hsvFacade.getBlockHeaderState(hash);
