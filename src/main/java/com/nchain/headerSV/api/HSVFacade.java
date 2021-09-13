@@ -43,6 +43,46 @@ public class HSVFacade {
         return BlockHeaderDTO.of(blockHeader.get());
     }
 
+    public List<BlockHeaderDTO> getAncestors(String hash, String ancestorHash){
+        Optional<ChainInfo> requestedBlock = blockChainStore.getBlockChainInfo(Sha256Hash.wrap(hash));
+        Optional<ChainInfo> ancestorBlock = blockChainStore.getBlockChainInfo(Sha256Hash.wrap(ancestorHash));
+
+        if(requestedBlock.isEmpty() || ancestorBlock.isEmpty()){
+            return null;
+        }
+
+        if(ancestorBlock.get().getHeight() > requestedBlock.get().getHeight()){
+            return null;
+        } else if(ancestorBlock.get().getHeight() == requestedBlock.get().getHeight()){
+            return Collections.emptyList();
+        }
+
+        List<BlockHeaderDTO> ancestorList = new ArrayList<>();
+        HeaderReadOnly currentBlock = blockChainStore.getBlock(requestedBlock.get().getHeader().getPrevBlockHash()).get();
+
+        while(!currentBlock.equals(ancestorBlock.get().getHeader())){
+
+            ancestorList.add(BlockHeaderDTO.of(currentBlock));
+
+            currentBlock = blockChainStore.getBlock(currentBlock.getPrevBlockHash()).get();
+        }
+
+        return ancestorList;
+    }
+
+    public BlockHeaderDTO findCommonAncestor(List<String> blockHashes) {
+        List<Sha256Hash> blockHashesSHA256 = blockHashes.stream().map(Sha256Hash::wrap).collect(Collectors.toList());
+
+        Optional<ChainInfo> lowestCommonAncestor = blockChainStore.getLowestCommonAncestor(blockHashesSHA256);
+
+        if(lowestCommonAncestor.isEmpty()){
+            return null;
+        }
+
+        return BlockHeaderDTO.of(lowestCommonAncestor.get().getHeader());
+    }
+
+
     public ChainStateDTO getBlockHeaderState(String hash){
         Optional<BlockHeader> blockHeaderOptional = blockChainStore.getBlock(Sha256Wrapper.wrap(hash));
 
