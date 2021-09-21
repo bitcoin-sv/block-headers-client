@@ -36,12 +36,12 @@ javadoc {
 
 dependencies {
 	// jcl Modules
-	implementation 'io.bitcoinsv.jcl:jcl-net:1.0.3'
+	implementation 'io.bitcoinsv.jcl:jcl-net:1.0.4'
 	implementation 'io.bitcoinsv.bitcoinjsv:bitcoinj-base:1.0.0'
-	implementation 'io.bitcoinsv.jcl:jcl-tools:1.0.3'
-	implementation 'io.bitcoinsv.jcl:jcl-store:1.0.3'
-	implementation 'io.bitcoinsv.jcl:jcl-store-levelDB:1.0.3'
-	implementation 'io.bitcoinsv.jcl:jcl-store-keyValue:1.0.3'
+	implementation 'io.bitcoinsv.jcl:jcl-tools:1.0.4'
+	implementation 'io.bitcoinsv.jcl:jcl-store:1.0.4'
+	implementation 'io.bitcoinsv.jcl:jcl-store-levelDB:1.0.4'
+	implementation 'io.bitcoinsv.jcl:jcl-store-keyValue:1.0.4'
 
 	// Spring boot
 	implementation 'org.springframework.boot:spring-boot-starter'
