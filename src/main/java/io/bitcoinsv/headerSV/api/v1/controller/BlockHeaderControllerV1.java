@@ -10,6 +10,8 @@ import io.bitcoinsv.headerSV.api.HSVFacade;
 import io.bitcoinsv.headerSV.domain.dto.BlockHeaderDTO;
 import io.bitcoinsv.headerSV.domain.dto.ChainStateDTO;
 
+import java.util.List;
+
 /**
  * Distributed under the Open BSV software license, see the accompanying file LICENSE
  * Copyright (c) 2020 Bitcoin Association
@@ -42,6 +44,29 @@ public class BlockHeaderControllerV1 {
                 return new ResponseEntity<>(blockHeaderDTO, HttpStatus.OK);
         }
     }
+
+    @RequestMapping("/{hash}/ancestors")
+    public ResponseEntity<?> getAncestors(@PathVariable String hash, @RequestBody String ancestorHash){
+        List<BlockHeaderDTO> headerHistory = hsvFacade.getAncestors(hash, ancestorHash);
+
+        if (headerHistory == null) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
+        }
+
+        return new ResponseEntity<>(headerHistory, HttpStatus.OK);
+    }
+
+    @RequestMapping("/commonAncestor")
+    public ResponseEntity<?> getCommonAncestor(@RequestBody List<String> blockHashes){
+        BlockHeaderDTO headerHistory = hsvFacade.findCommonAncestor(blockHashes);
+
+        if (headerHistory == null) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
+        }
+
+        return new ResponseEntity<>(headerHistory, HttpStatus.OK);
+    }
+
 
     @RequestMapping("/state/{hash}")
     public ResponseEntity<?> getHeaderDetails(@PathVariable String hash) {
