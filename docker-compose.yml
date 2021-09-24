@@ -19,7 +19,8 @@ services:
 #      - HEADERSV_NETWORK_PORT:18444
 #      - HEADERSV_NETWORK_DISCOVERYENABLED=false
       - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=25 -Dlogging.level.ROOT=INFO
-    network_mode: "host"
+    ports:
+      - "8001:8080"
 
 volumes:
   headersv-data:
