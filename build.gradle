@@ -67,13 +67,15 @@ test {
 mainClassName = "io.bitcoinsv.headerSV.HeaderSVApplication"
 
 jar {
-	enabled = true
 	manifest {
 		attributes("Main-Class": mainClassName)
 	}
 	metaInf {
 		from "${project.rootDir}/LICENSE"
 	}
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 publishing {

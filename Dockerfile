@@ -8,5 +8,5 @@ RUN gradle assemble
 FROM openjdk:11-jre-slim
 WORKDIR /app
 EXPOSE 8080
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/headerSV.jar
-ENTRYPOINT ["sh","-c","java -jar /app/headerSV.jar"]
+COPY --from=build /home/gradle/src/build/libs/*.jar /app/
+ENTRYPOINT ["sh","-c","java -jar /app/headerSV-1.0.0.jar"]
