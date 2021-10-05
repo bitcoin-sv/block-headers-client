@@ -74,6 +74,11 @@ public class NetworkServiceImpl implements NetworkService {
         serviceStarted = true;
         init();
         p2p.start();
+        // If some InitialConnections are specified, we connect to them after startup:
+        networkConfiguration.getInitialConnections().forEach(p -> {
+            log.info("Connecting manually to " + p + "...");
+            p2p.REQUESTS.PEERS.connect(p).submit();
+        });
         log.info("Network service started");
     }
 

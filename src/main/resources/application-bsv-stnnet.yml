@@ -5,7 +5,7 @@ headersv:
     networkId: "stnnet"
     minPeers: 5
     maxPeers: 10
-    peers:
+    initialConnections:
 
   sync:
     headersToIgnore:

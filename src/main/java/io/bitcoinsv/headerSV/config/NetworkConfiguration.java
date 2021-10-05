@@ -1,5 +1,6 @@
 package io.bitcoinsv.headerSV.config;
 
+import io.bitcoinsv.jcl.net.network.PeerAddress;
 import io.bitcoinsv.jcl.net.network.config.NetworkConfig;
 import io.bitcoinsv.jcl.net.network.config.provided.NetworkDefaultConfig;
 import io.bitcoinsv.jcl.net.protocol.config.ProtocolConfig;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * Distributed under the Open BSV software license, see the accompanying file LICENSE
@@ -31,7 +31,8 @@ public class NetworkConfiguration {
     /* The JCL attempts to connect to the peers in batches. If 1/10 peers is a good peer, then it will take a long time to connect to 30
        peers if this number is low. */
     private final int NUMBER_OF_PEERS_TO_CONNECT_TO_EACH_BATCH = 300;
-    private final String[] peers;
+    private final String[] dns;
+    private final List<PeerAddress> initialConnections = new ArrayList<>();
 
     private final ProtocolConfig protocolConfig;
     private final HeaderReadOnly genesisBlock;
@@ -43,7 +44,10 @@ public class NetworkConfiguration {
                                 @Value("${headersv.network.minPeers:5}") int minPeers,
                                 @Value("${headersv.network.maxPeers:15}") int maxPeers,
                                 @Value("${headersv.network.port:-1}") int port,
-                                @Value("${headersv.network.peers:[]}") String[] peers) throws ConfigurationException {
+                                @Value("${headersv.network.dns:[]}") String[] dns,
+                                @Value("${headersv.network.initialConnections}") String[] initialConnections) throws ConfigurationException {
+
+        try {
 
         switch (networkId) {
             case "mainnet":
@@ -71,12 +75,12 @@ public class NetworkConfiguration {
 
         }
 
-        List<String> dnsList = new ArrayList<>(Arrays.asList(peers));
+            List<String> dnsList = new ArrayList<>(Arrays.asList(dns));
 
-        //if there's any default peers, add them
-        if(networkParams.getDnsSeeds() != null) {
-            dnsList.addAll(Arrays.asList(networkParams.getDnsSeeds()));
-        }
+            //if there's any default dns, add them
+            if(networkParams.getDnsSeeds() != null) {
+                dnsList.addAll(Arrays.asList(networkParams.getDnsSeeds()));
+            }
 
         //We might want to override the port if connecting to a custom network
         ProtocolConfig defaultConfig = ProtocolConfigBuilder.get(networkParams);
@@ -98,7 +102,19 @@ public class NetworkConfiguration {
                 .maxSocketConnectionsOpeningAtSameTime(NUMBER_OF_PEERS_TO_CONNECT_TO_EACH_BATCH)
                 .build();
 
-        this.peers = peers;
+            this.dns = dns;
+
+            // We configure the list of initial Connections:
+            if (initialConnections != null) {
+                for(String peerAddress : initialConnections) {
+                    this.initialConnections.add(PeerAddress.fromIp(peerAddress.trim()));
+                }
+            }
+
+        } catch (Exception e) {
+            throw new ConfigurationException(e.getMessage());
+        }
+
     }
 
 
@@ -116,7 +132,9 @@ public class NetworkConfiguration {
 
     public AbstractBitcoinNetParams getNetworkParams() { return networkParams; }
 
-    public String[] getPeers() {
-        return peers;
+    public String[] getDns() {
+        return dns;
     }
+
+    public List<PeerAddress> getInitialConnections() { return this.initialConnections;}
 }

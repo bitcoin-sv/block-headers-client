@@ -5,7 +5,7 @@ headersv:
     networkId: "regtest"
     minPeers: 1
     maxPeers: 15
-    peers: "127.0.0.1"
+    initialConnections: "127.0.0.1:18444"
     port: 18444
 
 
