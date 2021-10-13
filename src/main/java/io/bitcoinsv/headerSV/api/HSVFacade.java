@@ -11,6 +11,7 @@ import io.bitcoinsv.bitcoinjsv.bitcoin.api.extended.ChainInfo;
 import io.bitcoinsv.bitcoinjsv.core.Sha256Hash;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -94,36 +95,41 @@ public class HSVFacade {
         HeaderReadOnly blockHeader = blockHeaderOptional.get();
         ChainState blockHeaderState = ChainState.LONGEST_CHAIN;
 
+        BigInteger chainWork = null;
+        Integer chainHeight = null;
+        Integer blockConfirmations = null;
+
         //Empty if the block is not connected
         Optional<ChainInfo> chainInfoOptional = blockChainStore.getBlockChainInfo(blockHeader.getHash());
         if(chainInfoOptional.isEmpty()) {
             blockHeaderState = ChainState.ORPHAN;
-        }
+        } else {
+            //Get the longest chain info
+            ChainInfo longestChainInfo = blockChainStore.getLongestChain().get();
 
-        //Get the chain info for this block
-        ChainInfo headerChainInfo = chainInfoOptional.get();
+            //Get the longest chain this header appears inf
+            ChainInfo headerlongestChainInfo = blockChainStore.getTipsChains(Sha256Hash.wrap(hash))
+                    .stream()
+                    .map(headerHash -> blockChainStore.getBlockChainInfo(headerHash))
+                    .max(Comparator.comparing(chainInfo -> chainInfo.get().getChainWork()))
+                    .get().get();
 
-        //Get the longest chain info
-        ChainInfo longestChainInfo = blockChainStore.getLongestChain().get();
+            chainWork = chainInfoOptional.get().getChainWork();
+            chainHeight = chainInfoOptional.get().getHeight();
+            blockConfirmations = headerlongestChainInfo.getHeight() - chainInfoOptional.get().getHeight() + 1;
 
-        //Get the longest chain this header appears in
-        ChainInfo headerlongestChainInfo = blockChainStore.getTipsChains(Sha256Hash.wrap(hash))
-                .stream()
-                .map(headerHash -> blockChainStore.getBlockChainInfo(headerHash))
-                .max(Comparator.comparing(chainInfo -> chainInfo.get().getChainWork()))
-                .get().get();
-
-        //If the tip of the requested headers work is less than the work of the longest chain, then it's stale
-        if(headerlongestChainInfo.getChainWork().compareTo(longestChainInfo.getChainWork()) < 0){
-            blockHeaderState = ChainState.STALE;
+            //If the tip of the requested headers work is less than the work of the longest chain, then it's stale
+            if (headerlongestChainInfo.getChainWork().compareTo(longestChainInfo.getChainWork()) < 0) {
+                blockHeaderState = ChainState.STALE;
+            }
         }
 
         return ChainStateDTO.builder()
                 .header(BlockHeaderDTO.of(blockHeader))
                 .state(blockHeaderState.name())
-                .chainWork(headerChainInfo.getChainWork())
-                .height(headerChainInfo.getHeight())
-                .confirmations(headerlongestChainInfo.getHeight() - headerChainInfo.getHeight() + 1)
+                .chainWork(chainWork)
+                .height(chainHeight)
+                .confirmations(blockConfirmations)
                 .build();
     }
 
