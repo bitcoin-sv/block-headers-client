@@ -62,7 +62,11 @@ public class BlockHeaderControllerV1 {
     public ResponseEntity<?> getHeadersByHeight(@RequestParam String height, @RequestParam(defaultValue = "1") String count,
                                                 @RequestHeader(value = "Accept", required = false, defaultValue = "application/json") MediaType acceptContentType){
         try {
-            List<BlockHeaderDTO> headers = hsvFacade.getHeadersByHeight(Integer.valueOf(height), Integer.valueOf(count));
+            if (Integer.parseInt(count) > 2000) {
+                throw new IllegalArgumentException("Count exceeds max value of 2000 headers");
+            }
+
+            List<BlockHeaderDTO> headers = hsvFacade.getHeadersByHeight(Integer.parseInt(height), Integer.parseInt(count));
             if (acceptContentType.toString().equals(MediaType.APPLICATION_OCTET_STREAM_VALUE)) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 for (BlockHeaderDTO header : headers) {
