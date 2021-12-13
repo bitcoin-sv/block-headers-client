@@ -1,6 +1,6 @@
 plugins {
-	id 'org.springframework.boot' version '2.2.5.RELEASE'
-	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'org.springframework.boot' version '2.5.5'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'idea'
 	id 'java'
 	id 'application'
@@ -9,7 +9,7 @@ plugins {
 	id 'com.google.cloud.tools.jib' version '3.1.4'
 }
 
-sourceCompatibility = '11'
+sourceCompatibility = '17'
 version = "$hsvVersion"
 
 configurations {
@@ -34,6 +34,12 @@ javadoc {
 	}
 }
 
+task printVersion {
+	doLast {
+		println project.version
+	}
+}
+
 dependencies {
 	// jcl Modules
 	implementation 'io.bitcoinsv.jcl:jcl-net:1.0.4'
@@ -50,10 +56,10 @@ dependencies {
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
 	// Lombok
-	annotationProcessor 'org.projectlombok:lombok'
-	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok:1.18.20'
+	compileOnly 'org.projectlombok:lombok:1.18.20'
 
-	compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+	implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
 	implementation 'com.google.guava:guava:27.1-jre'
 
 	// Testing
@@ -67,16 +73,15 @@ test {
 mainClassName = "io.bitcoinsv.headerSV.HeaderSVApplication"
 
 jar {
+	enabled = true
 	manifest {
 		attributes("Main-Class": mainClassName)
 	}
 	metaInf {
 		from "${project.rootDir}/LICENSE"
 	}
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
 }
+
 
 publishing {
 	publications {
@@ -125,7 +130,7 @@ publishing {
 
 jib {
 	from {
-		image = 'amazoncorretto:11'
+		image = 'openjdk:17-jdk'
 	}
 	container {
 		labels = [maintainer:'s.krese@nchain.com']

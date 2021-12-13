@@ -70,6 +70,16 @@ Retrieves the header with the given hash
 ```
 The content type: ```application/octet-stream``` can be provided in the requst header to return the headers raw bytes.
 
+#### Query Headers By Height (batched)
+Retrieves the header with the given hash
+```
+/api/v1/chain/header/byHeight?height=<start_height>&count=<count>
+```
+The Accept type: ```application/octet-stream``` can be provided in the requst header to return the headers as a
+stream of raw bytes.
+
+The query parameter: height is required. The count of headers requested is optional (default = 1)
+
 #### Query Headers State
 Retrieves the header with the given hash along with it's state relative to the chain
 ```

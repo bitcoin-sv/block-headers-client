@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Distributed under the Open BSV software license, see the accompanying file LICENSE
  * Copyright (c) 2020 Bitcoin Association
  *
- * @author m.jose@nchain.com
+ * @author m.fletcher@nchain.com
  */
 @Service
 @Slf4j

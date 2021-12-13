@@ -1,6 +1,7 @@
 package io.bitcoinsv.headerSV.service.sync;
 
 
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.extended.ChainInfo;
 import io.bitcoinsv.jcl.net.network.PeerAddress;
 import io.bitcoinsv.jcl.net.network.events.P2PEvent;
 import io.bitcoinsv.jcl.net.protocol.events.control.PeerHandshakedEvent;
@@ -43,6 +44,7 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
 
     @Setter
     private Set<String> headersToIgnore = Collections.emptySet();
+
 
     protected BlockHeaderSyncService(NetworkService networkService,
                                      NetworkConfiguration networkConfiguration,
@@ -120,11 +122,9 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
      * and requesting the headers for them will enable our peer to "catch up".
      */
     private void consumeInvMsg(InvMessage invMsg, PeerAddress peerAddress){
-        List<InventoryVectorMsg> blockHeaderMessages = invMsg.getInvVectorList().stream().filter(iv -> iv.getType() == InventoryVectorMsg.VectorType.MSG_BLOCK).collect(Collectors.toList());
+        List<Sha256Hash> blockHeaderMessages = invMsg.getInvVectorList().stream().filter(iv -> iv.getType() == InventoryVectorMsg.VectorType.MSG_BLOCK).map(inv -> Sha256Hash.wrapReversed(inv.getHashMsg().getHashBytes())).collect(Collectors.toList());
 
-        if(!blockHeaderMessages.isEmpty()) {
-            blockStore.getTipsChains().forEach(h -> requestHeadersFromHash(h, peerAddress));
-        }
+        blockHeaderMessages.forEach(h -> requestHeader(h, peerAddress));
     }
 
     /* Although blockStore is synchronized, we need to ensure another thread does not access
@@ -151,6 +151,19 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
         List<Sha256Hash> branchTips = blockStore.getTipsChains();
 
         blockStore.saveBlocks(blockHeaders);
+
+        //if we receive any orphaned blocks, ask this node
+        List<Sha256Hash> orphansToRemove = new ArrayList<>();
+
+        blockStore.getOrphanBlocks().forEach(o ->{
+            HeaderReadOnly orphanBlockHeader = blockStore.getBlock(o).get();
+            requestParentHeadersForOrphanHash(orphanBlockHeader.getHash(), peerAddress);
+
+            orphansToRemove.add(o);
+        });
+
+        //remove the orphans as we've made a best effort to retreive them
+        orphansToRemove.forEach(blockStore::removeBlock);
 
         //check which tips have changed
         List<Sha256Hash> updatedtips = blockStore.getTipsChains().stream().filter(h -> !branchTips.contains(h)).collect(Collectors.toList());
@@ -194,14 +207,24 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
         return true;
     }
 
+    private void requestHeader(Sha256Hash hash, PeerAddress peerAddress){
+        log.info("Requesting headers for block: " + hash );
+        networkService.send(buildGetHeaderMsg(hash), peerAddress,true);
+    }
+
     private void requestHeadersFromHash(Sha256Hash hash){
         log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight());
         networkService.broadcast(buildGetHeaderMsgFromHash(hash), true);
     }
 
     private void requestHeadersFromHash(Sha256Hash hash, PeerAddress peerAddress){
-       log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
+        log.info("Requesting headers from block: " + hash + " at height: " + blockStore.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
         networkService.send(buildGetHeaderMsgFromHash(hash), peerAddress, false);
+    }
+
+    private void requestParentHeadersForOrphanHash(Sha256Hash hash, PeerAddress peerAddress){
+        log.info("Requesting parent headers for block: " + hash);
+        networkService.send(buildGetHeadersForOrphanAncestors(hash), peerAddress, false);
     }
 
     private void requestPeerToSendNewHeaders(PeerAddress peerAddress){
@@ -234,15 +257,41 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
         return invMessage;
     }
 
-    private GetHeadersMsg buildGetHeaderMsgFromHash(Sha256Hash hash){
-        HashMsg hashMsg = HashMsg.builder().hash(hash.getReversedBytes()).build();
-        List<HashMsg> hashMsgs = Arrays.asList(hashMsg);
+    private GetHeadersMsg buildGetHeadersForOrphanAncestors(Sha256Hash orphanHash){
+        List<Sha256Hash> blockLocatorHashes = new ArrayList<>();
+
+        ChainInfo longestChainInfo = blockStore.getLongestChain().get();
+
+        //Always included the tip
+        blockLocatorHashes.add(longestChainInfo.getHeader().getHash());
+
+        //ancestor locators should be something like 10, 20, 40.. 640..
+        for(int i = 1; Math.exp(i) < longestChainInfo.getHeight(); i++){
+            Sha256Hash ancestorHash = blockStore.getAncestorByHeight(longestChainInfo.getHeader().getHash(), longestChainInfo.getHeight() - (int) Math.exp(i)).get().getHeader().getHash();
+            blockLocatorHashes.add(ancestorHash);
+        }
+
+        //Always included genesis
+        blockLocatorHashes.add(networkConfiguration.getGenesisBlock().getHash());
+
+
+        return buildGetHeadersMsg(blockLocatorHashes, orphanHash);
+    }
+
+
+    private GetHeadersMsg buildGetHeadersMsg(List<Sha256Hash> locatorHashes, Sha256Hash stopHash){
+        List<HashMsg> blockLocatorHashMsgs = Collections.emptyList();
+
+        //locator hash can be null if stop hash is defined, this will be treated as a call for that particular header
+        if(locatorHashes != null) {
+            blockLocatorHashMsgs = locatorHashes.stream().map(h -> HashMsg.builder().hash(h.getReversedBytes()).build()).collect(Collectors.toList());
+        }
 
         BaseGetDataAndHeaderMsg baseGetDataAndHeaderMsg = BaseGetDataAndHeaderMsg.builder()
                 .version(networkConfiguration.getProtocolConfig().getBasicConfig().getProtocolVersion())
-                .blockLocatorHash(hashMsgs)
-                .hashCount(VarIntMsg.builder().value(1).build())
-                .hashStop(HashMsg.builder().hash(Sha256Hash.ZERO_HASH.getBytes()).build())
+                .blockLocatorHash(blockLocatorHashMsgs)
+                .hashCount(VarIntMsg.builder().value(blockLocatorHashMsgs.size()).build())
+                .hashStop(HashMsg.builder().hash(stopHash.getReversedBytes()).build())
                 .build();
 
         GetHeadersMsg getHeadersMsg = GetHeadersMsg.builder()
@@ -251,5 +300,14 @@ public class BlockHeaderSyncService implements HeaderSvService, MessageConsumer,
 
         return getHeadersMsg;
     }
+
+    private GetHeadersMsg buildGetHeaderMsg(Sha256Hash hash){
+        return buildGetHeadersMsg(Collections.emptyList(), hash);
+    }
+
+    private GetHeadersMsg buildGetHeaderMsgFromHash(Sha256Hash hash){
+        return buildGetHeadersMsg(Arrays.asList(hash), Sha256Hash.ZERO_HASH);
+    }
+
 
 }

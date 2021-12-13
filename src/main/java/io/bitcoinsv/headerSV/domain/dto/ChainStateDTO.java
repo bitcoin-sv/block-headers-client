@@ -21,6 +21,6 @@ public class ChainStateDTO {
     private BlockHeaderDTO header;
     private String state;
     private BigInteger chainWork;
-    private int height;
-    private int confirmations;
+    private Integer height;
+    private Integer confirmations;
 }

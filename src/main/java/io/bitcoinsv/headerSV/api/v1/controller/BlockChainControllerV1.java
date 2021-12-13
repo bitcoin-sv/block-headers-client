@@ -30,9 +30,13 @@ public class BlockChainControllerV1 {
 
     @RequestMapping("/tips")
     public List<ChainStateDTO> getTips(){
-        List<ChainStateDTO> chainStateDTOList = hsvFacade.getChainTips();
+        try{
+            List<ChainStateDTO> chainStateDTOList = hsvFacade.getChainTips();
 
-        return chainStateDTOList;
+            return chainStateDTOList;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
     @RequestMapping("/tips/prune/{hash}")

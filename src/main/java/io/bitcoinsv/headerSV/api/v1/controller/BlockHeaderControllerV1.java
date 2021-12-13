@@ -10,6 +10,9 @@ import io.bitcoinsv.headerSV.api.HSVFacade;
 import io.bitcoinsv.headerSV.domain.dto.BlockHeaderDTO;
 import io.bitcoinsv.headerSV.domain.dto.ChainStateDTO;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 import java.util.List;
 
 /**
@@ -38,7 +41,10 @@ public class BlockHeaderControllerV1 {
 
         switch (contentType.toString()) {
             case MediaType.APPLICATION_OCTET_STREAM_VALUE:
-                return new ResponseEntity<>(blockHeaderDTO.getHeaderReadOnly().serialize(), HttpStatus.OK);
+                return ResponseEntity
+                        .ok()
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .body(blockHeaderDTO.getHeaderReadOnly().serialize());
 
             default:
                 return new ResponseEntity<>(blockHeaderDTO, HttpStatus.OK);
@@ -77,5 +83,30 @@ public class BlockHeaderControllerV1 {
         }
 
         return new ResponseEntity<>(blockHeaderStateDTO, HttpStatus.OK);
+    }
+
+    @RequestMapping("/byHeight")
+    public ResponseEntity<?> getHeadersByHeight(@RequestParam String height, @RequestParam(defaultValue = "1") String count,
+                                                @RequestHeader(value = "Accept", required = false, defaultValue = "application/json") MediaType acceptContentType){
+        try {
+            if (Integer.parseInt(count) > 2000) {
+                throw new IllegalArgumentException("Count exceeds max value of 2000 headers");
+            }
+
+            List<BlockHeaderDTO> headers = hsvFacade.getHeadersByHeight(Integer.parseInt(height), Integer.parseInt(count));
+            if (acceptContentType.toString().equals(MediaType.APPLICATION_OCTET_STREAM_VALUE)) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                for (BlockHeaderDTO header : headers) {
+                    baos.write(header.getHeaderReadOnly().serialize());
+                }
+                return new ResponseEntity<>(baos.toByteArray(), HttpStatus.OK);
+            } else {
+                // MediaType.APPLICATION_JSON_VALUE
+                return new ResponseEntity<>(headers, HttpStatus.OK);
+            }
+        }
+        catch (IllegalArgumentException | IllegalStateException | IOException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
+        }
     }
 }

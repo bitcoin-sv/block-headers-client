@@ -45,6 +45,30 @@ public class HSVFacade {
         return BlockHeaderDTO.of(blockHeader.get());
     }
 
+    public List<BlockHeaderDTO> getHeadersByHeight(Integer height, Integer count){
+        List<BlockHeaderDTO> listBlockHeaders = new ArrayList<>();
+        ChainInfo longestChainInfo = blockChainStore.getLongestChain().get();
+        HeaderReadOnly chainTip = longestChainInfo.getHeader();
+
+        // validation of inputs
+        int lastHeaderHeight = height + count - 1;
+        if (height > longestChainInfo.getHeight()) {
+            throw new IllegalArgumentException(String.format("Header at height %s exceeds the chain tip: %s", height, longestChainInfo.getHeight()));
+        } else if (lastHeaderHeight > longestChainInfo.getHeight()) {
+            lastHeaderHeight = longestChainInfo.getHeight();
+        }
+
+        for(int curHeight = height; curHeight<=lastHeaderHeight; curHeight++)
+        {
+            Optional<ChainInfo> header = blockChainStore.getAncestorByHeight(chainTip.getHash(), curHeight);
+            if (header.isEmpty()) {
+                throw new IllegalStateException(String.format("Header at height %s not found", curHeight));
+            }
+            listBlockHeaders.add(BlockHeaderDTO.of(header.get().getHeader()));
+        }
+        return listBlockHeaders;
+    }
+
     public List<BlockHeaderDTO> getAncestors(String hash, String ancestorHash){
         Optional<ChainInfo> requestedBlock = blockChainStore.getBlockChainInfo(Sha256Hash.wrap(hash));
         Optional<ChainInfo> ancestorBlock = blockChainStore.getBlockChainInfo(Sha256Hash.wrap(ancestorHash));
@@ -73,6 +97,8 @@ public class HSVFacade {
     }
 
     public BlockHeaderDTO findCommonAncestor(List<String> blockHashes) {
+        if (blockHashes == null || blockHashes.isEmpty()) return null;
+
         List<Sha256Hash> blockHashesSHA256 = blockHashes.stream().map(Sha256Hash::wrap).collect(Collectors.toList());
 
         Optional<ChainInfo> lowestCommonAncestor = blockChainStore.getLowestCommonAncestor(blockHashesSHA256);
