@@ -1,0 +1,6 @@
+logging:
+  level:
+    root: DEBUG
+spring:
+  profiles:
+    active: bsv-mainnet

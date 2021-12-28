@@ -1,0 +1,22 @@
+# Application Configuration:
+headersv:
+
+  general:
+    headersToIgnore:
+
+  network:
+    networkId: "regtest"
+    shareP2P: "no"
+    minPeers: 1
+    maxPeers: 15
+    initialConnections: "127.0.0.1:18444"
+    port: 18444
+
+  storage:
+    pruning:
+      fork:
+        enabled: false
+        pruneAfterConfirmations: 7
+      orphan:
+        enabled: false
+        pruneAfterInterval: 600
