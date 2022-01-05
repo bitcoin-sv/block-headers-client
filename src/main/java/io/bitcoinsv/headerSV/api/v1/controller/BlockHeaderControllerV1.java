@@ -12,7 +12,6 @@ import io.bitcoinsv.headerSV.domain.dto.ChainStateDTO;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
 import java.util.List;
 
 /**
@@ -32,14 +31,15 @@ public class BlockHeaderControllerV1 {
     }
 
     @RequestMapping("/{hash}")
-    public ResponseEntity<?> getHeader(@PathVariable String hash, @RequestHeader(value = "Content-Type", required = false, defaultValue = "application/json") MediaType contentType) {
+    public ResponseEntity<?> getHeader(@PathVariable String hash,
+                                       @RequestHeader(value = "Accept", required = false, defaultValue = "application/json") MediaType acceptContentType) {
         BlockHeaderDTO blockHeaderDTO = hsvFacade.getBlockHeader(hash);
 
         if (blockHeaderDTO == null) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
         }
 
-        switch (contentType.toString()) {
+        switch (acceptContentType.toString()) {
             case MediaType.APPLICATION_OCTET_STREAM_VALUE:
                 return ResponseEntity
                         .ok()
@@ -47,7 +47,10 @@ public class BlockHeaderControllerV1 {
                         .body(blockHeaderDTO.getHeaderReadOnly().serialize());
 
             default:
-                return new ResponseEntity<>(blockHeaderDTO, HttpStatus.OK);
+                return ResponseEntity
+                        .ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(blockHeaderDTO);
         }
     }
 
