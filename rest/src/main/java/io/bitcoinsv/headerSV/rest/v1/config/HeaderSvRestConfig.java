@@ -79,9 +79,11 @@ public class HeaderSvRestConfig {
     @Bean
     public HeaderSvConfig getHeaderSvConfig(
             @Value("${headersv.general.timeoutToTriggerSyncCompleteInSecs:60}") int timeoutToTriggerSyncCompleteInSecs,
+            @Value("${headersv.general.invBroadcastEnabled:true}") boolean invBroadcastEnabled,
             @Value("${headersv.general.headersToIgnore}") List<String> headersToIgnore) {
         return HeaderSvConfig.builder()
                 .timeoutToTriggerSyncComplete(Duration.ofSeconds(timeoutToTriggerSyncCompleteInSecs))
+                .invBroadcastEnabled(invBroadcastEnabled)
                 .headersToIgnore(headersToIgnore.stream().collect(Collectors.toSet()))
                 .build();
     }

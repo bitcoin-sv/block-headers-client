@@ -62,10 +62,15 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
     private final HeaderReadOnly genesisBlock;
     private final long protocolVersion;
 
-    // We trigger and Thread to keep track of the HEADERs received, to check WHEN we can trigger the
-    // CHAIN_SYNCHRONIZED Event:
+    // We trigger and Thread to to check WHEN we can trigger the CHAIN_SYNCHRONIZED Event.
+    // A CHAIN_SYNCHRONIZED event is triggered when we haven't received any Headers for some time. But we need to
+    // consider 2 different scenarios:
+    // - WE already asked Peers and received some Headers, but now they have stopped.
+    // - We already asked Peers but they never replied ( this might happen in a new run, when we are already synced)
+
     private final ExecutorService executor;
     private AtomicReference<Instant> lastTipsUpdate = new AtomicReference<>();
+    private AtomicBoolean requestForHeadersSent = new AtomicBoolean();
     private AtomicBoolean chainSyncEventTriggered = new AtomicBoolean();
 
 
@@ -78,7 +83,7 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
 
         // EVENT BUS CONFIG........
         this.eventBus = EventBus.builder()
-                .executor(ThreadUtils.getSingleThreadExecutorService("headerSV-eventStgreamer"))
+                .executor(ThreadUtils.getSingleThreadExecutorService("headerSV-eventStreamer"))
                 .build();
         this.eventStreamer = new HeaderSvEventStreamer(this.eventBus);
 
@@ -107,9 +112,6 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
         log.info("Current blockchain state: ");
         store.getTipsChains().forEach(t -> log.info("Chain Id: " + store.getBlockChainInfo(t).get().getHeader().getHash() + " Height: " + store.getBlockChainInfo(t).get().getHeight()));
 
-        // We reset this counter, so its never NULL...
-        this.lastTipsUpdate.set(Instant.now());
-
         // We start the monitor to check if the CHAIN_SYNCHRONIZED Event shoul dbe triggered...
         this.executor.execute(this::monitor);
 
@@ -131,7 +133,7 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
 
     @Override
     public void consume(BitcoinMsg message, PeerAddress peerAddress) {
-        log.debug("Consuming message type: " + message.getHeader().getCommand());
+        log.trace("Consuming message type: " + message.getHeader().getCommand());
 
         switch(message.getHeader().getCommand()){
             case HeadersMsg.MESSAGE_TYPE:
@@ -150,7 +152,7 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
 
     @Override
     public void consume(P2PEvent event) {
-        log.debug("Consuming event type: " + event.toString());
+        log.trace("Consuming event type: " + event.toString());
 
         if(event instanceof PeerHandshakedEvent){
             initiatePeerHandshake(((PeerHandshakedEvent) event).getPeerAddress());
@@ -236,10 +238,12 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
 
         // If the tips have changed, we keep processing...
         if (!updatedtips.isEmpty()) {
-            //Update the peers with the latest tips
-            updatedtips.stream().forEach(this::updatePeersWithLatestHeader);
+            // Update the peers with the latest tips (ONLY if Enabled)
+            if (config.isInvBroadcastEnabled()) {
+                updatedtips.stream().forEach(this::updatePeersWithLatestHeader);
+            }
 
-            //For the tips that have changed,
+            // For the tips that have changed,
             updatedtips.stream().forEach(this::requestHeadersFromHash);
 
             // We trigger an Event containing the updated tips and the Headers saved:
@@ -271,7 +275,7 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
     private boolean validBlockHeader(HeaderReadOnly header, PeerAddress peerAddress){
         //Reject the whole message if any of them are in the ignore list
         if(config.getHeadersToIgnore().contains(header.getHash().toString())){
-            log.info("Message containing header: " + header.getHash().toString() + " has been rejected due to being in the ignore list");
+            log.debug("Message containing header: " + header.getHash().toString() + " has been rejected due to being in the ignore list");
             networkService.blacklistPeer(peerAddress);
             return false;
         }
@@ -287,37 +291,40 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
     }
 
     private void requestHeader(Sha256Hash hash, PeerAddress peerAddress){
-        log.info("Requesting headers for block: " + hash );
-        networkService.send(buildGetHeaderMsg(hash), peerAddress,true);
+        log.debug("Requesting headers for block: " + hash );
+        boolean requestSent = networkService.send(buildGetHeaderMsg(hash), peerAddress,true);
+        if (requestSent) this.requestForHeadersSent.set(true);
     }
 
     private void requestHeadersFromHash(Sha256Hash hash){
         log.info("Requesting headers from block: " + hash + " at height: " + store.getBlockChainInfo(hash).get().getHeight());
-        networkService.broadcast(buildGetHeaderMsgFromHash(hash), true);
+        boolean requestSent = networkService.broadcast(buildGetHeaderMsgFromHash(hash), true);
+        if (requestSent) this.requestForHeadersSent.set(true);
     }
 
     private void requestHeadersFromHash(Sha256Hash hash, PeerAddress peerAddress){
-        log.info("Requesting headers from block: " + hash + " at height: " + store.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
-        networkService.send(buildGetHeaderMsgFromHash(hash), peerAddress, false);
+        log.debug("Requesting headers from block: " + hash + " at height: " + store.getBlockChainInfo(hash).get().getHeight() + " from peer: " + peerAddress);
+        boolean requestSent = networkService.send(buildGetHeaderMsgFromHash(hash), peerAddress, false);
+        if (requestSent) this.requestForHeadersSent.set(true);
     }
 
     private void requestParentHeadersForOrphanHash(Sha256Hash hash, PeerAddress peerAddress){
-        log.info("Requesting parent headers for block: " + hash);
+        log.debug("Requesting parent headers for block: " + hash);
         networkService.send(buildGetHeadersForOrphanAncestors(hash), peerAddress, false);
     }
 
     private void requestPeerToSendNewHeaders(PeerAddress peerAddress){
-        log.info("Requesting peer: " + peerAddress + " to inform client of any new headers");
+        log.debug("Requesting peer: " + peerAddress + " to inform client of any new headers");
         networkService.send(buildSendHeadersMsg(), peerAddress, false);
     }
 
     private void updatePeerWithLatestHeader(Sha256Hash hash, PeerAddress peerAddress){
-        log.info("Advertising to peer: " + peerAddress + " that chain tip is: " + hash);
+        log.debug("Advertising to peer: " + peerAddress + " that chain tip is: " + hash);
         networkService.send(buildBlockInventoryMsg(hash), peerAddress, false);
     }
 
     private void updatePeersWithLatestHeader(Sha256Hash hash){
-        log.info("Advertising to all peers that chain tip is: " + hash);
+        log.debug("Advertising to all peers that chain tip is: " + hash);
         networkService.broadcast(buildBlockInventoryMsg(hash), false);
     }
 
@@ -390,13 +397,15 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
 
     /**
      * This method runs in an infinite loop, checking if we have reached the tip of the chain, and in that case it
-     * triggers a ChainSynchronizedEvent. We consider tht we reached the Tip of the chain when the Tips in our storage
+     * triggers a ChainSynchronizedEvent. We consider that we reached the Tip of the chain when the Tips in our storage
      * have NOT been updated for some time (defined in the configuration).
      */
     private void monitor() {
         try {
             while (true) {
                 if ((!this.chainSyncEventTriggered.get())
+                        && (requestForHeadersSent.get())
+                        && (lastTipsUpdate.get() != null)
                         && (Duration.between(this.lastTipsUpdate.get(), Instant.now()).compareTo(this.config.getTimeoutToTriggerSyncComplete()) > 0)
                 ) {
                     List<ChainInfo> tipsChainInfo = store.getTipsChains().stream().map(h -> store.getBlockChainInfo(h).get()).collect(Collectors.toList());

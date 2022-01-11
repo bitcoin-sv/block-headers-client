@@ -26,10 +26,16 @@ public interface NetworkService {
     /** Returns the Net this Service is connected to*/
     Net getNet();
 
-    /** Publishes message to an individual peer */
-    void send(BodyMessage message, PeerAddress peerAddress, boolean requiresMinimumPeers);
-    /** Broadcasts a message to all connected peers */
-    void broadcast(BodyMessage message, boolean requiresMinimumPeers);
+    /**
+     * Publishes message to an individual peer. It returns True if the message has been sent, or FALSE if not becasue
+     * we are not connected to enough peers
+     */
+    boolean send(BodyMessage message, PeerAddress peerAddress, boolean requiresMinimumPeers);
+    /**
+     * Broadcasts a message to all connected peers It returns True if the message has been sent, or FALSE if not becasue
+     * we are not connected to enough peers
+     */
+    boolean broadcast(BodyMessage message, boolean requiresMinimumPeers);
 
     /** List of connected peers */
     List<PeerAddress> getConnectedPeers();

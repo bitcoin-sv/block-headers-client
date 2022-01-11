@@ -102,23 +102,25 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     @Override
-    public void broadcast(BodyMessage message, boolean requiresMinimumPeers) {
+    public boolean broadcast(BodyMessage message, boolean requiresMinimumPeers) {
         if(requiresMinimumPeers){
-            checkMinimumPeersConnected();
+            if (!checkMinimumPeersConnected()) return false;
         }
 
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(networkConfiguration.getProtocolConfig().getBasicConfig(), message);
         p2p.REQUESTS.MSGS.broadcast(bitcoinMsgBuilder.build()).submit();
+        return true;
     }
 
     @Override
-    public void send(BodyMessage message, PeerAddress peerAddress, boolean requiresMinimumPeers) {
+    public boolean send(BodyMessage message, PeerAddress peerAddress, boolean requiresMinimumPeers) {
         if(requiresMinimumPeers){
-            checkMinimumPeersConnected();
+            if (!checkMinimumPeersConnected()) return false;
         }
 
         BitcoinMsgBuilder bitcoinMsgBuilder = new BitcoinMsgBuilder<>(networkConfiguration.getProtocolConfig().getBasicConfig(), message);
         p2p.REQUESTS.MSGS.send(peerAddress, bitcoinMsgBuilder.build()).submit();
+        return true;
     }
 
     @Override
@@ -206,7 +208,6 @@ public class NetworkServiceImpl implements NetworkService {
         if(connectedPeers.size() < networkConfiguration.getProtocolConfig().getBasicConfig().getMinPeers().getAsInt()) {
             if(serviceStarted) {
                 log.warn("Network activity has been paused due to peer connections falling below the minimum threshold. Waiting for additional peers..");
-
                 serviceStarted = false;
             }
 
@@ -215,7 +216,6 @@ public class NetworkServiceImpl implements NetworkService {
 
         if(!serviceStarted) {
             log.warn("Network activity has resumed as peer count has risen above the minimum threshold");
-
             serviceStarted = true;
         }
 

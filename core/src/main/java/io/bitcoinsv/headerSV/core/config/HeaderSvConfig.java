@@ -18,27 +18,46 @@ public class HeaderSvConfig {
 
     // Default time we wait until without getting any HEADERs before we assume we've reached the TIP of the chain
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(60);
+    // By default, we broadcast INV to let Peers know about our Height in the Chain
+    private static final boolean DEFAULT_INV_BROADCAST_ENABLED = true;
 
     // If we haven't received any HEADERs after this time, we assume we have synchronized with the whole blockchain
     private Duration timeoutToTriggerSyncComplete;
+
+    // If FALSE, then The synchronization will rely only on GET_HEADERS/HEADERS message, without processing incoming
+    // INVs
+    private boolean invBroadcastEnabled;
 
     // HEADERs messages containing these Hashes are ignored
     private Set<String> headersToIgnore;
 
     /** Constructor */
     protected HeaderSvConfig(Duration timeoutToTriggerSyncComplete,
+                             boolean invBroadcastEnabled,
                              Set<String> headersToIgnore) {
         this.timeoutToTriggerSyncComplete = (timeoutToTriggerSyncComplete != null)? timeoutToTriggerSyncComplete : DEFAULT_TIMEOUT;
+        this.invBroadcastEnabled = invBroadcastEnabled;
         this.headersToIgnore = headersToIgnore;
     }
 
     /** Constructor */
     protected HeaderSvConfig(Set<String> headersToIgnore) {
-        this(DEFAULT_TIMEOUT, headersToIgnore);
+        this(DEFAULT_TIMEOUT, DEFAULT_INV_BROADCAST_ENABLED, headersToIgnore);
+    }
+
+    /** Constructor */
+    protected HeaderSvConfig(Duration timeoutToTriggerSyncComplete, Set<String> headersToIgnore) {
+        this(timeoutToTriggerSyncComplete, DEFAULT_INV_BROADCAST_ENABLED, headersToIgnore);
+    }
+
+    /** Constructor */
+    protected HeaderSvConfig(boolean invBroadcastEnabled, Set<String> headersToIgnore) {
+        this(DEFAULT_TIMEOUT, invBroadcastEnabled, headersToIgnore);
     }
 
     public Duration getTimeoutToTriggerSyncComplete()   { return this.timeoutToTriggerSyncComplete;}
     public Set<String> getHeadersToIgnore()             { return this.headersToIgnore;}
+    public boolean isInvBroadcastEnabled()              { return this.invBroadcastEnabled;}
 
     /**
      * It returns a default and ready-to-use HeaderSVService Configuration based on the Network
@@ -71,6 +90,7 @@ public class HeaderSvConfig {
     public static class HeaderSvConfigBuilder {
         protected Duration timeoutToTriggerSyncComplete;
         protected Set<String> headersToIgnore = Collections.emptySet();
+        protected boolean invBroadcastEnabled = DEFAULT_INV_BROADCAST_ENABLED;
 
         public HeaderSvConfigBuilder timeoutToTriggerSyncComplete(Duration timeoutToTriggerSyncComplete) {
             this.timeoutToTriggerSyncComplete = timeoutToTriggerSyncComplete;
@@ -82,8 +102,13 @@ public class HeaderSvConfig {
             return this;
         }
 
+        public HeaderSvConfigBuilder invBroadcastEnabled(boolean invBroadcastEnabled) {
+            this.invBroadcastEnabled = invBroadcastEnabled;
+            return this;
+        }
+
         public HeaderSvConfig build() {
-            return new HeaderSvConfig(this.timeoutToTriggerSyncComplete, this.headersToIgnore);
+            return new HeaderSvConfig(this.timeoutToTriggerSyncComplete, this.invBroadcastEnabled, this.headersToIgnore);
         }
     }
 }

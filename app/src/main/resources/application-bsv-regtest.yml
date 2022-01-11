@@ -3,7 +3,7 @@ headersv:
 
   general:
     headersToIgnore:
-
+    invBroadcastEnabled: true
   network:
     networkId: "regtest"
     shareP2P: "no"

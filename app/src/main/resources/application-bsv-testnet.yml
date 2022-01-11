@@ -3,7 +3,7 @@ headersv:
 
   general:
     headersToIgnore:
-
+    invBroadcastEnabled: true
   network:
     networkId: "testnet"
     shareP2P: "no"
