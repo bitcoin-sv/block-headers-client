@@ -35,6 +35,7 @@ public class NetworkServiceImpl implements NetworkService {
     // Protocol Handlers: This objects will carry out the Bitcoin Protocol and perform the
     // Serialization of messages.
     private P2P p2p;
+    private boolean p2pShared;
 
     // A Collection to keep track of the Peers handshaked:
     private List<PeerAddress> connectedPeers = Collections.synchronizedList(new ArrayList<>());
@@ -64,6 +65,7 @@ public class NetworkServiceImpl implements NetworkService {
     public NetworkServiceImpl(NetworkConfiguration networkConfiguration, P2P p2p) {
         this.networkConfiguration = networkConfiguration;
         this.p2p = p2p;
+        this.p2pShared = true;
     }
 
     private void init() {
@@ -85,7 +87,9 @@ public class NetworkServiceImpl implements NetworkService {
     public void start() {
         serviceStarted = true;
         init();
-        p2p.start();
+        if (!p2pShared) {
+            p2p.start();
+        }
         // If some InitialConnections are specified, we connect to them after startup:
         networkConfiguration.getInitialConnections().forEach(p -> {
             log.info("Connecting manually to " + p + "...");
@@ -97,7 +101,9 @@ public class NetworkServiceImpl implements NetworkService {
     @Override
     public void stop() {
         serviceStarted = false;
-        p2p.stop();
+        if (!p2pShared) {
+            p2p.stop();
+        }
         log.info("Network service stopped");
     }
 
