@@ -173,7 +173,9 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
         // request headers for each tip, at this point we don't know which nodes are SV and which are not
         store.getTipsChains().forEach(h -> {
             //Let this peer know where we've sync'd up too
-            updatePeerWithLatestHeader(h, peerAddress);
+            if (config.isInvBroadcastEnabled()) {
+                updatePeerWithLatestHeader(h, peerAddress);
+            }
 
             //Request any headers the peer has from our latest tip
             requestHeadersFromHash(h, peerAddress);
