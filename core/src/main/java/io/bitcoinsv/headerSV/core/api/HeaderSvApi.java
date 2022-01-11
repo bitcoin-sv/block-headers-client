@@ -85,8 +85,11 @@ public class HeaderSvApi {
      * @return                  List of Blocks between the ancestor and the block given.
      */
     public List<HeaderReadOnly> getAncestors(String hash, String ancestorHash){
-        Optional<ChainInfo> requestedBlock = storeService.getBlockChainInfo(Sha256Hash.wrap(hash));
-        Optional<ChainInfo> ancestorBlock = storeService.getBlockChainInfo(Sha256Hash.wrap(ancestorHash));
+        Sha256Hash hash256 = Sha256Hash.wrap(hash);
+        Sha256Hash ancestorHash256 = Sha256Hash.wrap(ancestorHash);
+
+        Optional<ChainInfo> requestedBlock = storeService.getBlockChainInfo(hash256);
+        Optional<ChainInfo> ancestorBlock = storeService.getBlockChainInfo(ancestorHash256);
 
         if(requestedBlock.isEmpty() || ancestorBlock.isEmpty()){
             return null;
@@ -96,6 +99,10 @@ public class HeaderSvApi {
             return null;
         } else if(ancestorBlock.get().getHeight() == requestedBlock.get().getHeight()){
             return Collections.emptyList();
+        }
+
+        if(!storeService.isInChain(hash256, ancestorHash256)){
+            return null;
         }
 
         List<HeaderReadOnly> ancestorList = new ArrayList<>();

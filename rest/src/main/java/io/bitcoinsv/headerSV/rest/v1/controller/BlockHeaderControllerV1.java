@@ -65,7 +65,7 @@ public class BlockHeaderControllerV1 {
         List<HeaderReadOnly> headerHistory = headerSvApi.getAncestors(hash, ancestorHash);
 
         if (headerHistory == null) {
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader either not found or not in the same chain");
         }
 
         // We build and return the DTOs:
@@ -79,7 +79,7 @@ public class BlockHeaderControllerV1 {
         HeaderReadOnly headerHistory = headerSvApi.findCommonAncestor(blockHashes);
 
         if (headerHistory == null) {
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader either not found or not in the same chain");
         }
 
         // We build and return the DTO:
