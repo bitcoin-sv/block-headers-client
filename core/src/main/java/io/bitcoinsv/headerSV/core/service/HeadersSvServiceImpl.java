@@ -186,8 +186,10 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
             requestHeadersFromHash(h, peerAddress);
         });
 
-        // Ask peer to keep up this node updated of latest headers
-        requestPeerToSendNewHeaders(peerAddress);
+        // Ask peer to keep up this node updated of latest headers (if enabled)
+        if (config.isSendHeadersEnabled()) {
+            requestPeerToSendNewHeaders(peerAddress);
+        }
     }
 
     /*

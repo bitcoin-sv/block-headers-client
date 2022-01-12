@@ -81,10 +81,12 @@ public class HeaderSvRestConfig {
     public HeaderSvConfig getHeaderSvConfig(
             @Value("${headersv.general.timeoutToTriggerSyncCompleteInSecs:60}") int timeoutToTriggerSyncCompleteInSecs,
             @Value("${headersv.general.invBroadcastEnabled:true}") boolean invBroadcastEnabled,
+            @Value("${headersv.general.sendHeadersEnabled:true}") boolean sendHeadersEnabled,
             @Value("${headersv.general.headersToIgnore}") List<String> headersToIgnore) {
         return HeaderSvConfig.builder()
                 .timeoutToTriggerSyncComplete(Duration.ofSeconds(timeoutToTriggerSyncCompleteInSecs))
                 .invBroadcastEnabled(invBroadcastEnabled)
+                .sendHeadersEnabled(sendHeadersEnabled)
                 .headersToIgnore(headersToIgnore.stream().collect(Collectors.toSet()))
                 .build();
     }
