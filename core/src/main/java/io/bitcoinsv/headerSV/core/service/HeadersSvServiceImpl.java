@@ -88,8 +88,13 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
         this.eventStreamer = new HeaderSvEventStreamer(this.eventBus);
 
         ProtocolConfig protocolConfig = ProtocolConfigBuilder.get(networkService.getNet().params());
-        genesisBlock = protocolConfig.getGenesisBlock().toBean();
-        protocolVersion = protocolConfig.getBasicConfig().getProtocolVersion();
+
+        // For convenience, we obtain some fields. the genesisBlock is obtained from the BNetworkService instead of
+        // from the protocolConfig, because sometimes (in testing) the NetworkService will be connected to a specific
+        // Network, but it will be using a hardcoded genesis block
+
+        genesisBlock = networkService.getGenesisBlock();                        // from the network Service
+        protocolVersion = protocolConfig.getBasicConfig().getProtocolVersion(); // from the protocol Config
 
         this.executor = ThreadUtils.getSingleThreadExecutorService("headerSV-service");
 

@@ -1,5 +1,6 @@
 package io.bitcoinsv.headerSV.core.service.network;
 
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
 import io.bitcoinsv.bitcoinjsv.params.Net;
 import io.bitcoinsv.headerSV.core.common.EventConsumer;
 import io.bitcoinsv.headerSV.core.common.MessageConsumer;
@@ -25,6 +26,11 @@ public interface NetworkService {
 
     /** Returns the Net this Service is connected to*/
     Net getNet();
+
+    /**
+     * Returns the Genesis Block of the Network used by this Service.
+     */
+    HeaderReadOnly getGenesisBlock();
 
     /**
      * Publishes message to an individual peer. It returns True if the message has been sent, or FALSE if not becasue

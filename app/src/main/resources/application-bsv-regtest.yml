@@ -10,6 +10,7 @@ headersv:
     minPeers: 1
     maxPeers: 15
     initialConnections: "127.0.0.1:18444"
+    genesisHeaderHex: 00e0ff2f9ac03a3fef1f9350edede763f59524f7ee484219eb9f5b080000000000000000e9337125266c3b9732f87f5dd3af0f9c0ad161011d25354ca0d12baa3bf2bb14c7330961cca31018ba5b6884
     port: 18444
 
   storage:

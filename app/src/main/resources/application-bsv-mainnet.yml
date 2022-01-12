@@ -10,6 +10,7 @@ headersv:
     minPeers: 15
     maxPeers: 30
     initialConnections:
+    genesisHeaderHex:
   storage:
     pruning:
       fork:

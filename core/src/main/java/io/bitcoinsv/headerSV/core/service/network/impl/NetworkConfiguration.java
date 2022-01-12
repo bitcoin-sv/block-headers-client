@@ -1,6 +1,8 @@
 package io.bitcoinsv.headerSV.core.service.network.impl;
 
 import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
+import io.bitcoinsv.bitcoinjsv.bitcoin.bean.base.HeaderBean;
+import io.bitcoinsv.bitcoinjsv.core.Utils;
 import io.bitcoinsv.bitcoinjsv.params.*;
 import io.bitcoinsv.jcl.net.network.PeerAddress;
 import io.bitcoinsv.jcl.net.network.config.NetworkConfig;
@@ -42,7 +44,8 @@ public class NetworkConfiguration {
                                 int maxPeers,
                                 int port,
                                 String[] dns,
-                                String[] initialConnections) throws ConfigurationException {
+                                String[] initialConnections,
+                                String genesisHeaderHex) throws ConfigurationException {
 
         try {
             switch (networkId) {
@@ -62,7 +65,12 @@ public class NetworkConfiguration {
                     break;
 
                 case "regtest":
-                    genesisBlock = NetworkUtils.GENESIS_BLOCK_HEADER_REGTEST;
+                    //We can override the genesis block to start at a later point in the chain
+                    if(genesisHeaderHex != null && !genesisHeaderHex.isBlank()){
+                        genesisBlock = new HeaderBean(Utils.HEX.decode(genesisHeaderHex));
+                    } else {
+                        genesisBlock = NetworkUtils.GENESIS_BLOCK_HEADER_REGTEST;
+                    }
                     networkParams = new RegTestParams(Net.REGTEST);
                     break;
 
@@ -135,6 +143,7 @@ public class NetworkConfiguration {
         private int port= -1; // default
         private String[] dns;
         private String[] initialConnections;
+        private String genesisHeaderHex;
 
         public NetworkConfigurationBuilder net(Net net) {
             this.networkId = net.name().toLowerCase();
@@ -166,8 +175,13 @@ public class NetworkConfiguration {
             return this;
         }
 
+        public NetworkConfigurationBuilder genesisHeaderHex(String genesisHeaderHex) {
+            this.genesisHeaderHex = genesisHeaderHex;
+            return this;
+        }
+
         public NetworkConfiguration build() throws ConfigurationException {
-            return new NetworkConfiguration(networkId, minPeers, maxPeers, port, dns, initialConnections);
+            return new NetworkConfiguration(networkId, minPeers, maxPeers, port, dns, initialConnections, genesisHeaderHex);
         }
 
     }

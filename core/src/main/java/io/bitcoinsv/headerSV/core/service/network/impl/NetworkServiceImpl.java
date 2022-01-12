@@ -1,5 +1,6 @@
 package io.bitcoinsv.headerSV.core.service.network.impl;
 
+import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
 import io.bitcoinsv.bitcoinjsv.params.Net;
 import io.bitcoinsv.headerSV.core.service.network.NetworkConsumerConfig;
 import io.bitcoinsv.headerSV.core.common.EventConsumer;
@@ -10,6 +11,7 @@ import io.bitcoinsv.jcl.net.network.events.P2PEvent;
 import io.bitcoinsv.jcl.net.network.events.PeerDisconnectedEvent;
 import io.bitcoinsv.jcl.net.protocol.events.control.PeerHandshakedEvent;
 import io.bitcoinsv.jcl.net.protocol.events.data.MsgReceivedEvent;
+import io.bitcoinsv.jcl.net.protocol.messages.BlockHeaderMsg;
 import io.bitcoinsv.jcl.net.protocol.messages.common.BitcoinMsgBuilder;
 import io.bitcoinsv.jcl.net.protocol.messages.common.BodyMessage;
 import io.bitcoinsv.jcl.net.protocol.messages.common.Message;
@@ -168,6 +170,11 @@ public class NetworkServiceImpl implements NetworkService {
     @Override
     public Net getNet() {
         return networkConfiguration.getNetworkParams().getNet();
+    }
+
+    @Override
+    public HeaderReadOnly getGenesisBlock() {
+        return this.networkConfiguration.getGenesisBlock();
     }
 
     private void onMessage(MsgReceivedEvent msgReceivedEvent) {
