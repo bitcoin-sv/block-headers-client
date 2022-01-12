@@ -98,10 +98,13 @@ some events so we can react to them:
 
 ```
 // Before starting the Service, we subscribe to some events:
+
+// Event triggered every time our Tips are updated buy a new Block being nnounced:
 headerSVService.EVENTS().TIPS_UPDATED().forEach(e -> {
    System.out.println("TIPS_UPDATED: " + e.getUpdatedTips().size() + " tips, " + e.getNewHeaders().size() + " new headers");
 });
 
+// Event triggered when we have cought up with the tip opf the chain and are are in sync with the network
 headerSVService.EVENTS().CHAIN_SYNCHRONIZED().forEach(e -> {
    System.out.println("CHAIN_SYNCHRONIZED");
 

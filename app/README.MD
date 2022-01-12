@@ -1,14 +1,14 @@
 # HeaderSV-App module
 
-The *HeaderSV-app* module is the highest-level module in the HeaderSV suite. It is a standalone application that 
-connects to the blockchain, synchronizes the Block Headers running also validations on them, and making sure that it's 
+The *HeaderSV-app* module is the highest-level module in the HeaderSV Suite. It is a standalone application that 
+connects to the blockchain, synchronizes the Block Headers while running also validations on them, and making sure that it's 
 always connected to enough Peers.
 
-> The *headerSV-app* module provides the same functionality as the **HeaderSV Client** in previous versiones (1.*)
+> The *headerSV-app* module provides the same functionality as the **HeaderSV Client** in previous versions (1.*)
 
 A REST API is also provided by the application which will allow rapid lookups of chain and network state, as well as basic controls to control stored data.
 
-The networks currently supported by the client are Mainnet, Testnet and STNnet. Additional networks can be added with ease.
+The networks currently supported by the client are **Mainnet**, **Testnet** and **STNnet**. Additional networks can be added with ease.
 
 ### Dependencies
 #### ** Note **
@@ -24,9 +24,9 @@ HeaderSV uses Gradle as its build tool. You can find the latest version of Gradl
 https://gradle.org/install/
 
 ### Installation
-To build the application, navigate to the root folder and run `gradlew clean build`.
+To build the application, navigate to the "*/app*" folder and run `gradlew clean build`.
 
-Run the application using `gradlew run`. The Mainnet will be synchronized by default. This can be changed by switching profiles in the application.properties file.
+Run the application using `gradlew run`. The *Mainnet* will be synchronized by default. This can be changed by switching profiles in the ```application.properties``` file.
 
 ### Docker
 You can build the docker file by either running `docker build -t headersv-app .` from the root directory. Or running `docker-compose build`. Once built, you can run by either
@@ -37,6 +37,7 @@ To check your client application is serving REST API calls once running, open a 
 
 ## Configuration
 The application has 4 default profiles:
+
 - `bsv-mainnet`
 - `bsv-testnet`
 - `bsv-stnnet`
@@ -64,6 +65,7 @@ Prunes a specified fork
 ```
 /api/v1/chain/tips/prune/{hash}
 ```
+
 ID | TYPE | Description |
 ---|------|-------------|
 hash | STRING | The Header hash
@@ -90,6 +92,7 @@ Retrieves the header with the given hash along with it's state relative to the c
 ```
 /api/v1/chain/header/state/{hash}
 ```
+
 ID | TYPE | Description |
 ---|------|-------------|
 hash | STRING | The Header hash

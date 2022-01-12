@@ -6,14 +6,19 @@ A REST API is also provided by the application which will allow rapid lookups of
 
 The networks currently supported by the client are *Mainnet*, *Testnet* and *STNnet*. Additional networks can be added with ease.
 
-## Version 2.x update
+## HeaderSV Modules
 
  Since version 2.0, the *HeaderSV Client* is distributed in a multi-modular fashion. So while the pre-existing 
  functionality remains the same, now it's more flexible and easy to integrate into third party projects if needed to.
  So, the *HeaderSV Client* is now a *Suite* of modules:
+ 
+ Each one of these modules can be consumed by an external *App*, and depending on the scenario you can use only the module you need
 
-> **UPDATE:
-> The previous versions of the *HeaderSV Client (v 1.x)* are equivalent now to the *headersv-app* module described below**
+![HeaderSV Suite](./headerSVModules.jpg)
+
+
+
+> **The previous versions of the *HeaderSV Client (v 1.x)* are equivalent now to the *headersv-app* module described below**
 
 ---
 
@@ -40,7 +45,7 @@ The networks currently supported by the client are *Mainnet*, *Testnet* and *STN
 ---
 
  * [**headerSV-core**](core/README.MD): This module is a Java Library that implements the *core* functionality of *HeaderSV*: It connects to the 
- network, synchronizes with the Chain an API (not REST) that can be used to retrieve information from it. 
+ network, synchronizes with the Chain and provides an API (not REST) that can be used to retrieve information from it. 
  
  **If you 
  want to synchronize with the chain and get updated in real-time about changes in it, this is the right module.**

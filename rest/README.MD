@@ -14,9 +14,9 @@ you can extend its current functionalities and add the *HeaderSV* ones on top of
 
 The way to use of **headerSV-rest** depends on your specific scenario, and a little technical description is needed before we can continue:
 
-*headerSV-rest* uses a **NetworkService** to connect to the blockchain network and send/recive messages from other Peers. This service relies on another low-level Service called **P2P**, which is part of the **jcl-net** package. 
+*headerSV-rest* uses a **NetworkService** to connect to the blockchain network and send/receive messages from other Peers. This service relies on another low-level Service called **P2P**, which is part of the **jcl-net** package. 
 
-In most cases, this information is irrelevant, but in some occasions, the *SpringBoot* App where you want to include **headerSV-rest** is already using the *P2P* Service for other purposes. In that specific sceneario, if you also include *headerSV-rest* you will end up with 2 *P2P* services running in your app at the same time. That's fine and it works (as long as you take care that both *P2P* sercices are listening to different port numbers), but in same cases you might want to just use one. In that case, you'll have to **SHARE** the *P2P* Service.
+In most cases, this information is irrelevant, but in some occasions, the *SpringBoot* App where you want to include **headerSV-rest** is already using the *P2P* Service for other purposes. In that specific sceneario, if you also include *headerSV-rest* you will end up with 2 *P2P* services running in your app at the same time. That's fine and it works (as long as you take care that both *P2P* services are listening to different port numbers), but in same cases you might want to just use one. In that case, you'll have to **SHARE** the *P2P* Service.
 
 So we have 2 Scenarios:
 
@@ -73,8 +73,8 @@ The
 *yaml* configuration files should be stored in `src/main/resources/application.yml`. The general structure of the config 
 file is like follows:
 
-> **NOTE**
-> In this case, the value of the properly ```headersv.netwrkService.shareP2P```has to be ```**"no"**```
+> **NOTE**: 
+> In this scenario, the value of the properly ```headersv.netwrkService.shareP2P```has to be ```"no"```
 
 
 ```
@@ -143,7 +143,7 @@ The Configuration is defined in 2 levels:
 In the *Java* code, and assuming that the pre-existing *SpringBoot* app is called "myApp", we need to edit our 
 current *Spring Configuration* and add a reference to the *HeaderSvRestConfig*.
 
-Since in this case we are **sharing** the P2P used by **heasderSV-rest** and our *App*, we need to expose thie *P2P* as a *Bean* in the Spring Context. The recommended way is to use the already present *NetworkConfiguration* imported from *headerSV-config* to initialize it:
+Since in this case we are **sharing** the P2P used by **heasderSV-rest** and our *App*, we need to expose the *P2P* as a *Bean* in the Spring Context. The recommended way is to use the already present *NetworkConfiguration* imported from *headerSV-config* to initialize it:
 
 ```
 @Configuration
@@ -166,8 +166,8 @@ The
 *yaml* configuration files should be stored in `src/main/resources/application.yml`. The general structure of the config 
 file is like follows:
 
-> **NOTE**
-> In this case, the value of the properly ```headersv.netwrkService.shareP2P```has to be ```**"yes"**```
+> **NOTE**:
+> In this scenario, the value of the properly ```headersv.netwrkService.shareP2P```has to be ```"yes"```
 
 ```
 # Header SV Configuration:
@@ -193,8 +193,14 @@ headersv:
 
 ### Start the Service
 
-After setting the configuration above, the *HeaderSVService* should be avaiable within the *Srpting Context*, so now we
-can start/stop it along with the main Application:
+After setting the configuration above, the *HeaderSVService* should be avaiable within the *Spring Context*, so now we
+can start/stop it along with the main Application. 
+
+Again, the way we starr/stop the Service depends on our specific scenario:
+
+* **Scenario1**:
+
+The simple one, we just start the Service when the application starts, and stops it when the application shutsdown.
 
 ```
 @SpringBootApplication
@@ -216,6 +222,40 @@ public class MyApp {
 	@PreDestroy
 	public void onStop() {
 		headerSvService.stop();
+	}
+
+}
+```
+
+* **Scenario 2**:
+
+In this case we are **sharing** the **P2P** Service, so the right thing to do is to start/stop this service externally:
+
+```
+@SpringBootApplication
+public class MyApp {
+
+	public static void main(String[] args) {
+		SpringApplication.run(HeaderSVApplication.class, args);
+	}
+
+    @Autowired
+    private P2P p2p;
+    
+	@Autowired
+	private HeaderSvService headerSvService;
+
+
+	@EventListener
+	public void onStart(ApplicationReadyEvent event) {
+	   p2p.start();
+		headerSvService.start();
+	}
+
+	@PreDestroy
+	public void onStop() {
+		headerSvService.stop();
+		p2p.stop();
 	}
 
 }
