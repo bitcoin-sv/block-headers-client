@@ -85,7 +85,7 @@ public class BlockHeaderControllerV1 {
         // We build and return the DTO:
         BlockHeaderDTO headerHistoryDO = BlockHeaderDTO.of(headerHistory);
 
-        return new ResponseEntity<>(headerHistory, HttpStatus.OK);
+        return new ResponseEntity<>(headerHistoryDO, HttpStatus.OK);
     }
 
 
