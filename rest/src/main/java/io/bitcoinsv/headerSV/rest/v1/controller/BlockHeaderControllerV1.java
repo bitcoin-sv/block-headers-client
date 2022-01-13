@@ -60,8 +60,23 @@ public class BlockHeaderControllerV1 {
     }
 
     //@RequestMapping("/{hash}/ancestors")
+    @Deprecated
+    @RequestMapping(value = HeaderSVRestEndpoints.URL_CHAIN_HEADER_HASH_ANCESTORS_DEPRECATED)
+    public ResponseEntity<?> getAncestorsDeprecated(@PathVariable String hash, @RequestBody String ancestorHash) {
+        List<HeaderReadOnly> headerHistory = headerSvApi.getAncestors(hash, ancestorHash);
+
+        if (headerHistory == null) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader either not found or not in the same chain");
+        }
+
+        // We build and return the DTOs:
+        List<BlockHeaderDTO> headerHistoryDTO = headerHistory.stream().map(BlockHeaderDTO::of).collect(Collectors.toList());
+        return new ResponseEntity<>(headerHistoryDTO, HttpStatus.OK);
+    }
+
+    //@RequestMapping("/{hash}/{ancestorHash}/}ancestors")
     @RequestMapping(value = HeaderSVRestEndpoints.URL_CHAIN_HEADER_HASH_ANCESTORS)
-    public ResponseEntity<?> getAncestors(@PathVariable String hash, @RequestBody String ancestorHash) {
+    public ResponseEntity<?> getAncestors(@PathVariable String hash, @PathVariable String ancestorHash) {
         List<HeaderReadOnly> headerHistory = headerSvApi.getAncestors(hash, ancestorHash);
 
         if (headerHistory == null) {

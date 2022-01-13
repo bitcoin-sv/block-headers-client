@@ -20,7 +20,8 @@ public class HeaderSVRestEndpoints {
     // Block Header Endpoints:
     public static final String URL_CHAIN_HEADER                     = "/api/v1/chain/header";
     public static final String URL_CHAIN_HEADER_HASH                = "/{hash}";
-    public static final String URL_CHAIN_HEADER_HASH_ANCESTORS      = "/{hash}/ancestors";
+    public static final String URL_CHAIN_HEADER_HASH_ANCESTORS_DEPRECATED  = "/{hash}/ancestors";
+    public static final String URL_CHAIN_HEADER_HASH_ANCESTORS      = "/{hash}/{ancestorHash}/ancestors";
     public static final String URL_CHAIN_HEADER_COMMON_ANCESTORS    = "/commonAncestor";
     public static final String URL_CHAIN_HEADER_STATE               = "/state/{hash}";
     public static final String URL_CHAIN_HEADER_BYHEIGHT            = "/byHeight";

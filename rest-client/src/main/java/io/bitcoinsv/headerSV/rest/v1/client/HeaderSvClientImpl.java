@@ -44,8 +44,7 @@ public class HeaderSvClientImpl implements HeaderSvClient {
 
     @Override
     public List<BlockHeaderDTO> getAncestors(String blockHash, String ancestorHash) {
-        RequestBody body = RequestBody.create(okhttp3.MediaType.parse("text/plain"), ancestorHash);
-        return RestServiceGenerator.executeSync(restClient.getAncestors(blockHash, body));
+        return RestServiceGenerator.executeSync(restClient.getAncestors(blockHash, ancestorHash));
     }
 
     @Override

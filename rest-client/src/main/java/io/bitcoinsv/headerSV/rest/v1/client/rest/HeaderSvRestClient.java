@@ -28,8 +28,12 @@ public interface HeaderSvRestClient {
     @GET(value = (HeaderSVRestEndpoints.URL_CHAIN_HEADER + HeaderSVRestEndpoints.URL_CHAIN_HEADER_HASH))
     Call<BlockHeaderDTO> getHeader(@Path("hash") String hash, @Header("Content-Type") MediaType contentType);
 
-    @POST(value = (HeaderSVRestEndpoints.URL_CHAIN_HEADER + HeaderSVRestEndpoints.URL_CHAIN_HEADER_HASH_ANCESTORS))
-    Call<List<BlockHeaderDTO>> getAncestors(@Path("hash") String hash, @Body RequestBody ancestorHash);
+    @Deprecated
+    @POST(value = (HeaderSVRestEndpoints.URL_CHAIN_HEADER + HeaderSVRestEndpoints.URL_CHAIN_HEADER_HASH_ANCESTORS_DEPRECATED))
+    Call<List<BlockHeaderDTO>> getAncestorsDeprecated(@Path("hash") String hash, @Body RequestBody ancestorHash);
+
+    @GET(value = (HeaderSVRestEndpoints.URL_CHAIN_HEADER + HeaderSVRestEndpoints.URL_CHAIN_HEADER_HASH_ANCESTORS))
+    Call<List<BlockHeaderDTO>> getAncestors(@Path("hash") String hash, @Path("ancestorHash") String ancestorHash);
 
     @POST(value = (HeaderSVRestEndpoints.URL_CHAIN_HEADER + HeaderSVRestEndpoints.URL_CHAIN_HEADER_COMMON_ANCESTORS))
     Call<BlockHeaderDTO> getCommonAncestor(@Body List<String> blockHashes);
