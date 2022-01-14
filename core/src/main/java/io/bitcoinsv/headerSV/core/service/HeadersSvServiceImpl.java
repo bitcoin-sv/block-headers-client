@@ -212,7 +212,7 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
         for(BlockHeaderMsg blockHeaderMsg : headerMsg.getBlockHeaderMsgList()){
 
             //convert the header message to a header
-            HeaderReadOnly header = BlockHeaderMsgToBean(blockHeaderMsg);
+            HeaderReadOnly header = blockHeaderMsg.toBean();
 
             //Reject the whole message if the peer is sending bad blocks
             if (!validBlockHeader(header, peerAddress)){
@@ -266,19 +266,6 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
             this.chainSyncEventTriggered.set(false);
         }
 
-    }
-
-    private HeaderReadOnly BlockHeaderMsgToBean(BlockHeaderMsg headersMsg){
-        HeaderBean headerBean = new HeaderBean(new LiteBlockBean());
-        headerBean.setTime(headersMsg.getCreationTimestamp());
-        headerBean.setDifficultyTarget(headersMsg.getDifficultyTarget());
-        headerBean.setNonce(headersMsg.getNonce());
-        headerBean.setPrevBlockHash(Sha256Hash.wrapReversed(headersMsg.getPrevBlockHash().getHashBytes()));
-        headerBean.setVersion(headersMsg.getVersion());
-        headerBean.setMerkleRoot(Sha256Hash.wrapReversed(headersMsg.getMerkleRoot().getHashBytes()));
-        headerBean.setHash(Sha256Hash.wrapReversed(headersMsg.getHash().getHashBytes()));
-
-        return headerBean;
     }
 
     private boolean validBlockHeader(HeaderReadOnly header, PeerAddress peerAddress){
