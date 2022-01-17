@@ -342,21 +342,24 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
     private GetHeadersMsg buildGetHeadersForOrphanAncestors(Sha256Hash orphanHash){
         List<Sha256Hash> blockLocatorHashes = new ArrayList<>();
 
-        ChainInfo longestChainInfo = store.getLongestChain().get();
 
-        //Always included the tip
-        blockLocatorHashes.add(longestChainInfo.getHeader().getHash());
+// TEMPORAL
+//        ChainInfo longestChainInfo = store.getLongestChain().get();
+//
+//        // Always included the tip
+//        blockLocatorHashes.add(longestChainInfo.getHeader().getHash());
+//
+//        //ancestor locators should be something like 10, 20, 40.. 640..
+//        for(int i = 1; Math.exp(i) < longestChainInfo.getHeight(); i++){
+//            Sha256Hash ancestorHash = store.getAncestorByHeight(longestChainInfo.getHeader().getHash(), longestChainInfo.getHeight() - (int) Math.exp(i)).get().getHeader().getHash();
+//            blockLocatorHashes.add(ancestorHash);
+//        }
+//
+//        //Always included genesis
+//        blockLocatorHashes.add(this.genesisBlock.getHash());
 
-        //ancestor locators should be something like 10, 20, 40.. 640..
-        for(int i = 1; Math.exp(i) < longestChainInfo.getHeight(); i++){
-            Sha256Hash ancestorHash = store.getAncestorByHeight(longestChainInfo.getHeader().getHash(), longestChainInfo.getHeight() - (int) Math.exp(i)).get().getHeader().getHash();
-            blockLocatorHashes.add(ancestorHash);
-        }
-
-        //Always included genesis
-        blockLocatorHashes.add(this.genesisBlock.getHash());
-
-
+        List<Sha256Hash> tips = store.getTipsChains();
+        blockLocatorHashes.addAll(tips);
         return buildGetHeadersMsg(blockLocatorHashes, orphanHash);
     }
 
