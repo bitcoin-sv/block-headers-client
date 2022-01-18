@@ -30,7 +30,7 @@ Run the application using `gradlew run`. The *Mainnet* will be synchronized by d
 
 ### Docker
 You can build the docker file by either running `docker build -t headersv-app .` from the root directory. Or running `docker-compose build`. Once built, you can run by either
-`docker run headersv` or `docker-compose up`. Note: if you're not using docker compose, you'll also need to expose the port and mount a volume to expose the API and persist state.
+`docker run headersv-app` or `docker-compose up`. Note: if you're not using docker compose, you'll also need to expose the port and mount a volume to expose the API and persist state.
 
 ## Verifying
 To check your client application is serving REST API calls once running, open a browser at `http://localhost:8001/api/v1/chain/tips` (default port is specified in the `docker-compose` file)
