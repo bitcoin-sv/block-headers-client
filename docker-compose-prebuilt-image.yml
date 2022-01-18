@@ -1,0 +1,20 @@
+# A docker-compose file for testing the App in docker and the local environment:
+version: "3.7"
+
+services:
+  headersv:
+    image: bitcoinsv/block-headers-client:1.0.2
+    volumes:
+      - headersv-data:/tmp/jcl
+    environment:
+      #bsv-mainnet | bsv-testnet
+      - SPRING_PROFILES_ACTIVE=bsv-mainnet
+
+      #HeaderSV Application Configuration - Other properties can be found in src/main/resources/application-bsv-xxx.yml
+      - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=25
+    ports:
+      - 8001:8080
+
+volumes:
+  headersv-data:
+    external: false
