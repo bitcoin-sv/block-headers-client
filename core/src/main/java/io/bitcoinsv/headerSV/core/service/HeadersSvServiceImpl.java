@@ -276,8 +276,11 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
             return false;
         }
 
-        /* We don't want to process this message, even it has some headers. Oherwise the different threads may request a branch that has already been processed, slowing down sync times.
-           This also catches duplicate messages, so there's no need to store the message checksum and compare each message*/
+        /* We don't want to process this message, even it has some headers. Otherwise the different threads may request a branch that has already been processed, slowing down sync times.
+           This also catches duplicate messages, so there's no need to store the message checksum and compare each message.
+
+           So this is basically an "overlap validation", so we don't process messages that contain Headers already processed
+         */
         if (store.getTipsChains().contains(header.getHash())) {
             log.debug("Message containing header: " + header.getHash().toString() + " has been rejected due to it containing processed headers");
             return false;
@@ -342,21 +345,23 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
     private GetHeadersMsg buildGetHeadersForOrphanAncestors(Sha256Hash orphanHash){
         List<Sha256Hash> blockLocatorHashes = new ArrayList<>();
 
+        // NOTE:
+        // When building the GET_HEADERS message, we can use several Hash Locators. In a general scenario, we can add
+        // our tips, and then some other locators referencing Block hashes at different heights, like [tip-50],
+        // [tip-100], etc
+        // But in this particular case, we can only use our TIPS as Locators. If we use any other "previous" block hash
+        // as a locator, the next HEADERS message that the Node sends as a response will be REJECTED due to the
+        // "overlap-validation" we do in the "validBlockHeader" method.
+        // Example:
+        // - Our tips are #120 and #45 (main branch and fork)
+        // - If we use #120, #45, and also #100, #80, #20 as locator, the Node will pick the first one that it also has
+        //   in its chain. It might be any of them, for example:
+        //      - If the Node chooses #45 (our fork tip), it will send in the HEADERS #46, #47, etc.. This will WORK
+        //      - If the Node chooses #120 (main tip), it will send #121, #122, etc. This will WORK.
+        //      - If the Node chooses #80, ti will send #81, #82,... all the way and also including #120, our Tip of the
+        //        main branch. SINCE ANY HEADERS CONTAINING ONE OF OUR TIPS IS REJECTED THIS MESSAGE WIL BE REJECTED
 
-// TEMPORAL
-//        ChainInfo longestChainInfo = store.getLongestChain().get();
-//
-//        // Always included the tip
-//        blockLocatorHashes.add(longestChainInfo.getHeader().getHash());
-//
-//        //ancestor locators should be something like 10, 20, 40.. 640..
-//        for(int i = 1; Math.exp(i) < longestChainInfo.getHeight(); i++){
-//            Sha256Hash ancestorHash = store.getAncestorByHeight(longestChainInfo.getHeader().getHash(), longestChainInfo.getHeight() - (int) Math.exp(i)).get().getHeader().getHash();
-//            blockLocatorHashes.add(ancestorHash);
-//        }
-//
-//        //Always included genesis
-//        blockLocatorHashes.add(this.genesisBlock.getHash());
+        // So bottom line: We can also use our TIPs as Hash locators in this Message
 
         List<Sha256Hash> tips = store.getTipsChains();
         blockLocatorHashes.addAll(tips);
