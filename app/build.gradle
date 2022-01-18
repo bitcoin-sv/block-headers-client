@@ -5,7 +5,6 @@ plugins {
     id 'java'
     id 'application'
     id 'maven-publish'
-    id 'com.google.cloud.tools.jib'
 }
 /****************************************
  * Local Configuration
@@ -138,17 +137,5 @@ publishing {
                 url "$rootProject.nexusReleasesUrl"
             }
         }
-    }
-}
-
-jib {
-    from {
-        image = 'openjdk:17-jdk'
-    }
-    to {
-        image = artifactName
-    }
-    container {
-        labels = [maintainer:'i.fernandez@nchain.com']
     }
 }
