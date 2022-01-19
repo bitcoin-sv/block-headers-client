@@ -48,17 +48,19 @@ public class NetworkConfiguration {
                                 String genesisHeaderHex) throws ConfigurationException {
 
         try {
-            switch (networkId) {
+            switch (networkId.toLowerCase()) {
                 case "mainnet":
                     genesisBlock = NetworkUtils.GENESIS_BLOCK_HEADER_MAINNET;
                     networkParams = new MainNetParams(Net.MAINNET);
                     break;
 
                 case "testnet":
+                case "testnet3":
                     genesisBlock = NetworkUtils.GENESIS_BLOCK_HEADER_TESTNET;
                     networkParams = new TestNet3Params(Net.TESTNET3);
                     break;
 
+                case "stn":
                 case "stnnet":
                     genesisBlock = NetworkUtils.GENESIS_BLOCK_HEADER_STNNET;
                     networkParams = new STNParams(Net.STN);
