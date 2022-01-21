@@ -76,7 +76,7 @@ bootJar {
 
 jar {
     enabled = true
-    archiveFileName = "${artifactName}-${version}.jar"
+    archiveClassifier = '' // avoid "-plain.jar" suffix in JAR file
 }
 
 test {
