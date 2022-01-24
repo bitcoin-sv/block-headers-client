@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author m.fletcher@nchain.com
  */
-public class NetworkServiceImpl implements NetworkService {
+public class NetworkServiceImpl extends NetworkServiceBase implements NetworkService {
 
     private Logger log = LoggerFactory.getLogger(NetworkServiceImpl.class);
     private NetworkConfiguration networkConfiguration;
@@ -42,15 +42,9 @@ public class NetworkServiceImpl implements NetworkService {
     // A Collection to keep track of the Peers handshaked:
     private List<PeerAddress> connectedPeers = Collections.synchronizedList(new ArrayList<>());
 
-    //Map all the subscribers by message
-    private Map<Class<? extends Message>, Map<MessageConsumer, NetworkConsumerConfig>> messageConsumers = new ConcurrentHashMap<>();
-    private Map<Class<? extends P2PEvent>, List<EventConsumer>> eventConsumers = new ConcurrentHashMap<>();
-
     // keep track of service state
     private boolean serviceStarted = false;
 
-    //keep track of received messages
-    private Set<Long> processedMessages = Collections.synchronizedSet(new HashSet<>());
 
     /**
      * Constructor.
@@ -131,30 +125,6 @@ public class NetworkServiceImpl implements NetworkService {
         return true;
     }
 
-    @Override
-    public void subscribe(Class<? extends Message> eventClass, MessageConsumer messageConsumer, boolean requiresMinimumPeers, boolean sendDuplicates) {
-        HashMap<MessageConsumer, NetworkConsumerConfig> entry = new HashMap<>();
-        entry.put(messageConsumer, NetworkConsumerConfig.builder()
-                .requiresMinimumPeers(Boolean.valueOf(requiresMinimumPeers))
-                .sendDuplicates(sendDuplicates)
-                .build());
-
-        messageConsumers.merge(eventClass, entry, (w, prev) -> {
-            prev.putAll(w);
-            return prev;
-        });
-    }
-
-    @Override
-    public void subscribe(Class<? extends P2PEvent> eventClass, EventConsumer messageConsumer) {
-        List<EventConsumer> entry = new ArrayList<>();
-        entry.add(messageConsumer);
-
-        eventConsumers.merge(eventClass, entry, (w, prev) -> {
-            prev.addAll(w);
-            return prev;
-        });
-    }
 
     @Override
     public List<PeerAddress> getConnectedPeers() {
@@ -177,34 +147,7 @@ public class NetworkServiceImpl implements NetworkService {
         return this.networkConfiguration.getGenesisBlock();
     }
 
-    private void onMessage(MsgReceivedEvent msgReceivedEvent) {
 
-        Map<MessageConsumer, NetworkConsumerConfig> handlers = messageConsumers.get(msgReceivedEvent.getBtcMsg().getBody().getClass());
-
-        if (handlers == null) {
-            return;
-        }
-
-        handlers.forEach((consumer, config) -> {
-            if (config.isRequiresMinimumPeers()) {
-                if(!checkMinimumPeersConnected()) {
-                    log.info("Message " + msgReceivedEvent.getBtcMsg().getHeader().getCommand() + " rejected. Not enough connected peers.");
-                    return;
-                }
-            }
-
-            // Check if we've already processed this header message
-            if(!config.isSendDuplicates()) {
-                if (processedMessages.contains(msgReceivedEvent.getBtcMsg().getHeader().getChecksum())) {
-                    return;
-                } else {
-                    processedMessages.add(msgReceivedEvent.getBtcMsg().getHeader().getChecksum());
-                }
-            }
-
-            consumer.consume(msgReceivedEvent.getBtcMsg(), msgReceivedEvent.getPeerAddress());
-        });
-    }
 
     private void onPeerDisconnected(PeerDisconnectedEvent event) {
         log.debug("Peer disconnected IP:" + event.getPeerAddress().toString() + ": Reason:" + event.getReason().toString());
@@ -214,10 +157,11 @@ public class NetworkServiceImpl implements NetworkService {
 
     private void onPeerHandshaked(PeerHandshakedEvent event) {
         connectedPeers.add(event.getPeerAddress());
-        eventConsumers.get(event.getClass()).forEach(c -> c.consume(event));
+        super.onEvent(event);
     }
 
-    private synchronized boolean checkMinimumPeersConnected() {
+    @Override
+    protected synchronized boolean checkMinimumPeersConnected() {
         if(connectedPeers.size() < networkConfiguration.getProtocolConfig().getBasicConfig().getMinPeers().getAsInt()) {
             if(serviceStarted) {
                 log.warn("Network activity has been paused due to peer connections falling below the minimum threshold. Waiting for additional peers..");
