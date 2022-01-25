@@ -151,8 +151,8 @@ public class NetworkServiceImpl extends NetworkServiceBase implements NetworkSer
 
     private void onPeerDisconnected(PeerDisconnectedEvent event) {
         log.debug("Peer disconnected IP:" + event.getPeerAddress().toString() + ": Reason:" + event.getReason().toString());
-
         connectedPeers.remove(event.getPeerAddress());
+        super.onEvent(event);
     }
 
     private void onPeerHandshaked(PeerHandshakedEvent event) {

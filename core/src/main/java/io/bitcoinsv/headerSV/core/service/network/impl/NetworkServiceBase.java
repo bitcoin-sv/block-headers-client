@@ -89,7 +89,9 @@ public abstract class NetworkServiceBase {
     }
 
     public void onEvent(P2PEvent event) {
-        eventConsumers.get(event.getClass()).forEach(c -> c.consume(event));
+        if (eventConsumers.containsKey(event.getClass())) {
+            eventConsumers.get(event.getClass()).forEach(c -> c.consume(event));
+        }
     }
     protected abstract boolean checkMinimumPeersConnected();
 
