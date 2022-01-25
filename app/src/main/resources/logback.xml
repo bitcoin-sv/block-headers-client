@@ -26,12 +26,7 @@
     </logger>
 
     <!-- JCL logging -->
-    <logger name="io.bitcoinsv.jcl.net.protocol" additivity="false">
-        <level value="INFO" />
-        <appender-ref ref="STDOUT" />
-    </logger>
-
-    <logger name="io.bitcoinsv.jcl.base.tools" additivity="false">
+    <logger name="io.bitcoinsv.jcl.net" additivity="false">
         <level value="INFO" />
         <appender-ref ref="STDOUT" />
     </logger>
