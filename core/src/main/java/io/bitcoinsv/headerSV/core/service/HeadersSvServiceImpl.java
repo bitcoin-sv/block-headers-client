@@ -106,32 +106,34 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
 
     @Override
     public void start() {
-        log.info("Starting blockstore...");
+        log.info("Starting headerSV...");
+        log.debug("Starting blockstore...");
         store.start();
-        log.info("Blockstore started.");
+        log.debug("Blockstore started.");
 
-        log.info("Starting Network Service...");
+        log.debug("Starting Network Service...");
         networkService.start();
-        log.info("Network Service started.");
+        log.debug("Network Service started.");
 
         log.info("Current blockchain state: ");
         store.getTipsChains().forEach(t -> log.info("Chain Id: " + store.getBlockChainInfo(t).get().getHeader().getHash() + " Height: " + store.getBlockChainInfo(t).get().getHeight()));
 
-        // We start the monitor to check if the CHAIN_SYNCHRONIZED Event shoul dbe triggered...
+        // We start the monitor to check if the CHAIN_SYNCHRONIZED Event should be triggered...
         this.executor.execute(this::monitor);
 
-        log.info("Listening for headers...");
+        log.debug("Listening for headers...");
     }
 
     @Override
     public void stop() {
-        log.info("Stopping blockstore...");
+        log.debug("Stopping blockstore...");
         store.stop();
-        log.info("Blockstore stopped.");
+        log.debug("Blockstore stopped.");
 
-        log.info("Stopping Network Service...");
+        log.debug("Stopping Network Service...");
         networkService.stop();
-        log.info("NetworkService stopped.");
+        log.debug("NetworkService stopped.");
+        log.info("headerSV stopped.");
 
         this.executor.shutdownNow();
     }
