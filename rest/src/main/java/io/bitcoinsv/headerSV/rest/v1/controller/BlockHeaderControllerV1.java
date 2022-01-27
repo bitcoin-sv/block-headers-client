@@ -37,7 +37,8 @@ public class BlockHeaderControllerV1 {
 
     //@RequestMapping("/{hash}")
     @RequestMapping(value = HeaderSVRestEndpoints.URL_CHAIN_HEADER_HASH)
-    public ResponseEntity<?> getHeader(@PathVariable String hash, @RequestHeader(value = "Content-Type", required = false, defaultValue = "application/json") MediaType contentType) {
+    public ResponseEntity<?> getHeader(@PathVariable String hash,
+                                       @RequestHeader(value = "Accept", required = false, defaultValue = "application/json") MediaType acceptContentType) {
 
         HeaderReadOnly blockHeader = headerSvApi.getBlockHeader(hash);
 
@@ -47,7 +48,7 @@ public class BlockHeaderControllerV1 {
         // We build the DTO:
         BlockHeaderDTO blockHeaderDTO = BlockHeaderDTO.of(blockHeader);
 
-        switch (contentType.toString()) {
+        switch (acceptContentType.toString()) {
             case MediaType.APPLICATION_OCTET_STREAM_VALUE:
                 return ResponseEntity
                         .ok()
@@ -55,7 +56,10 @@ public class BlockHeaderControllerV1 {
                         .body(blockHeaderDTO.getHeaderReadOnly().serialize());
 
             default:
-                return new ResponseEntity<>(blockHeaderDTO, HttpStatus.OK);
+                return ResponseEntity
+                        .ok()
+                        . contentType(MediaType.APPLICATION_JSON)
+                        .body(blockHeaderDTO);
         }
     }
 
