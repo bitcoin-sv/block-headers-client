@@ -1,0 +1,43 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+            <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-25thread] %-5level  - %msg%n</pattern>-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level  - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>log-HeaderSV.txt</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-25thread] %-5level  - %msg%n</pattern>
+        </encoder>
+    </appender>
+    -->
+
+    <!-- HeaderSv logging -->
+
+    <logger name="io.bitcoinsv.headerSV.core" additivity="false">
+        <level value="DEBUG" />
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <!-- JCL logging -->
+    <logger name="io.bitcoinsv.jcl.net.protocol" additivity="false">
+        <level value="INFO" />
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <logger name="io.bitcoinsv.jcl.base.tools" additivity="false">
+        <level value="INFO" />
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <root level="error">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+</configuration>

@@ -1,0 +1,23 @@
+# Application Configuration:
+headersv:
+
+  general:
+    headersToIgnore:
+    invBroadcastEnabled: true
+    sendHeadersEnabled: true
+  network:
+    networkId: "testnet"
+    shareP2P: "no"
+    minPeers: 2
+    maxPeers: 10
+    initialConnections:
+    genesisHeaderHex:
+
+  storage:
+    pruning:
+      fork:
+        enabled: false
+        pruneAfterConfirmations: 7
+      orphan:
+        enabled: false
+        pruneAfterInterval: 600

@@ -1,0 +1,142 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'idea'
+    id 'java'
+    id 'maven-publish'
+}
+/****************************************
+ * Local Configuration
+ ****************************************/
+
+group = "$hsvGroup"
+version = "$hsvVersion"
+
+def artifactName = "$hsvArtifactName"
+
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    // Nexus Releases
+    maven {
+        url = "$nexusReleasesUrl"
+        allowInsecureProtocol = true
+        credentials {
+            username = "$nexusUser"
+            password = "$nexusPassword"
+        }
+    }
+    // Nexus Snapshots
+    maven {
+        url = "$nexusSnapshotsUrl"
+        allowInsecureProtocol = true
+        credentials {
+            username = "$nexusUser"
+            password = "$nexusPassword"
+        }
+    }
+}
+
+dependencies {
+    // bitcoinJ modules
+    implementation "io.bitcoinsv.bitcoinjsv:bitcoinj-base:$bitcoinJVersion"
+
+    // jcl Modules
+    implementation "io.bitcoinsv.jcl:jcl-net:$JCLVersion"
+    implementation "io.bitcoinsv.jcl:jcl-tools:$JCLVersion"
+    implementation "io.bitcoinsv.jcl:jcl-store:$JCLVersion"
+    implementation "io.bitcoinsv.jcl:jcl-store-keyValue:$JCLVersion"
+    implementation "io.bitcoinsv.jcl:jcl-store-levelDB:$JCLVersion"
+
+    // HeaderSV Modules
+    implementation(project(":core"))
+    implementation(project(":rest-client"))
+
+
+    // logging
+    implementation 'org.slf4j:slf4j-api:1.7.26'
+
+    // JUnit
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+
+    // logback
+    testImplementation "ch.qos.logback:logback-classic"
+
+    // Spring
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+    archiveClassifier = '' // avoid "-plain.jar" suffix in JAR file
+}
+
+test {
+    useJUnitPlatform()
+}
+
+/****************************************
+ * Publish the JAR
+ ****************************************/
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+
+            artifactId = "$artifactName"
+            groupId = "$group"
+            version = "$version"
+
+            from components.java
+
+            pom {
+                name = "$artifactName"
+                description = 'A Service to synchronize with the BSV Chain and retrive Info from it'
+                url = 'https://github.com/bitcoin-sv/block-headers-client/core'
+
+                licenses {
+                    license {
+                        name = 'Open BSV License'
+                        url = 'https://github.com/bitcoin-sv/block-headers-client/core/blob/master/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        organization = 'nChain'
+                        organizationUrl = 'https://nchain.com'
+                        name = 'm.fletcher'
+                    }
+                    developer {
+                        organization = 'nChain'
+                        organizationUrl = 'https://nchain.com'
+                        name = 'i.fernandez'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/bitcoin-sv/block-headers-client'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            allowInsecureProtocol = true
+            credentials {
+                username = "$rootProject.nexusUser"
+                password = "$rootProject.nexusPassword"
+            }
+            if(project.version.endsWith('-SNAPSHOT')) {
+                url "$rootProject.nexusSnapshotsUrl"
+            } else {
+                url "$rootProject.nexusReleasesUrl"
+            }
+        }
+    }
+}

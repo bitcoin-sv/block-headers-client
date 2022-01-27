@@ -1,1 +1,6 @@
 rootProject.name = 'header-sv'
+include 'core'
+include 'rest'
+include 'rest-client'
+include 'app'
+
