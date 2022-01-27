@@ -91,6 +91,15 @@ public class HeaderSvConfig {
         return new HeaderSvConfigBuilder();
     }
 
+    /** It returns a Builder pre-loaded with the data of this instance */
+    public HeaderSvConfigBuilder toBuilder() {
+        return new HeaderSvConfigBuilder()
+                .timeoutToTriggerSyncComplete(this.timeoutToTriggerSyncComplete)
+                .headersToIgnore(this.headersToIgnore)
+                .invBroadcastEnabled(this.invBroadcastEnabled)
+                .sendHeadersEnabled(this.sendHeadersEnabled);
+    }
+
     /**
      * Builder
      */
