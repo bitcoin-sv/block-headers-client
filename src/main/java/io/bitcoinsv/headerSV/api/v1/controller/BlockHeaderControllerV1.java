@@ -32,26 +32,23 @@ public class BlockHeaderControllerV1 {
 
     @RequestMapping("/{hash}")
     public ResponseEntity<?> getHeader(@PathVariable String hash,
-                                       @RequestHeader(value = "Accept", required = false, defaultValue = "application/json") MediaType acceptContentType) {
+                                       @RequestHeader(value = "Accept", required = false, defaultValue = "application/json") String acceptContentType) {
         BlockHeaderDTO blockHeaderDTO = hsvFacade.getBlockHeader(hash);
 
         if (blockHeaderDTO == null) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT, "BlockHeader not found");
         }
 
-        switch (acceptContentType.toString()) {
-            case MediaType.APPLICATION_OCTET_STREAM_VALUE:
-                return ResponseEntity
-                        .ok()
-                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                        .body(blockHeaderDTO.getHeaderReadOnly().serialize());
-
-            default:
-                return ResponseEntity
-                        .ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(blockHeaderDTO);
+        if (MediaType.APPLICATION_OCTET_STREAM_VALUE.equals(acceptContentType)) {
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(blockHeaderDTO.getHeaderReadOnly().serialize());
         }
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(blockHeaderDTO);
     }
 
     @RequestMapping("/{hash}/ancestors")
@@ -67,14 +64,14 @@ public class BlockHeaderControllerV1 {
 
     @RequestMapping("/byHeight")
     public ResponseEntity<?> getHeadersByHeight(@RequestParam String height, @RequestParam(defaultValue = "1") String count,
-                                                @RequestHeader(value = "Accept", required = false, defaultValue = "application/json") MediaType acceptContentType){
+                                                @RequestHeader(value = "Accept", required = false, defaultValue = "application/json") String acceptContentType){
         try {
             if (Integer.parseInt(count) > 2000) {
                 throw new IllegalArgumentException("Count exceeds max value of 2000 headers");
             }
 
             List<BlockHeaderDTO> headers = hsvFacade.getHeadersByHeight(Integer.parseInt(height), Integer.parseInt(count));
-            if (acceptContentType.toString().equals(MediaType.APPLICATION_OCTET_STREAM_VALUE)) {
+            if (acceptContentType.equals(MediaType.APPLICATION_OCTET_STREAM_VALUE)) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 for (BlockHeaderDTO header : headers) {
                     baos.write(header.getHeaderReadOnly().serialize());
