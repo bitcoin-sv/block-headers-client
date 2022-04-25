@@ -19,9 +19,26 @@ HeaderSV uses Gradle as its build tool. You can find the latest version of Gradl
 https://gradle.org/install/
 
 ### Installation
+Pre-requisites (must be on system PATH):
+- Open Java JDK 11 from: https://jdk.java.net/java-se-ri/11
+
 To build the application, navigate to the root folder and run `./gradlew clean build`.
 
-Run the application using `./gradlew run`. The Mainnet will be synchronized by default. This can be changed by switching profiles in the application.properties file.
+Run the application using `./gradlew run`. The Mainnet will be synchronized by default. This can be changed by switching profiles in the application.properties file 
+(see Configuration section).
+
+### Standalone Spring Boot build
+To build a standalone, bundled application navigate to the root folder and run 
+`./gradlew assemble`. This will create a `headerSV-boot-1.0.2` Spring Boot application.
+The `.jar` file is runnable with a recent enough Java runtime environment via:
+
+     java.exe -jar headerSV-1.0.2.jar
+
+Or you can use the scripts in the `/bin` directory if the java runtime is on the system PATH.
+
+See the configuration section below as well as: 
+`https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#deployment` for
+details on configuration options.
 
 ### Docker
 You can build the docker file by either running `docker build -t headersv .` from the root directory. Or running `docker-compose build`. Once built, you can run by either
@@ -39,6 +56,10 @@ The application has 4 default profiles:
 
 You can switch between profiles by altering the value `spring.profiles.active=bsv-xxx` in `resources/application.yml`. Profiles can be amended to
 alter the values such as `minPeers` and `maxPeers`.
+
+Environment variables:
+- Alternatively, you can use the `SPRING_PROFILES_ACTIVE="bsv-xxx"` environment variable to switch profiles:
+- To change the default server port (8080 by default) you can use the `SERVER_PORT=12345` environment variable.
 
 ###Docker
 Profiles  can also be amended by overriding using environment variables, such as those in the `docker-compose` file.
