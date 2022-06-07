@@ -7,5 +7,5 @@ RUN gradle assemble
 # Stage 2 - the production environment
 FROM openjdk:18-ea-4-oracle
 WORKDIR /app
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/
-ENTRYPOINT ["sh","-c","java -jar /app/headerSV-1.0.2.jar"]
+COPY --from=build /home/gradle/src/app/build/libs/*.jar /app/
+ENTRYPOINT ["sh","-c","java -jar /app/headersv-app-2.0.0-SNAPSHOT.jar"]

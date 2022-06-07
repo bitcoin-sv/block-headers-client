@@ -1,126 +1,52 @@
 # HeaderSV Client
-This is a lightweight header client for the BitcoinSV Blockchain. The client will connect to the BitcoinSV network and manage whitelists and blacklists internally. The application ensures that it is always connected to at least the minimum number of peers configured before synchronizing any blocks.
+This is a lightweight client app for the BitcoinSV Blockchain. The App will connect to the BitcoinSV network and manage whitelists and blacklists internally. 
+The application ensures that it is always connected to at least the minimum number of peers configured before synchronizing any blocks.
 
 A REST API is also provided by the application which will allow rapid lookups of chain and network state, as well as basic controls to control stored data.
 
-The networks currently supported by the client are Mainnet, Testnet and STNnet. Additional networks can be added with ease.
+The networks currently supported by the client are *Mainnet*, *Testnet* and *STNnet*. Additional networks can be added with ease.
 
-### Dependencies
-#### ** Note **
-When building from source, HeaderSV is dependent on both BitcoinJ-SV and the Java Component Library (JCL), which are available on Maven Central under [/io/bitcoinsv/](https://repo.maven.apache.org/maven2/io/bitcoinsv/).
+## HeaderSV Modules
 
-#### Java
-You will need Java SDK to build this application on your machine. Get the latest version of Java at:
-https://www.java.com/en/download/help/index_installing.html
+ Since version 2.0, the *HeaderSV Client* is distributed in a multi-modular fashion. So while the pre-existing 
+ functionality remains the same, now it's more flexible and easy to integrate into third party projects if needed to.
+ So, the *HeaderSV Client* is now a *Suite* of modules:
+ 
+ Each one of these modules can be consumed by an external *App*, and depending on the scenario you can use only the module you need
 
-#### Gradle
+![HeaderSV Suite](./headerSVModules.jpg)
 
-HeaderSV uses Gradle as its build tool. You can find the latest version of Gradle at:
-https://gradle.org/install/
 
-### Installation
-To build the application, navigate to the root folder and run `./gradlew clean build`.
 
-Run the application using `./gradlew run`. The Mainnet will be synchronized by default. This can be changed by switching profiles in the application.properties file.
+> **The previous versions of the *HeaderSV Client (v 1.x)* are equivalent now to the *headersv-app* module described below**
 
-### Docker
-You can build the docker file by either running `docker build -t headersv .` from the root directory. Or running `docker-compose build`. Once built, you can run by either
-`docker run headersv` or `docker-compose up`. Note: if you're not using docker compose, you'll also need to expose the port and mount a volume to expose the API and persist state.
+---
 
-## Verifying
-To check your client application is serving REST API calls once running, open a browser at `http://localhost:8001/api/v1/chain/tips` (default port is specified in the `docker-compose` file)
+  * [**headerSV-app**](app/README.MD): This is equivalent to the *HeaderSV Client v.1.x*. It is a standalone application that can be deployed
+  and it also provides a *REST API* we can use to retrieve information about the Chain.
+  
+    **If you are just upgrading from previous versions of *HeaderSV Client* and want things unchanged, this is the right module.**
+ 
+---
 
-## Configuration
-The application has 4 default profiles:
-- `bsv-mainnet`
-- `bsv-testnet`
-- `bsv-stnnet`
-- `bsv-regtest`
+ * [**headerSV-rest**](rest/README.MD): This module is a Java library (JAR) that provides the REST API mentioned above as a separate layer that 
+  you can add to your pre-existing Application. 
+  
+  **If you already have an application and want to add *HeaderSV capabilities* 
+ to it rather than deploy a separate app, this is the right module.**
+ 
+---
 
-You can switch between profiles by altering the value `spring.profiles.active=bsv-xxx` in `resources/application.yml`. Profiles can be amended to
-alter the values such as `minPeers` and `maxPeers`.
+ * [**headerSV-rest-client**](rest-client/README.MD): This module is a Java Library (JAR) that provides a client for the *REST API*. 
+ 
+ **If you only want to 
+ *consume* the info produced from *HeaderSV* which is running in a different machine, this is right module.**
+ 
+---
 
-###Docker
-Profiles  can also be amended by overriding using environment variables, such as those in the `docker-compose` file.
+ * [**headerSV-core**](core/README.MD): This module is a Java Library that implements the *core* functionality of *HeaderSV*: It connects to the 
+ network, synchronizes with the Chain and provides an API (not REST) that can be used to retrieve information from it. 
+ 
+ **If you 
+ want to synchronize with the chain and get updated in real-time about changes in it, this is the right module.**
 
-## API | V1
-
-### Chain
-
-#### Query Chain Tips
-Returns the latest headers for the tip of the chain and any forks
-```
-/api/v1/chain/tips
-```
-Returns the the specified header for the tip of the chain and any forks
-
-#### Prune Fork
-Prunes a specified fork
-```
-/api/v1/chain/tips/prune/{hash}
-```
-ID | TYPE | Description |
----|------|-------------|
-hash | STRING | The Header hash 
-
-#### Query Headers
-Retrieves the header with the given hash
-```
-/api/v1/chain/header/{hash}
-```
-The content type: ```application/octet-stream``` can be provided in the requst header to return the headers raw bytes.
-
-#### Query Headers By Height (batched)
-Retrieves the header with the given hash
-```
-/api/v1/chain/header/byHeight?height=<start_height>&count=<count>
-```
-The Accept type: ```application/octet-stream``` can be provided in the requst header to return the headers as a 
-stream of raw bytes.
-
-The query parameter: height is required. The count of headers requested is optional (default = 1)
-
-#### Query Headers State
-Retrieves the header with the given hash along with it's state relative to the chain
-```
-/api/v1/chain/header/state/{hash}
-```
-ID | TYPE | Description |
----|------|-------------|
-hash | STRING | The Header hash 
-
-#### Response
-Returns a list of block headers and their state if specified.
-```
-{
-    "header": {
-        "hash": "00000000dfd5d65c9d8561b4b8f60a63018fe3933ecb131fb37f905f87da951a",
-        "version": 1,
-        "prevBlockHash": "00000000a1496d802a4a4074590ec34074b76a8ea6b81c1c9ad4192d3c2ea226",
-        "merkleRoot": "10f072e631081ad6bcddeabb90bc34d787fe7d7116fe0298ff26c50c5e21bfea",
-        "creationTimestamp": 1233046715,
-        "difficultyTarget": 486604799,
-        "nonce": 2999858432,
-        "transactionCount": 0,
-        "work": 4295032833
-    },
-    "state": "STALE",
-    "chainWork": 65537,
-    "height": 2000,
-    "confirmations": 4000
-}
-```
-
-ID | TYPE | VALUES |
----|------|-------------|
-state | ENUM | LONGEST_CHAIN, ORPHAN or STALE
-
-#### Query Network
-Returns a list of peers that are connected to the application
-```
-/api/v1/network/peers
-```
-Returns the number of peers connected to the application
-```
-/api/v1/network/peers/count
-```
