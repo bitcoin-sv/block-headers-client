@@ -1,16 +1,19 @@
 plugins {
-	id 'org.springframework.boot' version '2.2.5.RELEASE'
-	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'org.springframework.boot' version '2.5.5'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'idea'
 	id 'java'
-	id 'application'
 	id 'maven-publish'
-
-	id 'com.google.cloud.tools.jib' version '3.1.4'
 }
 
-sourceCompatibility = '11'
+sourceCompatibility = '17'
 version = "$hsvVersion"
+
+/****************************************
+ * Dependencies on specific libraries
+ ****************************************/
+ext['logback.version'] = '1.2.9'
+ext['log4j2.version'] = '2.17.0' // Just in Case (log4J vulnerability patch)
 
 configurations {
 	compileOnly {
@@ -34,100 +37,13 @@ javadoc {
 	}
 }
 
-dependencies {
-	// jcl Modules
-	implementation 'io.bitcoinsv.jcl:jcl-net:1.0.5'
-	implementation 'io.bitcoinsv.bitcoinjsv:bitcoinj-base:1.0.1'
-	implementation 'io.bitcoinsv.jcl:jcl-tools:1.0.5'
-	implementation 'io.bitcoinsv.jcl:jcl-store:1.0.5'
-	implementation 'io.bitcoinsv.jcl:jcl-store-levelDB:1.0.5'
-	implementation 'io.bitcoinsv.jcl:jcl-store-keyValue:1.0.5'
-
-	// Spring boot
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-
-	// Lombok
-	annotationProcessor 'org.projectlombok:lombok'
-	compileOnly 'org.projectlombok:lombok'
-
-	compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
-	implementation 'com.google.guava:guava:27.1-jre'
-
-	// Testing
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-test {
-	useJUnitPlatform()
-}
-
-mainClassName = "io.bitcoinsv.headerSV.HeaderSVApplication"
-
-jar {
-	manifest {
-		attributes("Main-Class": mainClassName)
-	}
-	metaInf {
-		from "${project.rootDir}/LICENSE"
-	}
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
-
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-
-			artifactId = "$hsvName"
-			groupId = "$hsvGroup"
-			version = "$hsvVersion"
-
-			from components.java
-
-			pom {
-				name = "$hsvName"
-				description = 'A lightweight header client for the Bitcoin SV Blockchain'
-				url = 'https://github.com/bitcoin-sv/block-headers-client'
-
-				licenses {
-					license {
-						name = 'Open BSV License'
-						url = 'https://github.com/bitcoin-sv/block-headers-client/blob/master/LICENSE'
-					}
-				}
-				developers {
-					developer {
-						organization = 'nChain'
-						organizationUrl = 'https://nchain.com'
-						name = 'm.fletcher'
-					}
-					developer {
-						organization = 'nChain'
-						organizationUrl = 'https://nchain.com'
-						name = 'm.j'
-					}
-				}
-				scm {
-					url = 'https://github.com/bitcoin-sv/block-headers-client'
-				}
-			}
-		}
-	}
-
-	repositories {
-		mavenLocal()
+task printVersion {
+	doLast {
+		println project.version
 	}
 }
 
-jib {
-	from {
-		image = 'amazoncorretto:11'
-	}
-	container {
-		labels = [maintainer:'s.krese@nchain.com']
-	}
-}
+dependencies {}
+
+bootJar { enabled = false}
+jar {enabled = false}
