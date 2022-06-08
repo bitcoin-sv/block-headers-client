@@ -1,0 +1,62 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'idea'
+    id 'java'
+    id 'application'
+    id 'maven-publish'
+}
+/****************************************
+ * Local Configuration
+ ****************************************/
+
+group = "$hsvGroup"
+version = "$hsvVersion"
+
+def artifactName = "$hsvArtifactName"
+
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+
+    // HeaderSV Modules
+    implementation(project(":rest"))
+    implementation(project(":core"))
+
+    // logging
+    implementation 'org.slf4j:slf4j-api:1.7.26'
+
+    // JUnit
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+
+    // logback
+    testImplementation "ch.qos.logback:logback-classic"
+
+    // Spring
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+}
+
+mainClassName = "io.bitcoinsv.headerSV.app.HeaderSVApplication"
+bootJar {
+    enabled = true
+    archiveFileName = "${artifactName}-${version}.jar"
+    metaInf {
+        from "${project.rootDir}/LICENSE"
+    }
+}
+
+
+
+jar {
+    enabled = false
+}
+
+test {
+    useJUnitPlatform()
+}

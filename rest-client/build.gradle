@@ -1,0 +1,59 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'idea'
+    id 'java'
+    id 'maven-publish'
+}
+/****************************************
+ * Local Configuration
+ ****************************************/
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    // bitcoinJ modules
+    implementation "io.bitcoinsv.bitcoinjsv:bitcoinj-base:$bitcoinJVersion"
+
+    // jcl Modules
+    implementation "io.bitcoinsv.jcl:jcl-net:$JCLVersion"
+    implementation "io.bitcoinsv.jcl:jcl-tools:$JCLVersion"
+
+    // Lombok
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+
+    // Web related
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation group: 'com.squareup.retrofit2', name: 'retrofit', version: '2.9.0'
+    implementation group: 'com.squareup.retrofit2', name: 'converter-gson', version: '2.9.0'
+
+    // logging
+    implementation 'org.slf4j:slf4j-api:1.7.26'
+
+    // JUnit
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+
+    // logback
+    testImplementation "ch.qos.logback:logback-classic"
+
+    // SpringBoot Test
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+    archiveClassifier = '' // avoid "-plain.jar" suffix in JAR file
+}
+
+test {
+    useJUnitPlatform()
+}
