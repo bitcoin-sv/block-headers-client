@@ -128,4 +128,5 @@ headerSVService.stop();
 
 ```
 
-
+## Database
+The default location for the networking & storage database can be located at ~/tmp/jcl.
