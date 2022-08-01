@@ -15,7 +15,7 @@ The functionalities provided by this module are:
 
 > this module does NOT include a *REST Api* or a webserver. Its meant to be used as another Service 
 > that can be included in any application. If you also need a REST api to expose its API capabilities, 
-> check out the [**headerSV-rest**](rest/README.MD) module
+> check out the [**headerSV-rest**](../rest/README.MD) module
  
 
 ## How to use *headerSV-core* (gradle)
@@ -23,19 +23,22 @@ The functionalities provided by this module are:
 ### Declare the dependencies 
 
 *headerSV-core* has dependencies on both BitcoinJ-SV and the Java Component Library (JCL), so the best approach is to 
-define the version numbers of each one in your `gradle.properties` file:
+define the version numbers of each one in your `gradle.properties` file. For example:
 
 ```
 # BitcoinJ dependency:
-bitcoinJVersion=1.0.2
+bitcoinJVersion=1.0.4
 
 # JCL dependency:
-JCLVersion=2.0.0
+JCLVersion=2.2.0
 
 # headerSV dependency:
-headerSVVersion=2.0.0
+headerSVVersion=2.0.2
 ```
-, and then you reference them in your *build.gradle* file:
+However, you should check [gradle.properties](https://github.com/bitcoin-sv/block-headers-client/blob/main/gradle.properties)
+in the root directory for up-to-date versions.
+
+Then you can reference them in your *build.gradle* file:
 
 ```
 // bitcoinJ modules
