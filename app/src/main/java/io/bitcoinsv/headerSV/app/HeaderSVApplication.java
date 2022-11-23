@@ -24,7 +24,7 @@ import javax.annotation.PreDestroy;
 public class HeaderSVApplication {
 
 	public static void main(String[] args) {
-		System.out.println("HeaderSV Listener 2.0.0");
+		System.out.println("HeaderSV Listener 2.0.4");
 		SpringApplication.run(HeaderSVApplication.class, args);
 	}
 

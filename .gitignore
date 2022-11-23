@@ -33,6 +33,7 @@ out/
 
 ### VS Code ###
 .vscode/
+.history
 
 # Package files
 *.jar

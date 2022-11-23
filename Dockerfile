@@ -8,5 +8,5 @@ RUN gradle assemble
 FROM openjdk:18-oraclelinux8
 WORKDIR /app
 COPY --from=build /home/gradle/src/app/build/libs/*.jar /app/
-ENTRYPOINT ["sh","-c","java -jar /app/headersv-app-2.0.2.jar"]
+ENTRYPOINT ["sh","-c","java -jar /app/headersv-app-2.0.4.jar"]
 

@@ -39,7 +39,7 @@ bitcoinJVersion=1.0.2
 JCLVersion=2.0.0
 
 # headerSV dependency:
-headerSVVersion=2.0.0
+headerSVVersion=2.0.4
 ```
 , and then you reference them in your *build.gradle* file:
 
