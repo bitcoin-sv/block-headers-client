@@ -236,7 +236,13 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
 
     // It process an incoming HeadersMsg:
     private void processHeadersMsg(HeadersMsg headerMsg, PeerAddress peerAddress) {
+        if (headerMsg.getBlockHeaderMsgList() == null || headerMsg.getBlockHeaderMsgList().size() == 0) {
+            log.debug("Received empty headers msg from peer {}.", peerAddress.toString());
+            return;
+        }
+
         log.debug("Processing headers msg from peer {}: {}", peerAddress.toString(), headerMsg.getBlockHeaderMsgList().stream().findFirst().get().getHash());
+
         //Convert each BlockHeaderMsg to a BlockHeader
         List<HeaderReadOnly> blockHeaders = new ArrayList<>(headerMsg.getBlockHeaderMsgList().size());
         boolean headersMsgRejected = false;
