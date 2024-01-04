@@ -224,17 +224,25 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
             try {
                 numAttempts++;
                 workToDo.run();
+                workDoneOK = true;
             } catch (Exception e) {
                 if (numAttempts > maxAttempts) { throw e; }
                 log.warn("ERROR while {}, retrying... ({} attempts left)", workName, (maxAttempts - numAttempts));
                 // a bit of a delay between runs:
-                try { Thread.sleep(millisWaitBetweenRuns);} catch (InterruptedException ie) {}
+                try { Thread.sleep(millisWaitBetweenRuns); } catch (InterruptedException ie) {}
             }
         }
     }
 
     // It process an incoming HeadersMsg:
     private void processHeadersMsg(HeadersMsg headerMsg, PeerAddress peerAddress) {
+        if (headerMsg.getBlockHeaderMsgList() == null || headerMsg.getBlockHeaderMsgList().size() == 0) {
+            log.debug("Received empty headers msg from peer {}.", peerAddress.toString());
+            return;
+        }
+
+        log.debug("Processing headers msg from peer {}: {}", peerAddress.toString(), headerMsg.getBlockHeaderMsgList().stream().findFirst().get().getHash());
+
         //Convert each BlockHeaderMsg to a BlockHeader
         List<HeaderReadOnly> blockHeaders = new ArrayList<>(headerMsg.getBlockHeaderMsgList().size());
         boolean headersMsgRejected = false;
@@ -351,7 +359,10 @@ public class HeadersSvServiceImpl implements HeaderSvService, MessageConsumer, E
     }
 
     private void requestHeader(Sha256Hash hash, PeerAddress peerAddress){
-        log.debug("Requesting headers for block: " + hash );
+        if (store.containsBlock(hash)) {
+            return;
+        }
+        log.debug("Requesting headers for block: {}", hash);
         boolean requestSent = networkService.send(buildGetHeaderMsg(hash), peerAddress,true);
         if (requestSent) this.requestForHeadersSent.set(true);
     }

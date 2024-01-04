@@ -22,8 +22,8 @@ dependencies {
     implementation "io.bitcoinsv.jcl:jcl-tools:$JCLVersion"
 
     // Lombok
-    annotationProcessor 'org.projectlombok:lombok:1.18.20'
-    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.26'
+    compileOnly 'org.projectlombok:lombok:1.18.26'
 
     // Web related
     implementation 'org.springframework.boot:spring-boot-starter-web'
