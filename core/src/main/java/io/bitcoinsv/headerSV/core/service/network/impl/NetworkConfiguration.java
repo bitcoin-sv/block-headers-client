@@ -1,5 +1,6 @@
 package io.bitcoinsv.headerSV.core.service.network.impl;
 
+import com.google.common.primitives.Longs;
 import io.bitcoinsv.bitcoinjsv.bitcoin.api.base.HeaderReadOnly;
 import io.bitcoinsv.bitcoinjsv.bitcoin.bean.base.HeaderBean;
 import io.bitcoinsv.bitcoinjsv.core.Utils;
@@ -45,7 +46,8 @@ public class NetworkConfiguration {
                                 int port,
                                 String[] dns,
                                 String[] initialConnections,
-                                String genesisHeaderHex) throws ConfigurationException {
+                                String genesisHeaderHex,
+                                long magicPacket) throws ConfigurationException {
 
         try {
             switch (networkId.toLowerCase()) {
@@ -81,6 +83,12 @@ public class NetworkConfiguration {
 
             }
 
+            if (magicPacket == 0)
+            {
+                // Reverse magic bytes from BitcoinJ
+                magicPacket = convertMagicBytesFromBitcoinJ(networkParams.getPacketMagic());
+            }
+
             List<String> dnsList = (dns != null) ?  new ArrayList<>(Arrays.asList(dns)) : new ArrayList<>();
 
             //if there's any default dns, add them
@@ -89,7 +97,7 @@ public class NetworkConfiguration {
             }
 
             //We might want to override the port if connecting to a custom network
-            ProtocolConfig defaultConfig = ProtocolConfigBuilder.get(networkParams);
+            ProtocolConfig defaultConfig = ProtocolConfigBuilder.get(networkParams, magicPacket);
             int requiredPort = port == -1 ? defaultConfig.getBasicConfig().getPort() : port;
 
             protocolConfig = defaultConfig.toBuilder()
@@ -124,6 +132,20 @@ public class NetworkConfiguration {
 
     }
 
+    /*
+        In BitcoinJ, the magic package is specified using a different Order than in JCL.
+        for example, the magic package field in the messages headers is specified this way:
+            - 0xe8f3e1e3L in JCL (same order as is sent over the wire)
+            - 0xe3e1f3e8L in BitcoinJ
+
+        This function translates the value from BitcoinJ into the equivalente representation using JCL
+     */
+    private static long convertMagicBytesFromBitcoinJ(long magic) {
+        byte[] result = new byte[8];
+        Utils.uint32ToByteArrayBE(magic, result, 0);
+        return Longs.fromByteArray(Utils.reverseBytes(result));
+    }
+
     public ProtocolConfig getProtocolConfig()           { return protocolConfig; }
     public NetworkConfig getNetworkConfig()             { return jclNetworkConfig; }
     public HeaderReadOnly getGenesisBlock()             { return genesisBlock; }
@@ -146,6 +168,7 @@ public class NetworkConfiguration {
         private String[] dns;
         private String[] initialConnections;
         private String genesisHeaderHex;
+        private long magicPacket;
 
         public NetworkConfigurationBuilder net(Net net) {
             this.networkId = net.name().toLowerCase();
@@ -182,8 +205,13 @@ public class NetworkConfiguration {
             return this;
         }
 
+        public NetworkConfigurationBuilder magicPacket(long magicPacket) {
+            this.magicPacket = magicPacket;
+            return this;
+        }
+
         public NetworkConfiguration build() throws ConfigurationException {
-            return new NetworkConfiguration(networkId, minPeers, maxPeers, port, dns, initialConnections, genesisHeaderHex);
+            return new NetworkConfiguration(networkId, minPeers, maxPeers, port, dns, initialConnections, genesisHeaderHex, magicPacket);
         }
 
     }
