@@ -44,8 +44,9 @@ public class HeaderSvRestConfig {
             @Value("${headersv.network.port:-1}") int port,
             @Value("${headersv.network.dns:[]}") String[] dns,
             @Value("${headersv.network.initialConnections}") String[] initialConnections,
-            @Value("${headersv.network.genesisHeaderHex}") String genesisHeaderHex) throws ConfigurationException {
-        return new NetworkConfiguration(networkId, minPeers, maxPeers, port, dns, initialConnections, genesisHeaderHex);
+            @Value("${headersv.network.genesisHeaderHex}") String genesisHeaderHex,
+            @Value("${headersv.network.magicBytes}") long magicPacket) throws ConfigurationException {
+        return new NetworkConfiguration(networkId, minPeers, maxPeers, port, dns, initialConnections, genesisHeaderHex, magicPacket);
     }
 
     @Bean
