@@ -33,13 +33,13 @@ define the version numbers of each one in your `gradle.properties` file:
 
 ```
 # BitcoinJ dependency:
-bitcoinJVersion=1.0.2
+bitcoinJVersion=1.0.4
 
 # JCL dependency:
-JCLVersion=2.0.0
+JCLVersion=2.3.2
 
 # headerSV dependency:
-headerSVVersion=2.0.4
+headerSVVersion=2.1.0
 ```
 , and then you reference them in your *build.gradle* file:
 
@@ -111,10 +111,10 @@ define the version numbers of each one in your `gradle.properties` file:
 bitcoinJVersion=1.0.2
 
 # JCL dependency:
-JCLVersion=2.0.0
+JCLVersion=2.3.2
 
 # headerSV dependency:
-headerSVVersion=2.0.0
+headerSVVersion=2.1.0
 ```
 , and then you reference them in your *build.gradle* file:
 

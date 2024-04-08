@@ -3,7 +3,7 @@ version: "3.7"
 
 services:
   headersv:
-    image: bitcoinsv/block-headers-client:2.0.4
+    image: bitcoinsv/block-headers-client:2.1.0
     volumes:
       - headersv-data:/tmp/jcl
     environment:
